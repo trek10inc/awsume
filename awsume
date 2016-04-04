@@ -1,0 +1,44 @@
+#!/bin/bash
+
+if [[ -z $1 ]];
+then 
+  echo Missing profile name
+else
+
+    aws s3 ls --profile $1 > /dev/null
+  if [[ $? -eq 0 ]];
+  then
+
+      cachedCreds=`ls ~/.aws/cli/cache/$1*`
+
+      token=$(python -c 'import json,sys,fileinput;
+obj=json.loads(fileinput.input().readline());
+creds = obj["Credentials"] 
+print creds["SessionToken"] + ""
+' $cachedCreds)
+
+      id=$(python -c 'import json,sys,fileinput;
+obj=json.loads(fileinput.input().readline());
+creds = obj["Credentials"] 
+print creds["AccessKeyId"] + ""
+' $cachedCreds)
+
+      key=$(python -c 'import json,sys,fileinput;
+obj=json.loads(fileinput.input().readline());
+creds = obj["Credentials"] 
+print creds["SecretAccessKey"] + ""
+' $cachedCreds)
+
+      if [[ "$2" == "show" ]];
+      then
+        echo "export AWS_SESSION_TOKEN=$token"
+        echo "export AWS_SECRET_ACCESS_KEY=$key"
+        echo "export AWS_ACCESS_KEY_ID=$id"
+      fi
+
+      export AWS_SESSION_TOKEN=$token
+      export AWS_SECRET_ACCESS_KEY=$key
+      export AWS_ACCESS_KEY_ID=$id
+  fi
+fi
+
