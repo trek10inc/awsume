@@ -19,4 +19,4 @@ Usage:
 
 awsume profilename [show]
 
-See our [blog](https://www.trek10.com/blog/awsume-aws-assume-made-awesome) for more details
+See our [blog](https://www.trek10.com/blog/awsume-aws-assume-made-awesome) for more details.
