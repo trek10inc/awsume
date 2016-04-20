@@ -9,40 +9,51 @@ else
   if [[ $? -eq 0 ]];
   then
 
-      cachedCreds=`ls ~/.aws/cli/cache/$1*`
+    cachedCreds=`ls ~/.aws/cli/cache/$1*`
 
-      token=$(python -c 'import json,sys,fileinput;
+    token=$(python -c 'import json,sys,fileinput;
 obj=json.loads(fileinput.input().readline());
 creds = obj["Credentials"] 
 print creds["SessionToken"] + ""
 ' $cachedCreds)
 
-      id=$(python -c 'import json,sys,fileinput;
+    id=$(python -c 'import json,sys,fileinput;
 obj=json.loads(fileinput.input().readline());
 creds = obj["Credentials"] 
 print creds["AccessKeyId"] + ""
 ' $cachedCreds)
 
-      key=$(python -c 'import json,sys,fileinput;
+    key=$(python -c 'import json,sys,fileinput;
 obj=json.loads(fileinput.input().readline());
 creds = obj["Credentials"] 
 print creds["SecretAccessKey"] + ""
 ' $cachedCreds)
 
-      region=$(grep -A 5 "profile $1" ~/.aws/config | grep default_region | awk '{print $3}')
+    region=$(grep -A 5 "profile $1" ~/.aws/config | grep default_region | awk '{print $3}')
 
-      if [[ "$2" == "show" ]];
+    if [[ "$2" == "show" ]];
+    then
+      echo "export AWS_SESSION_TOKEN=$token"
+      echo "export AWS_SECRET_ACCESS_KEY=$key"
+      echo "export AWS_ACCESS_KEY_ID=$id"
+      if [[ -z $region ]];
       then
-        echo "export AWS_SESSION_TOKEN=$token"
-        echo "export AWS_SECRET_ACCESS_KEY=$key"
-        echo "export AWS_ACCESS_KEY_ID=$id"
+        echo "#No region set"
+      else
         echo "export AWS_REGION=$region"
       fi
+    fi
 
-      export AWS_SESSION_TOKEN=$token
-      export AWS_SECRET_ACCESS_KEY=$key
-      export AWS_ACCESS_KEY_ID=$id
+    export AWS_SESSION_TOKEN=$token
+    export AWS_SECRET_ACCESS_KEY=$key
+    export AWS_ACCESS_KEY_ID=$id
+    if [[ -z $region ]];
+    then
+      unset AWS_REGION
+    else
       export AWS_REGION=$region
+    fi
   fi
 fi
+
 
