@@ -47,10 +47,12 @@ aws_secret_access_key = wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY
 
 Usage: 
 
-awsume profilename [show]
+awsume profilename [show|refresh]
 
 `awsume client1-admin` Exports into current shell, will ask for MFA if needed
 
 `awsume client1-admin show` Outputs export statements to copy / paste into some other shell, will ask for MFA if needed
+
+`awsume client1-admin refresh` Delete cached credentials and renew, should always prompt for mfa.
 
 See our [blog](https://www.trek10.com/blog/awsume-aws-assume-made-awesome) for more details
