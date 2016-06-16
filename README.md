@@ -5,7 +5,7 @@ Utility for easily assuming AWS IAM roles from the command line
 
 Copy `awsume` to `/usr/local/bin`
 
-`chmod 700 /usr/local/bin/asume`
+`chmod 700 /usr/local/bin/awsume`
 
 `alias awsume='. awsume'`
 
