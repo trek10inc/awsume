@@ -16,8 +16,8 @@ Add profiles to `~/.aws/config`
 ```
 # ~/.aws/config
 [profile internal-admin]
-role_arn = arn:aws:iam::<my aws account id>/role/admin-role
-mfa_serial = arn:aws:iam::<my aws account id>:mfa/joel
+role_arn = arn:aws:iam::<your aws account id>/role/admin-role
+mfa_serial = arn:aws:iam::<your aws account id>:mfa/joel
 source_profile = joel
 
 [profile client1-admin]
