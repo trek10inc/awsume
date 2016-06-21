@@ -33,7 +33,7 @@ creds = obj["Credentials"]
 print creds["SecretAccessKey"] + ""
 ' $cachedCreds)
 
-    region=$(grep -A 5 "profile $1" ~/.aws/config | grep default_region | awk '{print $3}')
+    region=$(grep -A 5 "profile $1" ~/.aws/config | grep region | awk '{print $3}')
 
     if [[ "$2" == "show" ]];
     then
@@ -45,6 +45,7 @@ print creds["SecretAccessKey"] + ""
         echo "#No region set"
       else
         echo "export AWS_REGION=$region"
+        echo "export AWS_DEFAULT_REGION=$region"
       fi
     fi
 
@@ -54,8 +55,10 @@ print creds["SecretAccessKey"] + ""
     if [[ -z $region ]];
     then
       unset AWS_REGION
+      unset AWS_DEFAULT_REGION
     else
       export AWS_REGION=$region
+      export AWS_DEFAULT_REGION=$region
     fi
   fi
 fi
