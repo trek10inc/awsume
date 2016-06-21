@@ -19,16 +19,19 @@ Add profiles to `~/.aws/config`
 role_arn = arn:aws:iam::<your aws account id>/role/admin-role
 mfa_serial = arn:aws:iam::<your aws account id>:mfa/joel
 source_profile = joel
+region = us-east-1
 
 [profile client1-admin]
 role_arn = arn:aws:iam::<client #1 account id>/role/admin-role
 mfa_serial = arn:aws:iam::<your aws account id>:mfa/joel
 source_profile = joel
+region = us-west-2
 
 [profile client2-admin]
 role_arn = arn:aws:iam::<client #2 account id>/role/admin-role
 mfa_serial = arn:aws:iam::<your aws account id>:mfa/joel
 source_profile = joel
+region = us-east-1
 ```
 
 Add credentials to `~/.aws/credentials`
