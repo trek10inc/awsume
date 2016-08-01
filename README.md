@@ -1,7 +1,7 @@
 # AWSume: AWS Assume Made Awesome
 Utility for easily assuming AWS IAM roles from the command line
 
-## Installation
+## OSX Installation
 
 Copy `awsume` to `/usr/local/bin`
 
@@ -9,9 +9,15 @@ Copy `awsume` to `/usr/local/bin`
 
 `alias awsume='. awsume'`
 
+## Windows Installation
+
+Copy `awsume.bat` to a folder on your machine.
+
+Add the folder to `Path` in the user variables section of environment variables.
+
 ## Setup
 
-Add profiles to `~/.aws/config`
+Add profiles to `~/.aws/config` (Windows users go to `%userprofile%\.aws\config`)
 
 ```
 # ~/.aws/config
@@ -34,7 +40,7 @@ source_profile = joel
 region = us-east-1
 ```
 
-Add credentials to `~/.aws/credentials`
+Add credentials to `~/.aws/credentials` (Windows users go to `%userprofile%\.aws\credentials`)
 
 ```
 # ~/.aws/credential
