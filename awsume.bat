@@ -6,7 +6,7 @@ IF "%2"=="refresh" (
   del "%userprofile%\.aws\cli\cache\%1*.json"
 )
 
-aws s3 ls --profile %1 > nul
+call aws s3 ls --profile %1 > nul
 
 IF ERRORLEVEL 1 GOTO end
 
