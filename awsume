@@ -33,8 +33,8 @@ creds = obj["Credentials"]
 print creds["SecretAccessKey"] + ""
 ' $cachedCreds)
 
-    region=$(grep -A 5 "profile $1" ~/.aws/config | grep region | awk '{print $3}')
-
+    region=$(aws configure get region --profile $1)
+    
     if [[ "$2" == "show" ]];
     then
       echo "export AWS_SESSION_TOKEN=$token"
@@ -52,7 +52,7 @@ print creds["SecretAccessKey"] + ""
     export AWS_SESSION_TOKEN=$token
     export AWS_SECRET_ACCESS_KEY=$key
     export AWS_ACCESS_KEY_ID=$id
-    if [[ -z $region ]];
+    if [[ -z "$region" ]];
     then
       unset AWS_REGION
       unset AWS_DEFAULT_REGION
@@ -62,5 +62,3 @@ print creds["SecretAccessKey"] + ""
     fi
   fi
 fi
-
-
