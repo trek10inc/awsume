@@ -1,8 +1,9 @@
 #!/bin/bash
 
-if [[ -z $1 ]];
+if [[ -z "$1" ]];
 then 
   echo Missing profile name
+  exit 1
 else
   if [[ "$2" == "refresh" ]];
   then
