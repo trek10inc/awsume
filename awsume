@@ -13,25 +13,13 @@ else
   if aws sts get-caller-identity --profile $1 >/dev/null
   then
 
-    cachedCreds=`ls ~/.aws/cli/cache/$1*`
-
-    token=$(python -c 'import json,sys,fileinput;
-obj=json.loads(fileinput.input().readline());
-creds = obj["Credentials"] 
-print creds["SessionToken"] + ""
-' $cachedCreds)
-
-    id=$(python -c 'import json,sys,fileinput;
-obj=json.loads(fileinput.input().readline());
-creds = obj["Credentials"] 
-print creds["AccessKeyId"] + ""
-' $cachedCreds)
-
-    key=$(python -c 'import json,sys,fileinput;
-obj=json.loads(fileinput.input().readline());
-creds = obj["Credentials"] 
-print creds["SecretAccessKey"] + ""
-' $cachedCreds)
+  read token key id <<< $(
+   cat ~/.aws/cli/cache/${1}*.json |\
+     python -c '
+import json, sys
+creds = json.load(sys.stdin)["Credentials"]
+print(" ".join(creds[_] for _ in ("SessionToken","AccessKeyId","SecretAccessKey")))
+')
 
     region=$(aws configure get region --profile $1)
     
@@ -40,9 +28,9 @@ print creds["SecretAccessKey"] + ""
       echo "export AWS_SESSION_TOKEN=$token"
       echo "export AWS_SECRET_ACCESS_KEY=$key"
       echo "export AWS_ACCESS_KEY_ID=$id"
-      if [[ -z $region ]];
+      if [[ -z "$region" ]];
       then
-        echo "#No region set"
+        echo "# No region set"
       else
         echo "export AWS_REGION=$region"
         echo "export AWS_DEFAULT_REGION=$region"
