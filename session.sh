@@ -5,19 +5,17 @@ PROFILE="${2}"
 
 if [[ -n "$TOKEN" ]] && [[ ${#TOKEN} == 6 ]]; then
 
-	if ! [[ -n "$PROFILE" ]]; then
-    PROFILE_FLAG=''
-  else
-    PROFILE_FLAG='--profile'
-  fi 
+  if [[ -n "$PROFILE" ]]; then
+    PROFILE_FLAG="--profile ${PROFILE}"
+  fi
 
-  MFA_SERIAL=$(aws --output json $PROFILE_FLAG $PROFILE iam get-user 2> /dev/null | sed -n 's/.*\(arn.*\)"/\1/p')
+  MFA_SERIAL=$(aws iam get-user $PROFILE_FLAG --query User.Arn --output text)
 
 	# If we get an error calling iam get-user $MFA_SERIAL will always be empty
 	if ! [[ -n "$MFA_SERIAL" ]]; then
 
 		# Assuming the error reporting doesn't change greatly this should work nicely
-		MFA_SERIAL=$(aws --output json $PROFILE_FLAG $PROFILE iam get-user 2>&1> /dev/null | sed -n 's/.*\(arn.*\).*/\1/p')
+		MFA_SERIAL=$(aws iam get-user $PROFILE_FLAG --output json 2>&1> /dev/null | sed -n 's/.*\(arn.*\).*/\1/p')
 
 		if ! [[ -n "$MFA_SERIAL" ]]; then
 
@@ -29,8 +27,8 @@ if [[ -n "$TOKEN" ]] && [[ ${#TOKEN} == 6 ]]; then
 	fi
 
 
-  MFA_SERIAL=$(echo $MFA_SERIAL | sed 's/user/mfa/')
-  
+  MFA_SERIAL=${MFA_SERIAL/user/mfa}
+
   if [[ -n "$PROFILE" ]]; then
     echo "Using profile so removing env credentials"
     temp_st=$AWS_SESSION_TOKEN
@@ -43,7 +41,7 @@ if [[ -n "$TOKEN" ]] && [[ ${#TOKEN} == 6 ]]; then
   
   aws sts get-session-token \
     --output json \
-    $PROFILE_FLAG $PROFILE \
+    $PROFILE_FLAG \
     --duration-seconds 900 \
     --serial-number $MFA_SERIAL \
     --token-code $TOKEN > ./SESSION
