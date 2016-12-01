@@ -41,7 +41,7 @@ if [[ -n "$TOKEN" ]] && [[ ${#TOKEN} == 6 ]]; then
   
   aws sts get-session-token \
     --output json \
-    $PROFILE_FLAG $PROFILE \
+    $PROFILE_FLAG \
     --duration-seconds 900 \
     --serial-number $MFA_SERIAL \
     --token-code $TOKEN > ./SESSION

@@ -17,7 +17,7 @@ else
    cat ~/.aws/cli/cache/${1}*.json | python -c '
 import json, sys
 creds = json.load(sys.stdin)["Credentials"]
-print(" ".join(creds[_] for _ in ("SessionToken","AccessKeyId","SecretAccessKey")))
+print(" ".join(creds[_] for _ in ("SessionToken","SecretAccessKey","AccessKeyId")))
 ')
 
     region=$(aws configure get region --profile $1)
