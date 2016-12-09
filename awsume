@@ -25,6 +25,7 @@ print(" ".join(creds[_] for _ in ("SessionToken","SecretAccessKey","AccessKeyId"
     if [[ "$2" == "show" ]];
     then
       echo "export AWS_SESSION_TOKEN=$token"
+      echo "export AWS_SECURITY_TOKEN=$token"
       echo "export AWS_SECRET_ACCESS_KEY=$key"
       echo "export AWS_ACCESS_KEY_ID=$id"
       if [[ -z "$region" ]];
@@ -36,6 +37,7 @@ print(" ".join(creds[_] for _ in ("SessionToken","SecretAccessKey","AccessKeyId"
       fi
     fi
 
+    export AWS_SECURITY_TOKEN=$token
     export AWS_SESSION_TOKEN=$token
     export AWS_SECRET_ACCESS_KEY=$key
     export AWS_ACCESS_KEY_ID=$id

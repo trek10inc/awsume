@@ -21,9 +21,10 @@ IF %ERRORLEVEL% NEQ 0 GOTO errorGetSession
 FOR /f "tokens=2" %%G IN (session.txt) DO SET AWS_ACCESS_KEY_ID=%%G
 FOR /f "tokens=4" %%G IN (session.txt) DO SET AWS_SECRET_ACCESS_KEY=%%G
 FOR /f "tokens=5" %%G IN (session.txt) DO SET AWS_SESSION_TOKEN=%%G
+FOR /f "tokens=5" %%G IN (session.txt) DO SET AWS_SECURITY_TOKEN=%%G
 DEL "./session.txt"
 
-ECHO Successfully set variables: AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY and AWS_SESSION_TOKEN
+ECHO Successfully set variables: AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_SESSION_TOKEN, and AWS_SECURITY_TOKEN
 
 GOTO eof
 

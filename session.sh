@@ -35,6 +35,7 @@ if [[ -n "$TOKEN" ]] && [[ ${#TOKEN} == 6 ]]; then
     temp_sak=$AWS_SECRET_ACCESS_KEY
     temp_aki=$AWS_ACCESS_KEY_ID
     unset AWS_SESSION_TOKEN 2> /dev/null
+    unset AWS_SECURITY_TOKEN 2> /dev/null
     unset AWS_SECRET_ACCESS_KEY 2> /dev/null
     unset AWS_ACCESS_KEY_ID 2> /dev/null
   fi
@@ -53,6 +54,7 @@ if [[ -n "$TOKEN" ]] && [[ ${#TOKEN} == 6 ]]; then
     if [[ -n "$PROFILE" ]]; then
       echo "Restoring env credentials"
       export AWS_SESSION_TOKEN=$temp_st
+      export AWS_SECURITY_TOKEN=$temp_st
       export AWS_SECRET_ACCESS_KEY=$temp_sak
       export AWS_ACCESS_KEY_ID=$temp_aki
     fi
@@ -62,6 +64,7 @@ if [[ -n "$TOKEN" ]] && [[ ${#TOKEN} == 6 ]]; then
 
   export AWS_SECRET_ACCESS_KEY=$(grep '"SecretAccessKey"' ./SESSION  | cut -d '"' -f4)
   export AWS_SESSION_TOKEN=$(grep '"SessionToken"' ./SESSION  | cut -d '"' -f4)
+  export AWS_SECURITY_TOKEN=$(grep '"SessionToken"' ./SESSION  | cut -d '"' -f4)
   export AWS_ACCESS_KEY_ID=$(grep '"AccessKeyId"' ./SESSION  | cut -d '"' -f4)
   printf " ---\nSession successfully set for profile/user: "$PROFILE"\n ---\n"
   rm ./SESSION
