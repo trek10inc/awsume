@@ -1,7 +1,17 @@
 # AWSume: AWS Assume Made Awesome
 Utility for easily assuming AWS IAM roles from the command line
 
-## OSX Installation
+## macOS Installation
+
+### Fast Install
+
+Run the command for your shell then start a new shell:
+
+bash: `curl https://raw.githubusercontent.com/trek10inc/awsume/master/awsume > /usr/local/bin/awsume && chmod 700 /usr/local/bin/awsume && echo "alias awsume='. awsume'" >> .bash_profile`
+
+zsh: `curl https://raw.githubusercontent.com/trek10inc/awsume/master/awsume > /usr/local/bin/awsume && chmod 700 /usr/local/bin/awsume && echo "alias awsume='. awsume'" >> .zshrc`
+
+### Manual Steps
 
 Copy `awsume` to `/usr/local/bin`
 
