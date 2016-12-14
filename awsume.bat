@@ -6,7 +6,7 @@ IF "%2"=="refresh" (
   DEL "%userprofile%\.aws\cli\cache\%1*.json"
 )
 
-call aws s3 ls --profile %1 > nul
+CALL aws s3 ls --profile %1 > nul
 
 IF ERRORLEVEL 1 GOTO end
 
@@ -26,7 +26,7 @@ FOR /F %%M in ('DIR %userprofile%\.aws\cli\cache\%1*.json /B /S') DO (
 )
 
 :setregion
-call aws configure get region --profile %1 > awsume_region.txt
+CALL aws configure get region > awsume_region.txt
 IF ERRORLEVEL 1 GOTO regionerror
 
 SET /p AWS_REGION= < awsume_region.txt
@@ -37,14 +37,14 @@ IF "%2"=="show" (
   ECHO SET AWS_REGION=%AWS_REGION%
   ECHO SET AWS_DEFAULT_REGION=%AWS_DEFAULT_REGION%
 )
-GOTO :end
+GOTO end
 
 :regionerror
 IF "%2"=="show" (
   ECHO "# No region set"
 )
 DEL "./awsume_region.txt"
-GOTO :end
+GOTO end
 
 
 :displayUsage
