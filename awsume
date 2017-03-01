@@ -39,7 +39,6 @@ print(" ".join(creds[_] for _ in ("SessionToken","SecretAccessKey","AccessKeyId"
 
     if [[ "$TERM_PROGRAM" == "iTerm.app" ]];
     then
-      echo Setting stuff
       echo -ne "\033]1;AWS ROLE: $1\007"
     fi
     export AWS_SECURITY_TOKEN=$token
