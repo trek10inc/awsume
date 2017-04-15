@@ -8,7 +8,7 @@
 
 PROFILE="${1}"
 
-read -s "?Enter MFA code: " TOKEN
+read -s -p "Enter MFA code: " TOKEN
 echo
 
 if [[ -n "$TOKEN" ]] && [[ ${#TOKEN} == 6 ]]; then
