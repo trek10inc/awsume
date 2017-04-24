@@ -14,7 +14,7 @@ else
   then
 
   read token key id <<< $(
-   cat ~/.aws/cli/cache/${1}*.json | python -c '
+   cat ~/.aws/cli/cache/${1}--arn*.json | python -c '
 import json, sys
 creds = json.load(sys.stdin)["Credentials"]
 print(" ".join(creds[_] for _ in ("SessionToken","SecretAccessKey","AccessKeyId")))

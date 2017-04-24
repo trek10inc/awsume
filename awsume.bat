@@ -10,7 +10,7 @@ CALL aws s3 ls --profile %1 > nul
 
 IF ERRORLEVEL 1 GOTO end
 
-FOR /F %%M in ('DIR %userprofile%\.aws\cli\cache\%1*.json /B /S') DO (
+FOR /F %%M in ('DIR %userprofile%\.aws\cli\cache\%1--arn*.json /B /S') DO (
   FOR /F tokens^=16^,20^,28^ delims^=^" %%G IN (%%M) DO (
     IF "%2"=="show" (
       ECHO.
