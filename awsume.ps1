@@ -81,7 +81,7 @@ function Set-Environment([string]$profileName, $session) {
     $env:AWS_SESSION_TOKEN = $session.Credentials.SessionToken
     $env:AWS_ACCESS_KEY_ID = $session.Credentials.AccessKeyId
     $env:AWS_REGION = aws configure get region --profile $profileName
-    $env:AWS_DEFAULT_REGION = aws configure get region --profile default
+    $env:AWS_DEFAULT_REGION = aws configure get region --profile $profileName
     
     if (-Not (Test-Path "~\.aws\cli\cache\")) {
         mkdir "~\.aws\cli\cache\"
