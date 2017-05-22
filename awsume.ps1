@@ -18,7 +18,9 @@ function Get-SavedSession([string]$profileName) {
     if (Test-Path "~\.aws\cli\cache\$tempProfile.json") {
         $session = Get-Content "~\.aws\cli\cache\$tempProfile.json" | ConvertFrom-Json
         $timeLeft = New-TimeSpan -Start (Get-Date) -End (Get-Date $session.Credentials.Expiration)
-        if (0 -le $timeLeft.TotalMinutes -and $timeLeft.TotalMinutes -lt 10) {
+        if ($timeLeft.TotalMinutes -le 0) {
+            $session = $null
+        } elseif ($timeLeft.TotalMinutes -lt 10) {
             $x = [math]::Round($timeLeft.TotalMinutes)
             $refreshToken = Read-Host "About $x minutes remain, refresh token? [Y/n]"
             if ([string]::IsNullOrWhiteSpace($refreshToken) -or $refreshToken -like "Y") {
