@@ -1,57 +1,204 @@
 #!/bin/bash
+#Author: Michael Barney, Trek10 Intern
+#Date: May 22, 2017
+#AWSume - a bash script to assume an AWS IAM role from the command-line
 
-if [[ -z "$1" ]];
-then 
-  echo Missing profile name
-  exit 1
-else
-  if [[ "$2" == "refresh" ]];
-  then
-    rm ~/.aws/cli/cache/$1*
-  fi
-  
-  if aws sts get-caller-identity --profile $1 >/dev/null
-  then
+#global variables
+PROFILE_NAME=""
+SOURCE_PROFILE=""
+ROLE_ARN=""
+MFA_ARN=""
+DEFAULT=false
+REFRESH=false
+SHOW=false
 
-  read token key id <<< $(
-   cat ~/.aws/cli/cache/${1}--arn*.json | python -c '
-import json, sys
-creds = json.load(sys.stdin)["Credentials"]
-print(" ".join(creds[_] for _ in ("SessionToken","SecretAccessKey","AccessKeyId")))
-')
+#directory variables
+CACHE=~/.aws/cli/cache/
 
-    region=$(aws configure get region --profile $1)
+#Session Variables
+SessionText=""
+SessionSecretAccessKey=""
+SessionAccessKey=""
+SessionToken=""
+SessionExpiration=""
+
+#Remove the environment variables associated with the AWS CLI,
+#ensuring all environment variables will be valid
+Remove-AwsEnvs()
+{
+    export AWS_SECRET_ACCESS_KEY=""
+    export AWS_SESSION_TOKEN=""
+    export AWS_ACCESS_KEY_ID=""
+    export AWS_REGION=""
+    export AWS_DEFAULT_REGION=""
+}
+
+#echo how to use the script and exit
+Usage()
+{
+    echo "USAGE: $0 <options/ProfileName>"
+    exit 1
+}
+
+#parse through parameters and handle them
+Handle-Parameters()
+{
+    for var in "$@"
+    do
+        if [[ "$var" == "-"* ]]; then #this parameter is a flag
+            if [[ "$var" == *"-d"* ]]; then DEFAULT=true
+            elif [[ "$var" == *"-r"* ]]; then REFRESH=true
+            elif [[ "$var" == *"-s"* ]]; then SHOW=true
+            else Usage
+            fi
+        fi
+    done
+}
+
+#Set the environment variables
+Set-AwsEnvs()
+{
+    export AWS_SECRET_ACCESS_KEY="$SessionSecretAccessKey"
+    export AWS_SESSION_TOKEN="$SessionToken"
+    export AWS_ACCESS_KEY_ID="$SessionAccessKey"
+    export AWS_REGION="$(aws configure get region --profile $PROFILE_NAME)"
+    export AWS_DEFAULT_REGION="$(aws configure get region --profile $PROFILE_NAME)"
+}
+
+#*****various getters for the misc data*****
+Get-ProfileName()
+{
+    if [ "$DEFAULT" = true ]; then #go with default profile
+        PROFILE_NAME="default"
+    else 
+        if [ -z "$1" ]; then #if no paramater passed
+            echo "Enter the profile name [default]: "
+            read PROFILE_NAME
+            #check if profile name is still empty
+            [ -z "$PROFILE_NAME" ] && echo "Use -d to set default" && PROFILE_NAME="default"
+        else
+            PROFILE_NAME=$1
+        fi
+    fi
+    #trim whitespace
+    PROFILE_NAME="$(echo -e "$PROFILE_NAME" | tr -d '[:space:]')"
+}
+
+Get-SourceProfile()
+{
+    SOURCE_PROFILE=$(aws configure get source_profile --profile "$PROFILE_NAME")
+    if [ -z "$SOURCE_PROFILE" ]; then
+        SOURCE_PROFILE="$PROFILE_NAME"
+    fi
+}
+
+Get-RoleArn()
+{
+    ROLE_ARN="$(aws configure get role_arn --profile "$PROFILE_NAME")"
+}
+
+Get-MfaArn()
+{
+    MFA_ARN="$(aws configure get mfa_serial --profile "$PROFILE_NAME")"
     
-    if [[ "$2" == "show" ]];
-    then
-      echo "export AWS_SESSION_TOKEN=$token"
-      echo "export AWS_SECURITY_TOKEN=$token"
-      echo "export AWS_SECRET_ACCESS_KEY=$key"
-      echo "export AWS_ACCESS_KEY_ID=$id"
-      if [[ -z "$region" ]];
-      then
-        echo "# No region set"
-      else
-        echo "export AWS_REGION=$region"
-        echo "export AWS_DEFAULT_REGION=$region"
-      fi
+    if [ $? -gt 1 ]; then
+        exit 1
     fi
+}
 
-    if [[ "$TERM_PROGRAM" == "iTerm.app" ]];
-    then
-      echo -ne "\033]1;AWS ROLE: $1\007"
+#Scan through the .json file and grab the required object data
+Parse-Credentials()
+{
+    read SessionSecretAccessKey SessionAccessKey SessionToken SessionExpiration <<< $(cat ${CACHE}awsume-temp-${SOURCE_PROFILE}.json | python -c 'import json, sys
+creds = json.load(sys.stdin)["Credentials"]
+print(" ".join(creds[_] for _ in ("SecretAccessKey","AccessKeyId","SessionToken","Expiration")))')
+}
+
+#pull a saved session and test its expiration
+Get-SavedSession() #$1 = profile to get
+{
+    SessionText=""
+    tempProfile=${CACHE}awsume-temp-$1.json
+    if [ -e $tempProfile ]; then
+        SessionText=$(cat $tempProfile)
+        Parse-Credentials
+
+        #calculate timeLeft in minutes
+        t1=$(date -d $SessionExpiration +%s) #expiration date in epoch
+        t2=$(date +%s) #current time in epoch
+        ts="$(($t1 - $t2))" #total seconds
+        tm="$(($ts / 60))" #total minutes        
+        th="$(($tm / 60))" #total hours
+
+        [ $tm -gt 60 ] && echo "Session Expiring in $th hours, $tm minutes" || echo "Session Expiring in $tm minutes"
+        
+        if [ $tm -le 0 ]; then #session expired
+            echo "Expired Session"
+            SessionText=""
+        elif [ $tm -lt 10 ]; then
+            read -p "Session about to expire, refresh token? [Y]: " Option
+            [ "$Option" = "Y" ] && SessionText="" #refresh token
+        fi
     fi
-    export AWS_SECURITY_TOKEN=$token
-    export AWS_SESSION_TOKEN=$token
-    export AWS_SECRET_ACCESS_KEY=$key
-    export AWS_ACCESS_KEY_ID=$id
-    if [[ -z "$region" ]];
-    then
-      unset AWS_REGION
-      unset AWS_DEFAULT_REGION
-    else
-      export AWS_REGION=$region
-      export AWS_DEFAULT_REGION=$region
+}
+
+#Verify MFA and set the session to the environment variables
+Set-Session() #$1=profile to set
+{
+    SessionText=""
+    if [ $REFRESH = false ]; then
+        Get-SavedSession $1
     fi
-  fi
+    if [ -z "$SessionText" ]; then
+        read -p "Enter MFA code: " mfaToken
+        #grab the session "object"
+        SessionText=$(aws sts get-session-token --serial-number $MFA_ARN --token-code $mfaToken --profile $1 --output json)
+        
+        #write session text to cache file
+        [ -d $CACHE ] || mkdir $CACHE #if directory doesn't exist, make it
+        tempProfile="awsume-temp-$1.json"
+        echo $SessionText > "${CACHE}${tempProfile}"
+
+        Parse-Credentials
+    fi
+    Set-AwsEnvs
+}
+
+#Set your session first, then assume the role
+Set-AssumeRole()
+{
+    Set-Session $SOURCE_PROFILE
+
+    SessionText=$(aws sts assume-role --role-arn $ROLE_ARN --role-session-name awsume-temp-${PROFILE_NAME} --output json)
+    
+    #write session text to cache file
+    [ -d $CACHE ] || mkdir $CACHE #if directory doesn't exist, make it
+    tempProfile="awsume-temp-$PROFILE_NAME.json"
+    echo $SessionText > "${CACHE}${tempProfile}"
+
+    Parse-Credentials
+    Set-AwsEnvs
+}
+
+#main body of the script
+Remove-AwsEnvs
+Handle-Parameters $@
+Get-ProfileName $@
+Get-SourceProfile
+Get-RoleArn
+Get-MfaArn
+Set-AwsEnvs
+
+if [ ! -z "$SOURCE_PROFILE" ] && [ ! -z "$ROLE_ARN" ]; then
+    Set-AssumeRole
+else
+    Set-Session $PROFILE_NAME
+fi
+
+if [ $SHOW = true ]; then
+    echo export AWS_SECRET_ACCESS_KEY=$sSessionSecretAccessKey
+    echo export AWS_SESSION_TOKEN=$SessionToken
+    echo export AWS_ACCESS_KEY_ID=$SessionAccessKey
+    echo export AWS_REGION=$(aws configure get region --profile $PROFILE_NAME)
+    echo export AWS_DEFAULT_REGION=$(aws configure get region --profile $PROFILE_NAME)
 fi
