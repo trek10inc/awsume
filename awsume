@@ -26,18 +26,19 @@ SessionExpiration=""
 #ensuring all environment variables will be valid
 Remove-AwsEnvs()
 {
-    export AWS_SECRET_ACCESS_KEY=""
-    export AWS_SESSION_TOKEN=""
-    export AWS_ACCESS_KEY_ID=""
-    export AWS_REGION=""
-    export AWS_DEFAULT_REGION=""
+    unset AWS_SECRET_ACCESS_KEY
+    unset AWS_SESSION_TOKEN
+    unset AWS_SECURITY_TOKEN
+    unset AWS_ACCESS_KEY_ID
+    unset AWS_REGION
+    unset AWS_DEFAULT_REGION
 }
 
 #echo how to use the script and exit
 Usage()
 {
     echo "USAGE: $0 <options/ProfileName>"
-    exit 1
+    false
 }
 
 #parse through parameters and handle them
@@ -74,10 +75,7 @@ Get-ProfileName()
         PROFILE_NAME="default"
     else 
         if [ -z "$1" ]; then #if no paramater passed
-            echo "Enter the profile name [default]: "
-            read PROFILE_NAME
-            #check if profile name is still empty
-            [ -z "$PROFILE_NAME" ] && echo "Use -d to set default" && PROFILE_NAME="default"
+            PROFILE_NAME="default"
         else
             PROFILE_NAME=$1
         fi
@@ -111,9 +109,10 @@ Get-MfaArn()
 #Scan through the .json file and grab the required object data
 Parse-Credentials() #$1 = profile to read from
 {
-    read SessionSecretAccessKey SessionAccessKey SessionToken SessionExpiration <<< $(cat ${CACHE}awsume-temp-$1.json | python -c 'import json, sys
-creds = json.load(sys.stdin)["Credentials"]
-print(" ".join(creds[_] for _ in ("SecretAccessKey","AccessKeyId","SessionToken","Expiration")))')
+    SessionSecretAccessKey=$(echo $SessionText | jp Credentials.SecretAccessKey | tr -d '[\"]') 
+    SessionAccessKey=$(echo $SessionText | jp Credentials.AccessKeyId | tr -d '[\"]')
+    SessionExpiration=$(echo $SessionText | jp Credentials.Expiration | tr -d '[\"]')
+    SessionToken=$(echo $SessionText | jp Credentials.SessionToken | tr -d '[\"]')
 }
 
 #pull a saved session and test its expiration
@@ -124,23 +123,6 @@ Get-SavedSession() #$1 = profile to get
     if [ -e $tempProfile ]; then
         SessionText=$(cat $tempProfile)
         Parse-Credentials $1
-
-        #calculate timeLeft in minutes
-        t1=$(date -d $SessionExpiration +%s) #expiration date in epoch
-        t2=$(date +%s) #current time in epoch
-        ts="$(($t1 - $t2))" #total seconds
-        tm="$(($ts / 60))" #total minutes        
-        th="$(($tm / 60))" #total hours
-        
-        if [ $tm -le 0 ]; then #session expired
-            echo "Expired Session"
-            SessionText=""
-        elif [ $tm -lt 10 ]; then
-            read -p "Session about to expire ($tm minutes), refresh token? [Y]: " Option
-            [ "$Option" = "Y" ] && SessionText="" #refresh token
-        else
-            [ $tm -gt 60 ] && echo "Session Expiring in $th hours" || echo "Session Expiring in $tm minutes"
-        fi
     fi
 }
 
@@ -153,9 +135,13 @@ Set-Session() #$1=profile to set
     fi
     if [ -z "$SessionText" ]; then
         read -p "Enter MFA code: " mfaToken
-        #grab the session "object"
-        SessionText=$(aws sts get-session-token --serial-number $MFA_ARN --token-code $mfaToken --profile $1 --output json)
         
+        #grab the session "object"
+        SessionText=$(aws sts get-session-token --region us-east-1 --serial-number $MFA_ARN --token-code $mfaToken --profile $1 --output json)
+        if [ "$?" -ne "0" ]; then #the get-session-token failed
+            false
+        fi
+
         #write session text to cache file
         [ -d $CACHE ] || mkdir $CACHE #if directory doesn't exist, make it
         tempProfile="awsume-temp-$1.json"
@@ -163,6 +149,7 @@ Set-Session() #$1=profile to set
 
         Parse-Credentials $1
     fi
+    echo "$1 expires: $SessionExpiration"
     Set-AwsEnvs
 }
 
@@ -172,15 +159,9 @@ Set-AssumeRole()
     Set-Session $SOURCE_PROFILE
 
     SessionText=$(aws sts assume-role --role-arn $ROLE_ARN --role-session-name "$PROFILE_NAME-$(date +%s)" --output json)
-    
-
-    #*****WE don't want to save these role credentials**************
-    #write session text to cache file
-    [ -d $CACHE ] || mkdir $CACHE #if directory doesn't exist, make it
-    tempProfile="awsume-temp-$PROFILE_NAME.json"
-    echo $SessionText > "${CACHE}${tempProfile}"
 
     Parse-Credentials $PROFILE_NAME
+    echo "$PROFILE_NAME expires: $SessionExpiration"
     Set-AwsEnvs
 }
 
@@ -191,7 +172,6 @@ Get-ProfileName $@
 Get-SourceProfile
 Get-RoleArn
 Get-MfaArn
-Set-AwsEnvs
 
 if [ ! -z "$SOURCE_PROFILE" ] && [ ! -z "$ROLE_ARN" ]; then
     Set-AssumeRole
