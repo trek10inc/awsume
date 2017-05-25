@@ -2,8 +2,8 @@
 #Author: Michael Barney, Trek10 Intern
 #Date: May 22, 2017
 #AWSume - a bash script to assume an AWS IAM role from the command-line
-
 #global variables
+
 PROFILE_NAME=""
 SOURCE_PROFILE=""
 ROLE_ARN=""
@@ -58,11 +58,13 @@ Handle-Parameters()
 #Set the environment variables
 Set-AwsEnvs()
 {
+    region="$(aws configure get region --profile $PROFILE_NAME)"
     export AWS_SECRET_ACCESS_KEY="$SessionSecretAccessKey"
     export AWS_SESSION_TOKEN="$SessionToken"
+    export AWS_SECURITY_TOKEN="$SessionToken"
     export AWS_ACCESS_KEY_ID="$SessionAccessKey"
-    export AWS_REGION="$(aws configure get region --profile $PROFILE_NAME)"
-    export AWS_DEFAULT_REGION="$(aws configure get region --profile $PROFILE_NAME)"
+    export AWS_REGION="$region"
+    export AWS_DEFAULT_REGION="$region"
 }
 
 #*****various getters for the misc data*****
@@ -107,9 +109,9 @@ Get-MfaArn()
 }
 
 #Scan through the .json file and grab the required object data
-Parse-Credentials()
+Parse-Credentials() #$1 = profile to read from
 {
-    read SessionSecretAccessKey SessionAccessKey SessionToken SessionExpiration <<< $(cat ${CACHE}awsume-temp-${SOURCE_PROFILE}.json | python -c 'import json, sys
+    read SessionSecretAccessKey SessionAccessKey SessionToken SessionExpiration <<< $(cat ${CACHE}awsume-temp-$1.json | python -c 'import json, sys
 creds = json.load(sys.stdin)["Credentials"]
 print(" ".join(creds[_] for _ in ("SecretAccessKey","AccessKeyId","SessionToken","Expiration")))')
 }
@@ -121,7 +123,7 @@ Get-SavedSession() #$1 = profile to get
     tempProfile=${CACHE}awsume-temp-$1.json
     if [ -e $tempProfile ]; then
         SessionText=$(cat $tempProfile)
-        Parse-Credentials
+        Parse-Credentials $1
 
         #calculate timeLeft in minutes
         t1=$(date -d $SessionExpiration +%s) #expiration date in epoch
@@ -129,15 +131,15 @@ Get-SavedSession() #$1 = profile to get
         ts="$(($t1 - $t2))" #total seconds
         tm="$(($ts / 60))" #total minutes        
         th="$(($tm / 60))" #total hours
-
-        [ $tm -gt 60 ] && echo "Session Expiring in $th hours, $tm minutes" || echo "Session Expiring in $tm minutes"
         
         if [ $tm -le 0 ]; then #session expired
             echo "Expired Session"
             SessionText=""
         elif [ $tm -lt 10 ]; then
-            read -p "Session about to expire, refresh token? [Y]: " Option
+            read -p "Session about to expire ($tm minutes), refresh token? [Y]: " Option
             [ "$Option" = "Y" ] && SessionText="" #refresh token
+        else
+            [ $tm -gt 60 ] && echo "Session Expiring in $th hours" || echo "Session Expiring in $tm minutes"
         fi
     fi
 }
@@ -159,7 +161,7 @@ Set-Session() #$1=profile to set
         tempProfile="awsume-temp-$1.json"
         echo $SessionText > "${CACHE}${tempProfile}"
 
-        Parse-Credentials
+        Parse-Credentials $1
     fi
     Set-AwsEnvs
 }
@@ -169,14 +171,16 @@ Set-AssumeRole()
 {
     Set-Session $SOURCE_PROFILE
 
-    SessionText=$(aws sts assume-role --role-arn $ROLE_ARN --role-session-name awsume-temp-${PROFILE_NAME} --output json)
+    SessionText=$(aws sts assume-role --role-arn $ROLE_ARN --role-session-name "$PROFILE_NAME-$(date +%s)" --output json)
     
+
+    #*****WE don't want to save these role credentials**************
     #write session text to cache file
     [ -d $CACHE ] || mkdir $CACHE #if directory doesn't exist, make it
     tempProfile="awsume-temp-$PROFILE_NAME.json"
     echo $SessionText > "${CACHE}${tempProfile}"
 
-    Parse-Credentials
+    Parse-Credentials $PROFILE_NAME
     Set-AwsEnvs
 }
 
@@ -198,6 +202,7 @@ fi
 if [ $SHOW = true ]; then
     echo export AWS_SECRET_ACCESS_KEY=$sSessionSecretAccessKey
     echo export AWS_SESSION_TOKEN=$SessionToken
+    echo export AWS_SECURITY_TOKEN=$SessionToken
     echo export AWS_ACCESS_KEY_ID=$SessionAccessKey
     echo export AWS_REGION=$(aws configure get region --profile $PROFILE_NAME)
     echo export AWS_DEFAULT_REGION=$(aws configure get region --profile $PROFILE_NAME)
