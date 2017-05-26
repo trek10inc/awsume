@@ -90,3 +90,11 @@ else {
 }
 
 #IF SHOW THEN SHOW COMMANDS
+if ($s){
+    Write-Host "`$env:AWS_SECRET_ACCESS_KEY =" $env:AWS_SECRET_ACCESS_KEY
+    Write-Host "`$env:AWS_SESSION_TOKEN =" $env:AWS_SESSION_TOKEN
+    Write-Host "`$env:AWS_SECURITY_TOKEN =" $env:AWS_SECURITY_TOKEN
+    Write-Host "`$env:AWS_ACCESS_KEY_ID =" $env:AWS_ACCESS_KEY_ID
+    Write-Host "`$env:AWS_REGION =" $env:AWS_REGION
+    Write-Host "`$env:AWS_DEFAULT_REGION =" $env:AWS_DEFAULT_REGION
+}
