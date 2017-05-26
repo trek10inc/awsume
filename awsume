@@ -45,7 +45,7 @@ AWSUME_Get-SavedSession() #$1 = profile to get
         aws sts get-caller-identity --region us-east-1 > /dev/null 2> /dev/null 
         
         if [ "$?" -ne "0" ]; then
-            rm AWSUME_tempProfile
+            rm $AWSUME_tempProfile
         fi
     fi
 }
@@ -63,7 +63,7 @@ AWSUME_Set-Session() #$1=profile to set
         #grab the session "object"
         AWSUME_USER_ARN=$(aws sts get-caller-identity --region us-east-1 --query Arn --output text --profile $1)
         AWSUME_MFA_ARN=${AWSUME_USER_ARN/user/mfa}
-        AWSUME_SessionText=(`aws sts get-session-token --duration-seconds 900 --region us-east-1 --serial-number $AWSUME_MFA_ARN --token-code $AWSUME_mfaToken --profile $1 --query '[Credentials.AccessKeyId,Credentials.SecretAccessKey,Credentials.SessionToken,Credentials.Expiration]' --output text`)
+        AWSUME_SessionText=(`aws sts get-session-token --region us-east-1 --serial-number $AWSUME_MFA_ARN --token-code $AWSUME_mfaToken --profile $1 --query '[Credentials.AccessKeyId,Credentials.SecretAccessKey,Credentials.SessionToken,Credentials.Expiration]' --output text`)
         #write session text to cache file
         [ -d $AWSUME_CACHE ] || mkdir $AWSUME_CACHE #if directory doesn't exist, make it
         AWSUME_tempProfile="awsume-temp-$1.json"
