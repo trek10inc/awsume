@@ -46,6 +46,7 @@ AWSUME_Get-SavedSession() #$1 = profile to get
         
         if [ "$?" -ne "0" ]; then
             rm $AWSUME_tempProfile
+	    AWSUME_SessionText=""
         fi
     fi
 }
