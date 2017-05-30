@@ -115,6 +115,9 @@ if [ -z "$AWSUME_SessionText" ]; then
         --profile $AWSUME_SOURCE_PROFILE \
         --query '[Credentials.AccessKeyId,Credentials.SecretAccessKey,Credentials.SessionToken,Credentials.Expiration]' \
         --output text`)
+    if [ "$?" -ne "0" ]; then
+        return 1
+    fi
 
     #write session text to cache file
     [ -d $AWSUME_CACHE ] || mkdir $AWSUME_CACHE #if directory doesn't exist, make it
@@ -123,7 +126,8 @@ if [ -z "$AWSUME_SessionText" ]; then
 
 fi
 AWSUME_Set-AwsEnvs
-echo "#Source Profile Credentials ($AWSUME_SOURCE_PROFILE) expire: ${AWSUME_SessionText[3]}"
+[ ! -z ${AWSUME_SessionText[3]} ] && \
+    echo "#Source Profile Credentials ($AWSUME_SOURCE_PROFILE) expire: ${AWSUME_SessionText[3]}"
 
 #now assume the role
 if [ $AWSUME_IS_USER != true ]; then
@@ -133,8 +137,14 @@ if [ $AWSUME_IS_USER != true ]; then
         --role-session-name "$AWSUME_PROFILE_NAME-$(date +%s)" \
         --query '[Credentials.AccessKeyId,Credentials.SecretAccessKey,Credentials.SessionToken,Credentials.Expiration]' \
         --output text`)
+    if [ "$?" -ne "0" ]; then
+        return 1
+    fi
+
     AWSUME_Set-AwsEnvs
-    echo "#Role Credentials ($AWSUME_PROFILE_NAME) expire: ${AWSUME_SessionText[3]}"
+    [ ! -z ${AWSUME_SessionText[3]} ] && \
+        [ ! -z ${AWSUME_SessionText[3]} ] && \
+            echo "#Role Credentials ($AWSUME_PROFILE_NAME) expire: ${AWSUME_SessionText[3]}"
 fi
 
 if [ $AWSUME_SHOW = true ]; then
