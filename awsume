@@ -33,72 +33,6 @@ AWSUME_Set-AwsEnvs()
     export AWS_DEFAULT_REGION="$AWSUME_SessionRegion"
 }
 
-#pull a saved session and test its expiration
-AWSUME_Get-SavedSession() #$1 = profile to get
-{
-    AWSUME_SessionText=""
-    AWSUME_tempProfile=${AWSUME_CACHE}awsume-temp-$1.json
-    if [ -e $AWSUME_tempProfile ]; then
-        AWSUME_SessionText=(`cat $AWSUME_tempProfile`)
-        AWSUME_Set-AwsEnvs
-        #check if credentials are valid
-        aws sts get-caller-identity --region us-east-1 > /dev/null 2> /dev/null 
-        
-        if [ "$?" -ne "0" ]; then
-            rm $AWSUME_tempProfile
-	    AWSUME_SessionText=""
-        fi
-    fi
-}
-
-#Verify MFA and set the session to the environment variables
-AWSUME_Set-Session() #$1=profile to set
-{
-    AWSUME_SessionText=""
-    if [ $AWSUME_REFRESH = false ]; then
-        AWSUME_Get-SavedSession $AWSUME_SOURCE_PROFILE
-    fi
-    if [ -z "$AWSUME_SessionText" ]; then
-        read -p "Enter MFA code: " AWSUME_mfaToken
-        
-        #grab the session "object"
-        AWSUME_USER_ARN=$(aws sts get-caller-identity \
-        --region us-east-1 \
-        --query Arn \
-        --output text \
-        --profile $1)
-        
-        AWSUME_MFA_ARN=${AWSUME_USER_ARN/user/mfa}
-        AWSUME_SessionText=(`aws sts get-session-token \
-        --region us-east-1 \
-        --serial-number $AWSUME_MFA_ARN \
-        --token-code $AWSUME_mfaToken \
-        --profile $1 \
-        --query '[Credentials.AccessKeyId,Credentials.SecretAccessKey,Credentials.SessionToken,Credentials.Expiration]' \
-        --output text`)
-        #write session text to cache file
-        [ -d $AWSUME_CACHE ] || mkdir $AWSUME_CACHE #if directory doesn't exist, make it
-        AWSUME_tempProfile="awsume-temp-$1.json"
-        echo ${AWSUME_SessionText[@]} > "${AWSUME_CACHE}${AWSUME_tempProfile}"
-
-    fi
-    AWSUME_Set-AwsEnvs
-    echo "#Source Profile Credentials ($1) expire: ${AWSUME_SessionText[3]}"
-}
-
-#Set your session first, then assume the role
-AWSUME_Set-AssumeRole()
-{
-    AWSUME_Set-Session $AWSUME_SOURCE_PROFILE
-    AWSUME_SessionText=(`aws sts assume-role \
-    --role-arn $AWSUME_ROLE_ARN \
-    --role-session-name "$AWSUME_PROFILE_NAME-$(date +%s)" \
-    --query '[Credentials.AccessKeyId,Credentials.SecretAccessKey,Credentials.SessionToken,Credentials.Expiration]' \
-    --output text`)
-    AWSUME_Set-AwsEnvs
-    echo "#Role Credentials ($AWSUME_PROFILE_NAME) expire: ${AWSUME_SessionText[3]}"
-}
-
 #Remove the environment variables associated with the AWS CLI,
 #ensuring all environment variables will be valid
 unset AWS_SECRET_ACCESS_KEY
@@ -137,11 +71,70 @@ if [ -z "$AWSUME_SOURCE_PROFILE" ]; then
     AWSUME_SOURCE_PROFILE="$AWSUME_PROFILE_NAME"
 fi
 
-if [ $AWSUME_IS_USER = true ]; then
-    AWSUME_Set-Session $AWSUME_PROFILE_NAME
-else
+#clear session attributes
+AWSUME_SessionText=""
+
+#if we have to grab a cached profile
+if [ $AWSUME_REFRESH = false ]; then
+    AWSUME_SessionText=""
+    AWSUME_tempProfile=${AWSUME_CACHE}awsume-temp-$AWSUME_SOURCE_PROFILE.json
+    if [ -e $AWSUME_tempProfile ]; then
+        AWSUME_SessionText=(`cat $AWSUME_tempProfile`)
+        AWSUME_Set-AwsEnvs
+        #check if credentials are valid
+        aws sts get-caller-identity --region us-east-1 > /dev/null 2> /dev/null 
+        
+        if [ "$?" -ne "0" ]; then
+            rm $AWSUME_tempProfile
+	        AWSUME_SessionText=""
+        fi
+    fi
+fi
+
+if [ -z "$AWSUME_SessionText" ]; then
+    read -p "#Enter MFA code: " AWSUME_mfaToken
+
+    #validate the mfa token
+    if [[ ! $AWSUME_mfaToken =~ ^[0-9]{6}$ ]]; then
+        echo "#Invalid MFA token"
+        return 1
+    fi
+
+    #grab the session "object"
+    AWSUME_USER_ARN=$(aws sts get-caller-identity \
+        --region us-east-1 \
+        --query Arn \
+        --output text \
+        --profile $AWSUME_SOURCE_PROFILE)
+    
+    AWSUME_MFA_ARN=${AWSUME_USER_ARN/user/mfa}
+    AWSUME_SessionText=(`aws sts get-session-token \
+        --region us-east-1 \
+        --serial-number $AWSUME_MFA_ARN \
+        --token-code $AWSUME_mfaToken \
+        --profile $AWSUME_SOURCE_PROFILE \
+        --query '[Credentials.AccessKeyId,Credentials.SecretAccessKey,Credentials.SessionToken,Credentials.Expiration]' \
+        --output text`)
+
+    #write session text to cache file
+    [ -d $AWSUME_CACHE ] || mkdir $AWSUME_CACHE #if directory doesn't exist, make it
+    AWSUME_tempProfile="awsume-temp-$AWSUME_SOURCE_PROFILE.json"
+    echo ${AWSUME_SessionText[@]} > "${AWSUME_CACHE}${AWSUME_tempProfile}"
+
+fi
+AWSUME_Set-AwsEnvs
+echo "#Source Profile Credentials ($AWSUME_SOURCE_PROFILE) expire: ${AWSUME_SessionText[3]}"
+
+#now assume the role
+if [ $AWSUME_IS_USER != true ]; then
     AWSUME_ROLE_ARN="$(aws configure get role_arn --profile "$AWSUME_PROFILE_NAME")"
-    AWSUME_Set-AssumeRole
+    AWSUME_SessionText=(`aws sts assume-role \
+        --role-arn $AWSUME_ROLE_ARN \
+        --role-session-name "$AWSUME_PROFILE_NAME-$(date +%s)" \
+        --query '[Credentials.AccessKeyId,Credentials.SecretAccessKey,Credentials.SessionToken,Credentials.Expiration]' \
+        --output text`)
+    AWSUME_Set-AwsEnvs
+    echo "#Role Credentials ($AWSUME_PROFILE_NAME) expire: ${AWSUME_SessionText[3]}"
 fi
 
 if [ $AWSUME_SHOW = true ]; then
