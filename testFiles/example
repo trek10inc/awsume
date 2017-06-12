@@ -1,0 +1,5 @@
+[profile hello]
+key1=value1
+key2=value2
+[profile hasSource]
+source_profile = source
