@@ -6,3 +6,4 @@ setup.cfg
 dist/
 build/
 awsumepy.egg-info/
+MANIFEST.in
