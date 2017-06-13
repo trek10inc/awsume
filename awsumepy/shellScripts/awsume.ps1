@@ -36,8 +36,6 @@ if ($args) {
     exit 1
 }
 
-#Location of the awsumepy script
-$AWSUMEPY_LOCATION = "./awsume.py"
 
 #Remove the environment variables associated with the AWS CLI,
 #ensuring all environment variables will be valid
@@ -56,7 +54,7 @@ $s_string = ""
 if ($s) { $s_string = "-s"}
 Write-Host $d_string
 $AWSUME_VALID,$AWSUME_SECRET_ACCESS_KEY,$AWSUME_SECURITY_TOKEN,$AWSUME_ACCESS_KEY_ID,$AWSUME_REGION = `
-$(python $AWSUMEPY_LOCATION $AWSUME_PROFILE_NAME $d_string $r_string $s_string) -split '\s+'
+$(awsumepy $AWSUME_PROFILE_NAME $d_string $r_string $s_string) -split '\s+'
 
 if ( $AWSUME_VALID = "True" ) {
     $env:AWS_SECRET_ACCESS_KEY = $AWSUME_SECRET_ACCESS_KEY
