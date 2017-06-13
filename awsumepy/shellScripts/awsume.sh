@@ -13,7 +13,7 @@ unset AWS_REGION
 unset AWS_DEFAULT_REGION
 
 #grab the environment variables from the python script
-read AWSUME_VALID AWSUME_SECRET_ACCESS_KEY AWSUME_SECURITY_TOKEN AWSUME_ACCESS_KEY_ID AWSUME_REGION <<< $(python $AWSUMEPY_LOCATION "$@")
+read AWSUME_VALID AWSUME_SECRET_ACCESS_KEY AWSUME_SECURITY_TOKEN AWSUME_ACCESS_KEY_ID AWSUME_REGION <<< $(awsumepy "$@")
 
 #set the environment variables
 if [ "$AWSUME_VALID" = "True" ]; then

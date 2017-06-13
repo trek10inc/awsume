@@ -1,5 +1,4 @@
 @echo off
-set AWSUMEPY_LOCATION="./awsume.py"
 
 set AWS_SECRET_ACCESS_KEY=
 set AWS_SESSION_TOKEN=
@@ -9,7 +8,7 @@ set AWS_REGION=
 set AWS_DEFAULT_REGION=
 set SHOW=
 
-python %AWSUMEPY_LOCATION% %* > ./temp.txt
+awsumepy %* > ./temp.txt
 set /p AWSUME_TEXT=<./temp.txt
 
 FOR %%A IN (%*) DO (
