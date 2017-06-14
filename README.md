@@ -1,48 +1,13 @@
 # AWSume: AWS Assume Made Awesome
 Utility for easily assuming AWS IAM roles from the command line, now in Python!
 
-## Linux / macOS Installation
+## Installation
 
-##### Run these commands:
+AWSume has been conveniently wrapped into a Python package and installable with just one simple command:
+`pip install awsume`
+Once you have awsume installed, you're ready to set up AWSume!
 
-1. To install AWSumePy:
-`pip install awsumepy`
-2. To grab the AWSume shell script:
-`curl https://raw.githubusercontent.com/trek10inc/awsume/awsumePy/awsumepy/shellScripts/awsume.sh > /usr/local/bin/awsume`
-3. To set executable permissions:
-`chmod 700 /usr/local/bin/awsume`
-4. To set the alias
-    - For all future shells:
-        - BASH on Linux: `echo "alias awsume='. awsume'" >> ~/.bashrc`
-        - BASH on macOS: `echo "alias awsume='. awsume'" >> .bash_profile`
-        - ZSH on Linux: `echo "alias awsume='. awsume'" >> ~/.zshrc`
-        - ZSH on macOS: `echo "alias awsume='. awsume'" >> .zshrc`
-    - For only the current shell:
-        - `alias awsume='. awsume'`
-5. Now you're ready to use AWSume!
-
-## Windows Installation
-
-##### Run these commands:
-
-1. To install AWSumePy:
-`pip install awsumepy`
-2. To grab the AWSume shell script:
-    - PowerShell: Copy `/awsumepy/awsume.ps1` to a folder on your system
-    - Command Prompt: Copy `/awsumepy/awsume.bat` to a folder on your system
-3. To add a folder to your `PATH` environment variable:
-    - Right click on `This PC` or `My Computer` from the start menu.
-    - On the left side, click on `Advanced System Settings`
-    - Under the `Advanced` tab, click the `Environment Variables...` button on the bottom
-    - For a global installation:
-        - Within the `System variables` groupbox, select the `Path` system variable.
-        - With the `Path` system variable selcted, click on the `Edit...` button on the bottom.
-        - Click the `New` button on the right, and enter the directory to the folder you made for *AWSume*
-    - For a user installation:
-        - Within the `User variables for [username]` groupbox, select the `Path` system variable.
-        - With the `Path` system variable selcted, click on the `Edit...` button beneath that groupbox.
-        - Click the `New` button on the right, and enter the directory to the folder you made for *AWSume*
-4. Now you're ready to use AWSume!
+***NOTE**: For Linux / macOS users, restart your terminal after installing to ensure the alias to AWSume is active*
 
 ## Setup
 
