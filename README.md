@@ -77,7 +77,7 @@ Add credentials to
 
 `%userprofile%\.aws\credentials` (for Windows)
 
-##### ~/.aws/credential
+##### ~/.aws/credentials
 
 ```
 
