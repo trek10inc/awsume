@@ -1,21 +1,38 @@
 # AWSume: AWS Assume Made Awesome
+
 Utility for easily assuming AWS IAM roles from the command line, now in Python!
 
 ## Installation
 
 AWSume has been conveniently wrapped into a Python package and installable with just one simple command:
+
 `pip install awsume`
-Once you have awsume installed, you're ready to set up AWSume!
+
+This will install AWSume from from the Python Package Index. The installer places the python and shell scripts into your python directory. If you're using `Bash` or `Zsh`, the installer will add an alias definition to their resource control file, either `.bash_alias`, `.bashrc`, `.bash_profile`, or `.zshrc`. When uninstalling AWSume, the alias definition will not be removed.
+
+Once you have AWSume installed, you're ready to set up AWSume!
+
+***NOTE**: You must have Python and Pip installed in order to use AWSume. Get them at [here](https://www.python.org).*
+
+***NOTE**: Make sure your Python PATH environment variables are set.*
 
 ***NOTE**: For Linux / macOS users, restart your terminal after installing to ensure the alias to AWSume is active*
 
 ## Setup
 
 Add profiles to
+
 `~/.aws/config` (for macOS / Linux)
+
 `%userprofile%\.aws\config` (for Windows)
 
-##### ~/.aws/config
+Add source profiles to
+
+`~/.aws/credentials` (for macOS / Linux)
+
+`%userprofile%\.aws\credentials` (for Windows)
+
+### ~/.aws/config
 
 ```
 [profile internal-admin]
@@ -42,10 +59,9 @@ Add credentials to
 
 `%userprofile%\.aws\credentials` (for Windows)
 
-##### ~/.aws/credentials
+### ~/.aws/credentials
 
 ```
-
 [default]
 aws_access_key_id = AKIAIOIEUFSN9EXAMPLE
 aws_secret_access_key = wJalrXIneUATF/K7MDENG/jeuFHEnfEXAMPLEKEY
@@ -55,7 +71,7 @@ aws_access_key_id = AKIAIOSFODNN7EXAMPLE
 aws_secret_access_key = wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY
 ```
 
-Usage: 
+Usage:
 
 ```
 awsume [profilename] [-d] [-s] [-r]
@@ -82,4 +98,4 @@ Outputs export commands to shell, useful if you want to copy / paste into some o
 `awsume client1-admin -r`
 Delete cached credentials and refresh, will always prompt for MFA.
 
-See our [blog](https://www.trek10.com/blog/awsume-aws-assume-made-awesome) for more details
+See our [blog](https://www.trek10.com/blog/awsume-aws-assume-made-awesome) for more details.
