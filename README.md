@@ -12,7 +12,7 @@ This will install AWSume from from the Python Package Index. The installer place
 
 Once you have AWSume installed, you're ready to set up AWSume!
 
-***NOTE**: You must have Python and Pip installed in order to use AWSume. Get them at [here](https://www.python.org).*
+***NOTE**: You must have Python and Pip installed in order to use AWSume. Get them [here](https://www.python.org).*
 
 ***NOTE**: Make sure your Python PATH environment variables are set.*
 
