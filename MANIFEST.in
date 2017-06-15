@@ -1,0 +1,4 @@
+exclude ./awsumepy/testAwsume.py
+include ./awsumepy/shellScripts/awsume.bat
+include ./awsumepy/shellScripts/awsume.ps1
+include ./awsumepy/shellScripts/awsume
