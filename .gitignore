@@ -1,9 +1,6 @@
 awsume.pyc
 .vscode/
 temp.txt
-setup.py
-setup.cfg
 dist/
 build/
 awsumepy.egg-info/
-MANIFEST.in
