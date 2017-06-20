@@ -1,0 +1,6 @@
+awsume.pyc
+.vscode/
+temp.txt
+dist/
+build/
+awsumepy.egg-info/
