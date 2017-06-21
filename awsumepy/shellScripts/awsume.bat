@@ -18,9 +18,13 @@ FOR %%A IN (%*) DO (
 for /f "tokens=1,2,3,4,5 delims= " %%a in ("%AWSUME_TEXT%") do (
     if "%%a" == "True" (
         set AWS_SECRET_ACCESS_KEY=%%b
-        set AWS_SESSION_TOKEN=%%c
-        set AWS_SECURITY_TOKEN=%%c
+
+        if "%%c" NEQ "None" (
+            set AWS_SESSION_TOKEN=%%c
+            set AWS_SECURITY_TOKEN=%%c)
+        
         set AWS_ACCESS_KEY_ID=%%d
+        
         if "%%e" NEQ "None" (
             set AWS_REGION=%%e
             set AWS_DEFAULT_REGION=%%e)
