@@ -3,10 +3,12 @@ import sys, os, ConfigParser, re, argparse, collections, datetime, dateutil, bot
 #get cross-platform home directory
 HOME_PATH = os.path.expanduser('~')
 
-#arguments - a list of arguments
-#parse through the arguments
-#return a namespace
 def handle_parameters(arguments):
+    """
+    arguments - a list of arguments
+    parse through the arguments
+    return a namespace
+    """
     parser = argparse.ArgumentParser(description='Awsume')
     #profile name argument
     parser.add_argument(action='store', dest='profile_name',
@@ -25,11 +27,17 @@ def handle_parameters(arguments):
     parser.add_argument('-r', action='store_true', default=False,
                         dest='refresh',
                         help='Force refresh the session')
+    #no-mfa flag
+    parser.add_argument('-n', action='store_true', default=False,
+                        dest='no_mfa',
+                        help='Attempt to use AWSume without prompting for MFA')
     return parser.parse_args(arguments)
 
-#iniFile - the file to create a parser out of
-#return a dict of sections from the file
 def get_sections(iniFile):
+    """
+    iniFile - the file to create a parser out of
+    return a dict of sections from the file
+    """
     if os.path.exists(iniFile):
         PARSER = ConfigParser.ConfigParser()
         PARSER.read(iniFile)
@@ -37,19 +45,23 @@ def get_sections(iniFile):
     print >> sys.stderr, '#Error::invalid file path'
     exit(1)
 
-#sectionName - the name of a section to get
-#sections - the sections to search in
-#return the section under the name `sectionName`
 def get_section(sectionName, sections):
+    """
+    sectionName - the name of a section to get
+    sections - the sections to search in
+    return the section under the name `sectionName`
+    """
     #check if profile exists
     if sectionName in sections:
         return sections[sectionName]
     return None
 
-#userProfile - the profile that contains the source profile name
-#sourceFilePath - the file that contains the source profile of `userProfile`
-#return the source profile of userProfile, if there is no source_profile, return `userProfile` itself
 def get_source_profile(userProfile, sourceFilePath):
+    """
+    userProfile - the profile that contains the source profile name
+    sourceFilePath - the file that contains the source profile of `userProfile`
+    return the source profile of userProfile, if there is no source_profile, return `userProfile` itself
+    """
     if os.path.exists(sourceFilePath):
         if is_role(userProfile):
             return get_section(userProfile['source_profile'], get_sections(sourceFilePath))
@@ -59,33 +71,41 @@ def get_source_profile(userProfile, sourceFilePath):
     print >> sys.stderr, '#Error::invalid file path'
     exit(1)
 
-#profileToCheck - the profile to check
-#return if `profileToCheck` is a role or user
 def is_role(profileToCheck):
+    """
+    profileToCheck - the profile to check
+    return if `profileToCheck` is a role or user
+    """
     if 'source_profile' in profileToCheck:
         return True
     return False
 
-#prompt the user to enter an MFA code
-#return the string entered by the user
 def read_mfa():
+    """
+    prompt the user to enter an MFA code
+    return the string entered by the user
+    """
     print >> sys.stderr, '#Enter MFA Code:'
     return raw_input()
 
-#mfaToken - the token to validate
-#return if `mfaToken` is a valid MFA code
 def valid_mfa_token(mfaToken):
+    """
+    mfaToken - the token to validate
+    return if `mfaToken` is a valid MFA code
+    """
     mfaTokenPattern = re.compile('^[0-9]{6}$')
     if not mfaTokenPattern.match(mfaToken):
         return False
     return True
 
-#profileName - the name of the profile to create the client with
-#secretAccessKey - secret access key that can be passed into the session
-#accessKeyId - access key id that can be passed into the session
-#sessionToken - session token that can be passed into the session
-#return a boto3 session client
 def create_client(profileName=None, secretAccessKey=None, accessKeyId=None, sessionToken=None):
+    """
+    profileName - the name of the profile to create the client with
+    secretAccessKey - secret access key that can be passed into the session
+    accessKeyId - access key id that can be passed into the session
+    sessionToken - session token that can be passed into the session
+    return a boto3 session client
+    """
     botoSession = boto3.Session(profile_name=profileName,
                                 aws_access_key_id=accessKeyId,
                                 aws_secret_access_key=secretAccessKey,
@@ -93,33 +113,58 @@ def create_client(profileName=None, secretAccessKey=None, accessKeyId=None, sess
 
     return botoSession.client('sts', region_name='us-east-1')
 
-#mfaToken - the MFA code to pass to the sts call
-#getSessionTokenClient - the client to make the call on
-def get_session(mfaToken, getSessionTokenClient):
+def get_session(getSessionTokenClient, awsumeProfile, no_mfa):
+    """
+    getSessionTokenClient - the client to make the call on
+    no_mfa - flag for attempting to 'awsume' without mfa
+    awsumeProfile - the profile to 'awsume'
+    return the session token credentials
+    """
+    #if user set the no_mfa flag
+    if no_mfa is True:
+        returnCredentials = collections.OrderedDict()
+        returnCredentials['Credentials'] = collections.OrderedDict()
+        returnCredentials['Credentials']['SecretAccessKey'] = awsumeProfile['aws_secret_access_key']
+        returnCredentials['Credentials']['AccessKeyId'] = awsumeProfile['aws_access_key_id']
+        returnCredentials['Credentials']['region'] = awsumeProfile['region']
+        return returnCredentials
+    #if user did not set the no_mfa flag
+    else:
+        #if the profile has an mfa_serial entry, use it
+        if 'mfa_serial' in awsumeProfile:
+            mfaSerial = awsumeProfile['mfa_serial']
+        #if the profile has no mfa_serial entry, get it from get_caller_identity
+        else:
+            mfaSerial = getSessionTokenClient.get_caller_identity()['Arn'].replace('user', 'mfa')
+    #get mfa token
+    mfaToken = read_mfa()
     if not valid_mfa_token(mfaToken):
         print >> sys.stderr, '#Invalid MFA Code'
         exit(1)
-    #get the mfa serial
-    mfaSerial = getSessionTokenClient.get_caller_identity()['Arn'].replace('user', 'mfa')
+    #make call
     return getSessionTokenClient.get_session_token(
         SerialNumber=mfaSerial,
-        TokenCode=mfaToken
+        TokenCode=mfaToken,
     )
 
-#assumeRoleClient - the client to make the sts call on
-#roleArn - the role arn to use when assuming the role
-#roleSessionName - the name to assign to the role-assumed session
-#assume role and return the session credentials
 def assume_role(assumeRoleClient, roleArn, roleSessionName):
+    """
+    assumeRoleClient - the client to make the sts call on
+    roleArn - the role arn to use when assuming the role
+    roleSessionName - the name to assign to the role-assumed session
+    assume role and return the session credentials
+    """
     return assumeRoleClient.assume_role(
         RoleArn=roleArn,
-        RoleSessionName=roleSessionName
+        RoleSessionName=roleSessionName,
     )
 
-#awsRole - contains the credentials required for setting the session
-#awsProfile - contains the region required for setting the session
-#returns a dict of the session to set
 def create_awsume_session(awsRole, awsProfile):
+    """
+    awsRole - contains the credentials required for setting the session
+    awsProfile - contains the region required for setting the session
+    returns a dict of the session to set
+    """
     awsumeSession = collections.OrderedDict()
     if awsRole.get('Credentials'):
         awsumeSession['SecretAccessKey'] = awsRole.get('Credentials').get('SecretAccessKey')
@@ -128,17 +173,20 @@ def create_awsume_session(awsRole, awsProfile):
         awsumeSession['region'] = awsProfile.get('region')
         awsumeSession['Expiration'] = awsRole.get('Credentials').get('Expiration')
         #convert the time to local time
-        if awsumeSession['Expiration'].tzinfo != None:
-            awsumeSession['Expiration'] = awsumeSession['Expiration'].astimezone(dateutil.tz.tzlocal())
+        if awsumeSession.get('Expiration'):
+            if awsumeSession['Expiration'].tzinfo != None:
+                awsumeSession['Expiration'] = awsumeSession['Expiration'].astimezone(dateutil.tz.tzlocal())
         return awsumeSession
     print >> sys.stderr, '#Error::invalid role'
     exit(1)
 
-#awsumeSession - the session to create a string out of
-#create a formatted string containing
-#useful space-delimited credential information
-#if an empty session is given, an empty string is returned
 def session_string(awsumeSession):
+    """
+    awsumeSession - the session to create a string out of
+    create a formatted string containing
+    useful space-delimited credential information
+    if an empty session is given, an empty string is returned
+    """
     if all(cred in awsumeSession for cred in ('SecretAccessKey', 'SessionToken', 'AccessKeyId', 'region')):
         return str(awsumeSession['SecretAccessKey']) + ' ' + \
             str(awsumeSession['SessionToken']) + ' ' + \
@@ -146,9 +194,11 @@ def session_string(awsumeSession):
             str(awsumeSession['region'])
     return ''
 
-#sessionString - the formatted string that contains session credentials
-#return a session dict containing those session credentials
 def parse_session_string(sessionString):
+    """
+    sessionString - the formatted string that contains session credentials
+    return a session dict containing those session credentials
+    """
     sessionArray = sessionString.split(' ')
     awsumeSession = collections.OrderedDict()
     if len(sessionArray) == 5:
@@ -156,24 +206,32 @@ def parse_session_string(sessionString):
         awsumeSession['SessionToken'] = sessionArray[1]
         awsumeSession['AccessKeyId'] = sessionArray[2]
         awsumeSession['region'] = sessionArray[3]
-        awsumeSession['Expiration'] = datetime.datetime.strptime(sessionArray[4], '%Y-%m-%d_%H-%M-%S')
+        if sessionArray[4] != 'None':
+            awsumeSession['Expiration'] = datetime.datetime.strptime(sessionArray[4], '%Y-%m-%d_%H-%M-%S')
     return awsumeSession
 
-#cacheFilePath - the path to write the cache file to
-#cacheFileName - the name of the file to write
-#awsumeSession - the session to write
-#write the session to the file path
 def write_session(cacheFilePath, cacheFileName, awsumeSession):
+    """
+    cacheFilePath - the path to write the cache file to
+    cacheFileName - the name of the file to write
+    awsumeSession - the session to write
+    write the session to the file path
+    """
     if not os.path.exists(cacheFilePath):
         os.makedirs(cacheFilePath)
     out_file = open(cacheFilePath + cacheFileName, 'w+')
-    out_file.write(session_string(awsumeSession) + ' ' + awsumeSession['Expiration'].strftime('%Y-%m-%d_%H-%M-%S'))
+    if awsumeSession.get('Expiration'):
+        out_file.write(session_string(awsumeSession) + ' ' + awsumeSession['Expiration'].strftime('%Y-%m-%d_%H-%M-%S'))
+    else:
+        out_file.write(session_string(awsumeSession) + ' ' + str(None))
     out_file.close()
 
-#cacheFilePath - the path to read from
-#cacheFilename - the name of the cache file
-#return a session if the
 def read_session(cacheFilePath, cacheFileName):
+    """
+    cacheFilePath - the path to read from
+    cacheFilename - the name of the cache file
+    return a session if the path to the file exists
+    """
     if os.path.isfile(cacheFilePath + cacheFileName):
         in_file = open(cacheFilePath + cacheFileName, 'r')
         awsumeSession = parse_session_string(in_file.read())
@@ -181,11 +239,13 @@ def read_session(cacheFilePath, cacheFileName):
         awsumeSession = collections.OrderedDict()
     return awsumeSession
 
-#awsumeSession - the session to validate
-#return whether or not the session is valid,
-# if credentials are expired, or don't exist, they're invalid
-# else they are valid
 def is_valid(awsumeSession):
+    """
+    awsumeSession - the session to validate
+    return whether or not the session is valid,
+    if credentials are expired, or don't exist, they're invalid
+    else they are valid
+    """
     if awsumeSession.get('Expiration'):
         if awsumeSession.get('Expiration') > datetime.datetime.now().replace():
             return True
@@ -215,17 +275,20 @@ def main():
     #here we check for used credentials
     filePath = HOME_PATH + '/.aws/cli/cache/'
     fileName = 'awsume-temp-' + sourceProfile['__name__']
-    session = read_session(filePath, fileName)
+    if not args.no_mfa:
+        session = read_session(filePath, fileName)
+    else:
+        session = collections.OrderedDict()
 
     #verify the expiration, or if the user wants to force-refresh
     if args.refresh or not is_valid(session):
         #set the session
-        userSession = get_session(read_mfa(), client)
+        userSession = get_session(client, sourceProfile, args.no_mfa)
         session = create_awsume_session(userSession, profile)
 
         #write session to cache
-        write_session(filePath, fileName, session)
-
+        if not args.no_mfa:
+            write_session(filePath, fileName, session)
     #create new client based on the new session credentials
     client = create_client(None,
                            session['SecretAccessKey'],
