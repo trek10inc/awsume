@@ -29,7 +29,8 @@ Param (
     [string]$AWSUME_PROFILE_NAME = "default",
     [switch]$d = $false,
     [switch]$r = $false,
-    [switch]$s = $false
+    [switch]$s = $false,
+    [switch]$n = $false
 )
 if ($args) {
     Write-Warning "Unknown arguments: $args"
@@ -52,15 +53,20 @@ $r_string = ""
 if ($r) { $r_string = "-r"}
 $s_string = ""
 if ($s) { $s_string = "-s"}
+$n_string = ""
+if ($n) { $n_string = "-n"}
 Write-Host $d_string
 $AWSUME_VALID,$AWSUME_SECRET_ACCESS_KEY,$AWSUME_SECURITY_TOKEN,$AWSUME_ACCESS_KEY_ID,$AWSUME_REGION = `
-$(awsumepy $AWSUME_PROFILE_NAME $d_string $r_string $s_string) -split '\s+'
+$(awsumepy $AWSUME_PROFILE_NAME $d_string $r_string $s_string $n_string) -split '\s+'
 
 if ( $AWSUME_VALID = "True" ) {
     $env:AWS_SECRET_ACCESS_KEY = $AWSUME_SECRET_ACCESS_KEY
-    $env:AWS_SESSION_TOKEN = $AWSUME_SECURITY_TOKEN
-    $env:AWS_SECURITY_TOKEN = $AWSUME_SECURITY_TOKEN
     $env:AWS_ACCESS_KEY_ID = $AWSUME_ACCESS_KEY_ID
+    
+    if ( $AWSUME_SECURITY_TOKEN -ne "None" ) {
+        $env:AWS_SESSION_TOKEN = $AWSUME_SECURITY_TOKEN
+        $env:AWS_SECURITY_TOKEN = $AWSUME_SECURITY_TOKEN
+    }
 
     if ( $AWSUME_REGION -ne "None" ) {
         $env:AWS_REGION = $AWSUME_REGION
