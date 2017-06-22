@@ -79,9 +79,16 @@ awsume [profilename] [-d] [-s] [-r]
     -d              Use the default profile
     -s              Show the commands to assume the role
     -r              Force refresh the session
+    -n              Attempt to use AWSume without prompting for MFA
 ```
 
 Examples:
+
+`awsume client1-source-profile`
+Exports `client1-source-profile` credentials into current shell, will ask for MFA if needed
+
+`awsume client1-source-profile -n`
+Exports `client1-source-profile` credentials into current shell, will usually not ask for MFA, but it will if `client1-source-profile` is a role profile instead of a source profile, and requires MFA
 
 `awsume client1-admin`
 Exports `client1-admin` credentials into current shell, will ask for MFA if needed

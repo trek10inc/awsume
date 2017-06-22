@@ -50,7 +50,7 @@ out_file.write("Setup is running " + sys.argv[1] + "\n")
 setup(
     name="awsume",
     packages=find_packages(exclude=("*test*", "./awsumepy/test*", "./awsumepy/testAwsume.py")),
-    version="0.9.0dev",
+    version="1.0.20",
     author="Trek10, Inc",
     author_email="package-management@trek10.com",
     description="Utility for easily assuming AWS IAM roles from the command line, now in Python!",
