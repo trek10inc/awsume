@@ -27,10 +27,6 @@ def handle_parameters(arguments):
     parser.add_argument('-r', action='store_true', default=False,
                         dest='refresh',
                         help='Force refresh the session')
-    #no-mfa flag
-    parser.add_argument('-n', action='store_true', default=False,
-                        dest='no_mfa',
-                        help='Attempt to use AWSume without prompting for MFA')
     return parser.parse_args(arguments)
 
 def get_sections(iniFile):
@@ -54,21 +50,35 @@ def get_section(sectionName, sections):
     #check if profile exists
     if sectionName in sections:
         return sections[sectionName]
-    return None
+    return collections.OrderedDict()
+
+def validate_credentials_profile(awsumeCredentialsProfile):
+    """
+    awsumeConfigProfile - the profile to validate
+    validate that `awsumeConfigProfile` has proper aws credentials
+    """
+    if 'aws_access_key_id' not in awsumeCredentialsProfile:
+        print >> sys.stderr, '#Error: Your profile does not contain an access key id'
+        exit(1)
+    if 'aws_secret_access_key' not in awsumeCredentialsProfile:
+        print >> sys.stderr, '#Error: Your profile does not contain a secret access key'
+        exit(1)
 
 def get_source_profile(userProfile, sourceFilePath):
     """
     userProfile - the profile that contains the source profile name
     sourceFilePath - the file that contains the source profile of `userProfile`
-    return the source profile of userProfile, if there is no source_profile, return `userProfile` itself
+    return the source profile of `userProfile`, if there is no source_profile, return empty OrderedDict
     """
     if os.path.exists(sourceFilePath):
         if is_role(userProfile):
-            return get_section(userProfile['source_profile'], get_sections(sourceFilePath))
-        userProfile = userProfile
-        userProfile['__name__'] = userProfile['__name__'].replace('profile ', '')
-        return userProfile
-    print >> sys.stderr, '#Error::invalid file path'
+            returnProfile = get_section(userProfile['source_profile'], get_sections(sourceFilePath))
+            if returnProfile != collections.OrderedDict():
+                return returnProfile
+            print >> sys.stderr, '#Error: Profile does not contain a valid source profile'
+            exit(1)
+        return collections.OrderedDict()
+    print >> sys.stderr, '#Error: Trying to access non-existant file path: ' + sourceFilePath
     exit(1)
 
 def is_role(profileToCheck):
@@ -76,8 +86,14 @@ def is_role(profileToCheck):
     profileToCheck - the profile to check
     return if `profileToCheck` is a role or user
     """
-    if 'source_profile' in profileToCheck:
+    if 'source_profile' in profileToCheck and 'role_arn' in profileToCheck:
         return True
+    if 'source_profile' in profileToCheck:
+        print >> sys.stderr, '#Error: Profile contains a source_profile, but no role_arn'
+        exit(1)
+    if 'role_arn' in profileToCheck:
+        print >> sys.stderr, '#Error: Profile contains a role_arn, but no source_profile'
+        exit(1)
     return False
 
 def read_mfa():
@@ -113,39 +129,32 @@ def create_client(profileName=None, secretAccessKey=None, accessKeyId=None, sess
 
     return botoSession.client('sts', region_name='us-east-1')
 
-def get_session(getSessionTokenClient, awsumeProfile, no_mfa):
+def get_session(getSessionTokenClient, awsumeProfile):
     """
     getSessionTokenClient - the client to make the call on
-    no_mfa - flag for attempting to 'awsume' without mfa
     awsumeProfile - the profile to 'awsume'
     return the session token credentials
     """
-    #if user set the no_mfa flag
-    if no_mfa is True:
-        returnCredentials = collections.OrderedDict()
-        returnCredentials['Credentials'] = collections.OrderedDict()
-        returnCredentials['Credentials']['SecretAccessKey'] = awsumeProfile['aws_secret_access_key']
-        returnCredentials['Credentials']['AccessKeyId'] = awsumeProfile['aws_access_key_id']
-        returnCredentials['Credentials']['region'] = awsumeProfile['region']
-        return returnCredentials
-    #if user did not set the no_mfa flag
+    #if the profile doesn't have an mfa_serial entry
+    if 'mfa_serial' not in awsumeProfile:
+        return getSessionTokenClient.get_session_token()
     else:
-        #if the profile has an mfa_serial entry, use it
-        if 'mfa_serial' in awsumeProfile:
-            mfaSerial = awsumeProfile['mfa_serial']
-        #if the profile has no mfa_serial entry, get it from get_caller_identity
-        else:
-            mfaSerial = getSessionTokenClient.get_caller_identity()['Arn'].replace('user', 'mfa')
-    #get mfa token
-    mfaToken = read_mfa()
-    if not valid_mfa_token(mfaToken):
-        print >> sys.stderr, '#Invalid MFA Code'
-        exit(1)
-    #make call
-    return getSessionTokenClient.get_session_token(
-        SerialNumber=mfaSerial,
-        TokenCode=mfaToken,
-    )
+        mfaSerial = awsumeProfile['mfa_serial']
+        #get mfa token
+        mfaToken = read_mfa()
+        if not valid_mfa_token(mfaToken):
+            print >> sys.stderr, '#Invalid MFA Code'
+            exit(1)
+        #make call
+        try:
+            return getSessionTokenClient.get_session_token(
+                SerialNumber=mfaSerial,
+                TokenCode=mfaToken,
+                DurationSeconds=900
+            )
+        except boto3.exceptions.botocore.exceptions.ClientError as e:
+            print >> sys.stderr, "#Error: " + str(e)
+            exit(1)
 
 def assume_role(assumeRoleClient, roleArn, roleSessionName):
     """
@@ -154,10 +163,18 @@ def assume_role(assumeRoleClient, roleArn, roleSessionName):
     roleSessionName - the name to assign to the role-assumed session
     assume role and return the session credentials
     """
-    return assumeRoleClient.assume_role(
-        RoleArn=roleArn,
-        RoleSessionName=roleSessionName,
-    )
+    try:
+        return assumeRoleClient.assume_role(
+            RoleArn=roleArn,
+            RoleSessionName=roleSessionName,
+            DurationSeconds=900
+        )
+    except boto3.exceptions.botocore.exceptions.ClientError as e:
+        print >> sys.stderr, "#Error: " + str(e)
+        print >> sys.stderr, "#This is likely because your config role profile does not have an `mfa_serial` listed when it needs one to assume the role."
+        print >> sys.stderr, "#Please verify that all information in your config and credentials file is correct. Consult the AWS documentation to verify."
+        print >> sys.stderr, "#You may also have to clear the cache for this profile, as it may contain non-MFA authenticated credentials"
+        exit(1)
 
 def create_awsume_session(awsRole, awsProfile):
     """
@@ -256,51 +273,78 @@ def is_valid(awsumeSession):
 def main():
     #get command-line arguments and handle them
     args = handle_parameters(sys.argv[1:])
-    if args.default is True:
+
+    #get config and credentials profiles as dicts
+    if args.default is True or args.profile_name == 'default':
+        #make sure we always look at the default profile
         args.profile_name = 'default'
-    #grab the profile dict from the config file
-    profile = get_section('profile ' + args.profile_name, get_sections(HOME_PATH + '/.aws/config'))
-    #if profile isn't in the config file, check the credentials file
-    if not profile:
-        profile = get_section(args.profile_name, get_sections(HOME_PATH + '/.aws/credentials'))
+        #default profiles aren't prefixed by 'profile '
+        configProfile = get_section('default', get_sections(HOME_PATH + '/.aws/config'))
+    else:
+        configProfile = get_section('profile ' + args.profile_name, get_sections(HOME_PATH + '/.aws/config'))
+
+    if is_role(configProfile):
+        #grab the source profile
+        credentialsProfile = get_source_profile(configProfile, HOME_PATH + '/.aws/credentials')
+    else:
+        #the rest of the user, from the credentials file
+        credentialsProfile = get_section(args.profile_name, get_sections(HOME_PATH + '/.aws/credentials'))
+        if credentialsProfile == collections.OrderedDict():
+            print >> sys.stderr, '#Error: Profile not found in credentials file'
+            exit(1)
 
     #if the profile doesn't exist, leave
-    if not profile:
-        print >> sys.stderr, '#Profile [' + args.profile_name + '] not found'
+    if not configProfile and not credentialsProfile:
+        print >> sys.stderr, '#Error: Profile [' + args.profile_name + '] not found'
         exit(1)
-    sourceProfile = get_source_profile(profile, HOME_PATH + '/.aws/credentials')
 
-    client = create_client(sourceProfile['__name__']) #the boto3 client used to make aws calls
+    #make sure credentials profile is valid
+    validate_credentials_profile(credentialsProfile)
+
+    #if the user is AWSuming a user profile, and no mfa is required
+    #no more work is required
+    if not is_role(configProfile) and 'mfa_serial' not in configProfile:
+        print "True " + \
+                credentialsProfile.get('aws_secret_access_key') + " " + \
+                "None" + " " + \
+                credentialsProfile.get('aws_access_key_id') + " " + \
+                str(configProfile.get('region')) #region may or may not be 'NoneType'
+        exit(0)
+
+    #now we have to get the session token
+    #the boto3 client used to make aws calls
+    userClient = create_client(credentialsProfile['__name__'])
 
     #here we check for used credentials
     filePath = HOME_PATH + '/.aws/cli/cache/'
-    fileName = 'awsume-temp-' + sourceProfile['__name__']
-    if not args.no_mfa:
-        session = read_session(filePath, fileName)
-    else:
-        session = collections.OrderedDict()
+    fileName = 'awsume-temp-' + credentialsProfile['__name__']
 
+    cacheSession = read_session(filePath, fileName)
+    if is_valid(cacheSession):
+        awsumeUserSession = cacheSession
     #verify the expiration, or if the user wants to force-refresh
-    if args.refresh or not is_valid(session):
+    if args.refresh or not is_valid(cacheSession):
         #set the session
-        userSession = get_session(client, sourceProfile, args.no_mfa)
-        session = create_awsume_session(userSession, profile)
+        awsUserSession = get_session(userClient, configProfile)
+        awsumeUserSession = create_awsume_session(awsUserSession, configProfile)
+        write_session(filePath, fileName, awsumeUserSession)
 
-        #write session to cache
-        if not args.no_mfa:
-            write_session(filePath, fileName, session)
-    #create new client based on the new session credentials
-    client = create_client(None,
-                           session['SecretAccessKey'],
-                           session['AccessKeyId'],
-                           session['SessionToken'])
-
-    #assume the role if applicable
-    if is_role(profile):
-        session = create_awsume_session(assume_role(client, profile['role_arn'], profile['__name__'].replace('profile ', '') + '-awsume-session'), profile)
-
+    returnSession = awsumeUserSession
+    #at this point we have valid user credentials
+    #if we're assuming a role, then we need to call assume_role
+    if is_role(configProfile):
+        #create new client based on the new session credentials
+        roleClient = create_client(None,
+                                   awsumeUserSession['SecretAccessKey'],
+                                   awsumeUserSession['AccessKeyId'],
+                                   awsumeUserSession['SessionToken'])
+        awsumeRoleSession = create_awsume_session(assume_role(roleClient,
+                                                              configProfile['role_arn'],
+                                                              configProfile['__name__'].replace('profile ', '') + '-awsume-session'
+                                                             ), configProfile)
+        returnSession = awsumeRoleSession
     #send shell script wrapper the session environment variables
-    print 'True' + ' ' + session_string(session)
+    print 'True' + ' ' + session_string(returnSession)
 
 if __name__ == '__main__':
     main()
