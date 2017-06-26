@@ -52,7 +52,7 @@ setup(
     description="Utility for easily assuming AWS IAM roles from the command line, now in Python!",
     license="MIT",
     url='https://github.com/trek10inc/awsume',
-    download_url='https://github.com/trek10inc/awsume/archive/1.0.0.tar.gz',
+    download_url='https://github.com/trek10inc/awsume/archive/1.0.2.tar.gz',
     scripts=[
         'awsumepy/shellScripts/awsume',
         'awsumepy/shellScripts/awsume.ps1',
