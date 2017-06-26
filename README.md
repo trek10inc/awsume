@@ -20,6 +20,19 @@ Once you have AWSume installed, you're ready to set up AWSume!
 
 ## Setup
 
+### Configuring Using The AWS CLI
+
+`aws configure set <key> <value> --profile <profile_name>`
+
+Where:
+- `key` is what you would like to set within the `config`/`credentials` file, such as:
+  - `aws_access_key_id`, `aws_secret_access_key`, `region`, `output`, `mfa_serial`, `role_arn`, or `source_profile`
+- `value` is the value you'd like to set the `key` to
+- `profile_name` is the name of the profile you are creating
+  - `profile_name` is what you will pass into AWSume
+
+### Configuring Manually
+
 Add profiles to
 
 `~/.aws/config` (for macOS / Linux)
@@ -32,20 +45,20 @@ Add source profiles to
 
 `%userprofile%\.aws\credentials` (for Windows)
 
-### ~/.aws/config
+#### ~/.aws/config
 
 ```
+[default]
+region = us-east-1
 [profile internal-admin]
 role_arn = arn:aws:iam::<your aws account id>/role/admin-role
 source_profile = joel
 region = us-east-1
-
 [profile client1-admin]
 role_arn = arn:aws:iam::<client #1 account id>/role/admin-role
 mfa_serial = arn:aws:iam::<your aws account id>:mfa/joel
 source_profile = joel
 region = us-west-2
-
 [profile client2-admin]
 role_arn = arn:aws:iam::<client #2 account id>/role/admin-role
 mfa_serial = arn:aws:iam::<your aws account id>:mfa/joel
@@ -59,13 +72,12 @@ Add credentials to
 
 `%userprofile%\.aws\credentials` (for Windows)
 
-### ~/.aws/credentials
+#### ~/.aws/credentials
 
 ```
 [default]
 aws_access_key_id = AKIAIOIEUFSN9EXAMPLE
 aws_secret_access_key = wJalrXIneUATF/K7MDENG/jeuFHEnfEXAMPLEKEY
-
 [joel]
 aws_access_key_id = AKIAIOSFODNN7EXAMPLE
 aws_secret_access_key = wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY
