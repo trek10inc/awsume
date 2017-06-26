@@ -12,6 +12,23 @@ unset AWS_ACCESS_KEY_ID
 unset AWS_REGION
 unset AWS_DEFAULT_REGION
 
+#see if user used -h flag
+for AWSUME_var in "$@"
+do
+    if [[ "$AWSUME_var" == "-h"* ]]; then
+        echo "usage: awsume [-h] [-d] [-s] [-r] [-n] [profile name]"
+        echo ""
+        echo "positional arguments:"
+        echo "  profile name  The profile name"
+        echo ""
+        echo "optional arguments:"
+        echo "  -h, --help    show this help message and exit"
+        echo "  -d            Use the default profile"
+        echo "  -s            Show the commands to assume the role"
+        echo "  -r            Force refresh the session"
+    fi
+done
+
 #grab the environment variables from the python script
 read AWSUME_VALID AWSUME_SECRET_ACCESS_KEY AWSUME_SECURITY_TOKEN AWSUME_ACCESS_KEY_ID AWSUME_REGION <<< $(awsumepy "$@")
 
