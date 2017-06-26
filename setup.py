@@ -1,4 +1,4 @@
-import atexit, os, sys
+import atexit, os
 from setuptools import setup, find_packages
 from setuptools.command.install import install
 from setuptools.command.install_scripts import install_scripts
@@ -43,14 +43,10 @@ class CustomInstallScripts(install_scripts):
         atexit.register(_post_install_scripts)
         install_scripts.run(self)
 
-home = os.path.expanduser('~')
-out_file = open(os.path.abspath('%s/setup_log.txt' % home), 'a')
-out_file.write("Setup is running " + sys.argv[1] + "\n")
-
 setup(
     name="awsume",
     packages=find_packages(exclude=("*test*", "./awsumepy/test*", "./awsumepy/testAwsume.py")),
-    version="1.0.20",
+    version="1.0.2",
     author="Trek10, Inc",
     author_email="package-management@trek10.com",
     description="Utility for easily assuming AWS IAM roles from the command line, now in Python!",
