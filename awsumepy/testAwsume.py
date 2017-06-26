@@ -72,7 +72,7 @@ class TestINISectionMethods(unittest.TestCase):
         self.assertEqual(awsumepy.get_section('profile hello', self.expected_example_sections), self.expected_example_section_hello)
         self.assertEqual(awsumepy.get_section('profile hasSource', self.expected_example_sections), self.expected_example_section_hasSource)
         #getting a section that doesn't exist in the sections
-        self.assertIsNone(awsumepy.get_section('non-existent-profile', self.expected_example_sections))
+        self.assertEqual(awsumepy.get_section('non-existent-profile', self.expected_example_sections), collections.OrderedDict())
 
 #
 #   Testing for awsume methods that handle profiles
@@ -94,7 +94,7 @@ class TestProfileMethods(unittest.TestCase):
     def test_get_source_profile(self):
         #normal use-cases
         self.assertEqual(awsumepy.get_source_profile(self.example_role_profile, './test/exampleCredentials'), self.expected_source_profile)
-        self.assertEqual(awsumepy.get_source_profile(self.example_user_profile, './test/exampleCredentials'), self.example_user_profile)
+        self.assertEqual(awsumepy.get_source_profile(self.example_user_profile, './test/exampleCredentials'), collections.OrderedDict())
 
     def test_is_role(self):
         #normal use-cases
@@ -187,6 +187,9 @@ class TestSessionMethods(unittest.TestCase):
         self.assertEqual(awsumepy.read_session("/non/existant/path", "non-existent-file"), collections.OrderedDict())
         #passing an empty file
         self.assertEqual(awsumepy.read_session("./test/", "emptyFile"), collections.OrderedDict())
+
+
+
 
 
 
