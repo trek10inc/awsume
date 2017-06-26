@@ -35,9 +35,12 @@ IF defined SHOW (
     for /f "tokens=1,2,3,4,5 delims= " %%a in ("%AWSUME_TEXT%") do (
     if "%%a" == "True" (
         echo set AWS_SECRET_ACCESS_KEY=%%b
-        echo set AWS_SESSION_TOKEN=%%c
-        echo set AWS_SECURITY_TOKEN=%%c
         echo set AWS_ACCESS_KEY_ID=%%d
+
+        if "%%c" NEQ "None" (
+            echo set AWS_SESSION_TOKEN=%%c
+            echo set AWS_SECURITY_TOKEN=%%c)
+
         if "%%e" NEQ "None" (
             echo set AWS_REGION=%%e
             echo set AWS_DEFAULT_REGION=%%e)
