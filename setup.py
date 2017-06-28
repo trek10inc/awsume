@@ -11,15 +11,21 @@ class CustomInstall(install):
             #alias string to add
             alias = 'alias awsume=". awsume"\n'
             rc_file = ""
-            #the possible shell resource files
+
+            #the possible bash rc files
             if os.path.exists(os.path.abspath('%s/.bash_aliases' % homefolder)):
                 rc_file = os.path.abspath('%s/.bash_aliases' % homefolder)
             elif os.path.exists(os.path.abspath('%s/.bashrc' % homefolder)):
                 rc_file = os.path.abspath('%s/.bashrc' % homefolder)
             elif os.path.exists(os.path.abspath('%s/.bash_profile' % homefolder)):
                 rc_file = os.path.abspath('%s/.bash_profile' % homefolder)
-            elif os.path.exists(os.path.abspath('%s/.zshrc' % homefolder)):
+            #the possible zsh rc files
+            if os.path.exists(os.path.abspath('%s/.zshrc' % homefolder)):
                 rc_file = os.path.abspath('%s/.zshrc' % homefolder)
+            elif os.path.exists(os.path.abspath('%s/.zshenv' % homefolder)):
+                rc_file = os.path.abspath('%s/.zshenv' % homefolder)
+            elif os.path.exists(os.path.abspath('%s/.zprofile' % homefolder)):
+                rc_file = os.path.abspath('%s/.zprofile' % homefolder)
 
             #now add the alias to the user's rc file
             if os.path.exists(rc_file):
