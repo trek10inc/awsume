@@ -149,8 +149,7 @@ def get_session(getSessionTokenClient, awsumeProfile):
         try:
             return getSessionTokenClient.get_session_token(
                 SerialNumber=mfaSerial,
-                TokenCode=mfaToken,
-                DurationSeconds=900
+                TokenCode=mfaToken
             )
         except boto3.exceptions.botocore.exceptions.ClientError as e:
             print >> sys.stderr, "#Error: " + str(e)
@@ -166,9 +165,8 @@ def assume_role(assumeRoleClient, roleArn, roleSessionName):
     try:
         return assumeRoleClient.assume_role(
             RoleArn=roleArn,
-            RoleSessionName=roleSessionName,
-            DurationSeconds=900
-        )
+            RoleSessionName=roleSessionName
+       )
     except boto3.exceptions.botocore.exceptions.ClientError as e:
         print >> sys.stderr, "#Error: " + str(e)
         print >> sys.stderr, "#This is likely because your config role profile does not have an `mfa_serial` listed when it needs one to assume the role."
