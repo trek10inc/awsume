@@ -264,7 +264,6 @@ def is_valid(awsumeSession):
     if awsumeSession.get('Expiration'):
         if awsumeSession.get('Expiration') > datetime.datetime.now().replace():
             return True
-        print >> sys.stderr, '#Session credentials have expired, refreshing session.'
         return False
     return False
 
