@@ -52,14 +52,14 @@ class CustomInstallScripts(install_scripts):
 setup(
     name="awsume",
     packages=find_packages(exclude=("*test*", "./awsumepy/test*", "./awsumepy/testAwsume.py")),
-    version="1.0.2",
+    version="1.0.3",
     author="Trek10, Inc",
     author_email="package-management@trek10.com",
     description="Utility for easily assuming AWS IAM roles from the command line, now in Python!",
     long_description=open('README.rst').read(),
     license="MIT",
     url='https://github.com/trek10inc/awsume',
-    download_url='https://github.com/trek10inc/awsume/archive/1.0.2.tar.gz',
+    download_url='https://github.com/trek10inc/awsume/archive/1.0.3.tar.gz',
     scripts=[
         'awsumepy/shellScripts/awsume',
         'awsumepy/shellScripts/awsume.ps1',
