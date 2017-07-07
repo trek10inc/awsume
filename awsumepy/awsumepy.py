@@ -1,5 +1,5 @@
 
-__version__ = '1.1.4'
+__version__ = '1.1.5'
 
 import sys, os, ConfigParser, re, argparse, collections, datetime, dateutil, boto3, psutil
 
@@ -561,7 +561,7 @@ def stop_auto_refresh(profileName=None):
         print 'Kill'
     exit(0)
 
-def generate_formatted_data(configSections):
+def generate_formatted_data(configSections, credentialsSections):
     """
     configSections - the profile from the config file;
     format the config profiles for easy printing
@@ -592,6 +592,17 @@ def generate_formatted_data(configSections):
             profileList[index].append('Yes' if 'mfa_serial' in configSections[section] else 'No')
             profileList[index].append(str(configSections[section].get('region')))
         index += 1
+    #add profiles that are in credentials but not config
+    for section in credentialsSections:
+        if section not in [row[0] for row in profileList]:
+            profileList.append([])
+            profileList[index].append(section.replace('profile ', ''))
+            profileList[index].append('User')
+            profileList[index].append('None')
+            profileList[index].append('No')
+            profileList[index].append('None')
+            index += 1
+
     return profileList
 
 def print_formatted_data(formattedProfileData):
@@ -610,7 +621,8 @@ def list_profile_data():
     List useful information about awsume-able profiles
     """
     configSections = get_profiles_from_ini_file(AWS_CONFIG_FILE)
-    print_formatted_data(generate_formatted_data(configSections))
+    credentialsSections = get_profiles_from_ini_file(AWS_CREDENTIALS_FILE)
+    print_formatted_data(generate_formatted_data(configSections, credentialsSections))
 
 def main():
     #get command-line arguments and handle them
