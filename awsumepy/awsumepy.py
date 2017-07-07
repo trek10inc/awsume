@@ -1,5 +1,5 @@
 
-__version__ = '1.1.5'
+__version__ = '1.1.6'
 
 import sys, os, ConfigParser, re, argparse, collections, datetime, dateutil, boto3, psutil
 
@@ -595,12 +595,13 @@ def generate_formatted_data(configSections, credentialsSections):
     #add profiles that are in credentials but not config
     for section in credentialsSections:
         if section not in [row[0] for row in profileList]:
-            profileList.append([])
-            profileList[index].append(section.replace('profile ', ''))
-            profileList[index].append('User')
-            profileList[index].append('None')
-            profileList[index].append('No')
-            profileList[index].append('None')
+            if 'auto-refresh-' not in section:
+                profileList.append([])
+                profileList[index].append(section.replace('profile ', ''))
+                profileList[index].append('User')
+                profileList[index].append('None')
+                profileList[index].append('No')
+                profileList[index].append('None')
             index += 1
 
     return profileList
