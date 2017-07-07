@@ -360,7 +360,6 @@ def get_assume_role_credentials(assumeRoleClient, roleArn, roleSessionName):
         return assumeRoleClient.assume_role(
             RoleArn=roleArn,
             RoleSessionName=roleSessionName)
-
     except boto3.exceptions.botocore.exceptions.ClientError as e:
         print >> sys.stderr, '#AWSume Error: ' + str(e)
         exit(1)
