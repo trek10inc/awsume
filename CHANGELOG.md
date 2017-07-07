@@ -1,5 +1,11 @@
 # AWSume Changelog
 
+## [1.1.4] - 2017-07-07 - Bug Fix
+
+### Changed
+
+- Fixed dependency bug
+
 ## [1.1.2] - 2017-07-07 - AutoAwsume
 
 ### Added
