@@ -1,5 +1,5 @@
 
-__version__ = '1.1.2'
+__version__ = '1.1.4'
 
 import sys, os, ConfigParser, re, argparse, collections, datetime, dateutil, boto3, psutil
 
