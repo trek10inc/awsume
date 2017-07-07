@@ -1,8 +1,14 @@
 # AWSume Changelog
 
+## [1.1.6] - 2017-07-07 - Bug Fix
+
+### Changed
+
+- Fixed bug that resets environment variables even when you're using the `-h`, `-l`, `-v`, or `-k` (on a different profile than the current profile)
+
 ## [1.1.5] - 2017-07-07 - Bug Fix
 
-## Changed
+### Changed
 
 - Fixed list_profiles bug
 

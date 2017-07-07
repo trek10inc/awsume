@@ -42,17 +42,6 @@ if ($args) {
     exit 1
 }
 
-#Remove the environment variables associated with the AWS CLI,
-#ensuring all environment variables will be valid
-$env:AWS_SECRET_ACCESS_KEY = ""
-$env:AWS_SESSION_TOKEN = ""
-$env:AWS_SECURITY_TOKEN = ""
-$env:AWS_ACCESS_KEY_ID = ""
-$env:AWS_REGION = ""
-$env:AWS_DEFAULT_REGION = ""
-$env:AWS_PROFILE = ""
-$env:AWS_DEFAULT_PROFILE = ""
-
 #check all of the parameter switches
 $h_string = ""
 if ($h) { $h_string = "-h"}
@@ -91,6 +80,17 @@ elseif ( $AWSUME_FLAG -eq "Version" ) {
 }
 #set up auto-refreshing role
 elseif ( $AWSUME_FLAG -eq "Auto" ) {
+    #Remove the environment variables associated with the AWS CLI,
+    #ensuring all environment variables will be valid
+    $env:AWS_SECRET_ACCESS_KEY = ""
+    $env:AWS_SESSION_TOKEN = ""
+    $env:AWS_SECURITY_TOKEN = ""
+    $env:AWS_ACCESS_KEY_ID = ""
+    $env:AWS_REGION = ""
+    $env:AWS_DEFAULT_REGION = ""
+    $env:AWS_PROFILE = ""
+    $env:AWS_DEFAULT_PROFILE = ""
+
     $env:AWS_PROFILE = $AWSUME_1
     $env:AWS_DEFAULT_PROFILE = $AWSUME_1
 
@@ -100,10 +100,29 @@ elseif ( $AWSUME_FLAG -eq "Auto" ) {
 }
 #if user sent kill flag
 elseif ( $AWSUME_FLAG -eq "Kill" ) {
+    $env:AWS_PROFILE = ""
+    $env:AWS_DEFAULT_PROFILE = ""
     exit
+}
+elseif ( $AWSUME_FLAG -eq "Stop" ) {
+    if ( "auto-refresh-$AWSUME_1" -eq "$env:AWS_PROFILE" ) {
+        $env:AWS_PROFILE = ""
+        $env:AWS_DEFAULT_PROFILE = ""
+    }
 }
 #awsume the profile
 elseif ( $AWSUME_FLAG -eq "Awsume") {
+    #Remove the environment variables associated with the AWS CLI,
+    #ensuring all environment variables will be valid
+    $env:AWS_SECRET_ACCESS_KEY = ""
+    $env:AWS_SESSION_TOKEN = ""
+    $env:AWS_SECURITY_TOKEN = ""
+    $env:AWS_ACCESS_KEY_ID = ""
+    $env:AWS_REGION = ""
+    $env:AWS_DEFAULT_REGION = ""
+    $env:AWS_PROFILE = ""
+    $env:AWS_DEFAULT_PROFILE = ""
+
     $env:AWS_SECRET_ACCESS_KEY = $AWSUME_1
     $env:AWS_ACCESS_KEY_ID = $AWSUME_3
     

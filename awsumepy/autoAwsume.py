@@ -27,8 +27,6 @@ def refresh_session(oldSession, roleArn, sessionName):
     newRoleSession['Expiration'] = newRoleSession['Expiration'].replace(tzinfo=None)
     return newRoleSession
 
-
-
 def scan_through_auto_refresh_profiles(credentialsProfiles):
     """
     credentialsProfiles - the dict of profiles to scan through;
@@ -71,7 +69,6 @@ def main():
         if timeUntilEarliestExpiration <= 0:
             break
         #wait until the next session expires to run again
-        print >> sys.stderr, "sleep until " + str(timeUntilEarliestExpiration)
         time.sleep(timeUntilEarliestExpiration)
 
     print >> sys.stderr, "#autoAwsume: No more credentials left to refresh, shutting down"

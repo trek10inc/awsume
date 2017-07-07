@@ -559,6 +559,8 @@ def stop_auto_refresh(profileName=None):
     if not is_auto_refresh_profiles():
         kill_all_auto_processes()
         print 'Kill'
+    else:
+        print 'Stop ' + profileName
     exit(0)
 
 def generate_formatted_data(configSections, credentialsSections):
