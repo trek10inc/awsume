@@ -29,6 +29,7 @@ Once you have AWSume installed, you're ready to set up AWSume!
 - You must have Python and Pip installed in order to use AWSume. Get them [here](https://www.python.org).
 - Make sure your Python PATH environment variables are set.
 - For Linux / macOS users, restart your terminal after installing to ensure the alias to AWSume is active.
+- For macOS users, you may have to run pip with the `--ignore-installed six` option. Try installing without it first. If it doesn't work, try adding the option to the end of the command.
 
 ## Setup
 
