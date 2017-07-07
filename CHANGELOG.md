@@ -1,5 +1,11 @@
 # AWSume Changelog
 
+## [1.1.5] - 2017-07-07 - Bug Fix
+
+## Changed
+
+- Fixed list_profiles bug
+
 ## [1.1.4] - 2017-07-07 - Bug Fix
 
 ### Changed
