@@ -1,8 +1,9 @@
 import atexit, os
-import awsumepy.awsumepy
 from setuptools import setup, find_packages
 from setuptools.command.install import install
 from setuptools.command.install_scripts import install_scripts
+
+version = '1.1.4'
 
 class CustomInstall(install):
     def run(self):
@@ -53,14 +54,14 @@ class CustomInstallScripts(install_scripts):
 setup(
     name="awsume",
     packages=find_packages(exclude=("*test*", "./awsumepy/test*", "./awsumepy/testAwsume.py")),
-    version=awsumepy.awsumepy.__version__,
+    version=version,
     author="Trek10, Inc",
     author_email="package-management@trek10.com",
     description="Utility for easily assuming AWS IAM roles from the command line, now in Python!",
     long_description=open('README.rst').read(),
     license="MIT",
     url='https://github.com/trek10inc/awsume',
-    download_url='https://github.com/trek10inc/awsume/archive/' + awsumepy.awsumepy.__version__ + '.tar.gz',
+    download_url='https://github.com/trek10inc/awsume/archive/' + version + '.tar.gz',
     scripts=[
         'awsumepy/shellScripts/awsume',
         'awsumepy/shellScripts/awsume.ps1',
