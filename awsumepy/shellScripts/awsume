@@ -3,17 +3,6 @@
 #Date: June 2, 2017
 #AWSume - a bash script to assume an AWS IAM role from the command-line
 
-AWSUMEPY_LOCATION="./awsume.py"
-
-unset AWS_SECRET_ACCESS_KEY
-unset AWS_SESSION_TOKEN
-unset AWS_SECURITY_TOKEN
-unset AWS_ACCESS_KEY_ID
-unset AWS_REGION
-unset AWS_DEFAULT_REGION
-unset AWS_PROFILE
-unset AWS_DEFAULT_PROFILE
-
 #grab the environment variables from the python script
 #AWSUME_FLAG - what awsumepy told the shell to do
 #AWSUME_1 - secret access key / autoAwsumeProfileName
@@ -30,6 +19,14 @@ elif [ "$AWSUME_FLAG" = "Version" ]; then
     echo "$AWSUME_1"
 #set up auto-refreshing role
 elif [ "$AWSUME_FLAG" = "Auto" ]; then
+    unset AWS_SECRET_ACCESS_KEY
+    unset AWS_SESSION_TOKEN
+    unset AWS_SECURITY_TOKEN
+    unset AWS_ACCESS_KEY_ID
+    unset AWS_REGION
+    unset AWS_DEFAULT_REGION
+    unset AWS_PROFILE
+    unset AWS_DEFAULT_PROFILE
     #set the profile that will contain the session credentials
     export AWS_PROFILE=$AWSUME_1
     export AWS_DEFAULT_PROFILE=$AWSUME_1
@@ -38,9 +35,28 @@ elif [ "$AWSUME_FLAG" = "Auto" ]; then
 
 #user sent the kill flag, so do no more
 elif [ "$AWSUME_FLAG" = "Kill" ]; then
+    unset AWS_PROFILE
+    unset AWS_DEFAULT_PROFILE
     return
+
+elif [ "$AWSUME_FLAG" = "Stop" ]; then
+    if [ "auto-refresh-$AWSUME_1" == "$AWS_PROFILE" ]; then
+        unset AWS_PROFILE
+        unset AWS_DEFAULT_PROFILE
+    fi
+    return
+
 #awsume the profile
 elif [ "$AWSUME_FLAG" = "Awsume" ]; then
+    unset AWS_SECRET_ACCESS_KEY
+    unset AWS_SESSION_TOKEN
+    unset AWS_SECURITY_TOKEN
+    unset AWS_ACCESS_KEY_ID
+    unset AWS_REGION
+    unset AWS_DEFAULT_REGION
+    unset AWS_PROFILE
+    unset AWS_DEFAULT_PROFILE
+
     export AWS_SECRET_ACCESS_KEY=$AWSUME_1
     export AWS_ACCESS_KEY_ID=$AWSUME_3
 
