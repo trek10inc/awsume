@@ -93,14 +93,22 @@ aws_secret_access_key = wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY
 ## Usage:
 
 ```
-awsume [profilename] [-d] [-s] [-r]
-    profilename     The profile name (default if left blank)
-    -d              Use the default profile
-    -s              Show the commands to assume the role
-    -r              Force refresh the session
-    -n              Attempt to use AWSume without prompting for MFA
-    -a              Spawn background process to auto-refresh role credentials
-    -k              Remove the auto-refresh profile, if none left, kill the background process
+usage: awsumepy [-h] [-d] [-s] [-r] [-a] [-k] [-v] [-l] [profile name]
+
+AWSume
+
+positional arguments:
+  profile name  The profile name
+
+optional arguments:
+  -h, --help    show this help message and exit
+  -d            Use the default profile
+  -s            Show the commands to assume the role
+  -r            Force refresh the session
+  -a            Enable auto-refreshing role credentials
+  -k            Kill the auto-refreshing process
+  -v            Display the current version of AWSume
+  -l            List useful information about available profiles
 ```
 
 <p align="center">
