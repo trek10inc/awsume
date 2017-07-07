@@ -1,4 +1,5 @@
 import atexit, os
+import awsumepy.awsumepy
 from setuptools import setup, find_packages
 from setuptools.command.install import install
 from setuptools.command.install_scripts import install_scripts
@@ -11,15 +12,21 @@ class CustomInstall(install):
             #alias string to add
             alias = 'alias awsume=". awsume"\n'
             rc_file = ""
-            #the possible shell resource files
+
+            #the possible bash rc files
             if os.path.exists(os.path.abspath('%s/.bash_aliases' % homefolder)):
                 rc_file = os.path.abspath('%s/.bash_aliases' % homefolder)
             elif os.path.exists(os.path.abspath('%s/.bashrc' % homefolder)):
                 rc_file = os.path.abspath('%s/.bashrc' % homefolder)
             elif os.path.exists(os.path.abspath('%s/.bash_profile' % homefolder)):
                 rc_file = os.path.abspath('%s/.bash_profile' % homefolder)
-            elif os.path.exists(os.path.abspath('%s/.zshrc' % homefolder)):
+            #the possible zsh rc files
+            if os.path.exists(os.path.abspath('%s/.zshrc' % homefolder)):
                 rc_file = os.path.abspath('%s/.zshrc' % homefolder)
+            elif os.path.exists(os.path.abspath('%s/.zshenv' % homefolder)):
+                rc_file = os.path.abspath('%s/.zshenv' % homefolder)
+            elif os.path.exists(os.path.abspath('%s/.zprofile' % homefolder)):
+                rc_file = os.path.abspath('%s/.zprofile' % homefolder)
 
             #now add the alias to the user's rc file
             if os.path.exists(rc_file):
@@ -46,14 +53,14 @@ class CustomInstallScripts(install_scripts):
 setup(
     name="awsume",
     packages=find_packages(exclude=("*test*", "./awsumepy/test*", "./awsumepy/testAwsume.py")),
-    version="1.0.2",
+    version=awsumepy.awsumepy.__version__,
     author="Trek10, Inc",
     author_email="package-management@trek10.com",
     description="Utility for easily assuming AWS IAM roles from the command line, now in Python!",
     long_description=open('README.rst').read(),
     license="MIT",
     url='https://github.com/trek10inc/awsume',
-    download_url='https://github.com/trek10inc/awsume/archive/1.0.2.tar.gz',
+    download_url='https://github.com/trek10inc/awsume/archive/' + awsumepy.awsumepy.__version__ + '.tar.gz',
     scripts=[
         'awsumepy/shellScripts/awsume',
         'awsumepy/shellScripts/awsume.ps1',
@@ -62,11 +69,13 @@ setup(
     include_package_data=True,
     install_requires=[
         'python-dateutil',
-        'boto3'
+        'boto3',
+        'psutil'
     ],
     entry_points={
         "console_scripts": [
             'awsumepy=awsumepy.awsumepy:main',
+            'autoAwsume=awsumepy.autoAwsume:main'
         ]
     },
     cmdclass={
