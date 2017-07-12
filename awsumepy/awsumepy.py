@@ -1,5 +1,5 @@
 
-__version__ = '1.1.6'
+__version__ = '1.1.7'
 
 import sys, os, ConfigParser, re, argparse, collections, datetime, dateutil, boto3, psutil
 
@@ -120,7 +120,7 @@ def get_credentials_profile(configSection, arguments):
         return get_source_profile_from_role(configSection, AWS_CREDENTIALS_FILE)
     else:
         #the rest of the user, from the credentials file
-        returnProfile = get_ini_profile_by_name(arguments.profile_name, get_profiles_from_ini_file(AWS_CREDENTIALS_FILE))
+        returnProfile = get_ini_profile_by_name(configSection['__name__'].replace('profile ', ''), get_profiles_from_ini_file(AWS_CREDENTIALS_FILE))
         if returnProfile == collections.OrderedDict():
             print >> sys.stderr, '#AWSume Error: Profile not found in credentials file'
             exit(1)
