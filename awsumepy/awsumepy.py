@@ -634,8 +634,8 @@ def main():
     handle_command_line_arguments(commandLineArguments)
 
     #get the two profiles
-    configProfile = get_config_profile(commandLineArguments)
-    credentialsProfile = get_credentials_profile(configProfile, commandLineArguments)
+    configProfile = get_config_profile(commandLineArguments) #contains access keys
+    credentialsProfile = get_credentials_profile(configProfile, commandLineArguments) #contains other info
 
     #handle those profiles
     handle_profiles(configProfile, credentialsProfile)
