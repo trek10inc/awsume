@@ -170,4 +170,12 @@ Removes all `auto-refresh-` profiles from the `.aws/credentials` file, and kills
 
 - Only use the `awsume [profile] -k` option to stop the background process, do not run a `kill` command or terminate the process yourself without AWSume.
 
+### TroubleShooting
+
+- **I'm getting an installation error, "fatal error: Python.h No such file or directory"**
+  - This is an issue with `python-dev` not being installed on your system. Run your package manager to install `python-dev`, and make sure all of your packages are up-to-date before trying to install AWSume again.
+
+- **I'm getting an installation error when pip is trying to uninstall six, I get "Operation not permitted"**
+  - Run your `pip install awsume` command with the option `--ignore-installed six`. The issue here is that OS X ships with `six-1.4.1` preinstalled. AWSume depends on boto3 and python-dateutil, which both depend on six >= 1.5. When installing AWSume, pip needs to uninstall six to upgrade it to the required version. However, due to Apple's "System Integrity Protection", not even root can modify/uninstall six. So, the only way around this is to ignore upgrading six when installing AWSume.
+
 See our [blog](https://www.trek10.com/blog/awsume-aws-assume-made-awesome) for more details.
