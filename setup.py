@@ -3,7 +3,7 @@ from setuptools import setup, find_packages
 from setuptools.command.install import install
 from setuptools.command.install_scripts import install_scripts
 
-version = '1.1.6'
+version = '1.1.7'
 
 class CustomInstall(install):
     def run(self):
@@ -35,7 +35,7 @@ class CustomInstall(install):
                     lines = f.readlines()
                     if alias not in lines:
                         out = open(rc_file, 'a')
-                        out.write("#AWSume alias to source the AWSume script")
+                        out.write("#AWSume alias to source the AWSume script\n")
                         out.write(alias)
                         out.close()
         atexit.register(_post_install)
