@@ -120,7 +120,7 @@ def get_credentials_profile(configSection, arguments):
         return get_source_profile_from_role(configSection, AWS_CREDENTIALS_FILE)
     else:
         #the rest of the user, from the credentials file
-        returnProfile = get_ini_profile_by_name(configSection['__name__'].replace('profile ', ''), get_profiles_from_ini_file(AWS_CREDENTIALS_FILE))
+        returnProfile = get_ini_profile_by_name(arguments.profile_name, get_profiles_from_ini_file(AWS_CREDENTIALS_FILE))
         if returnProfile == collections.OrderedDict():
             print >> sys.stderr, '#AWSume Error: Profile not found in credentials file'
             exit(1)
@@ -634,8 +634,8 @@ def main():
     handle_command_line_arguments(commandLineArguments)
 
     #get the two profiles
-    configProfile = get_config_profile(commandLineArguments) #contains access keys
-    credentialsProfile = get_credentials_profile(configProfile, commandLineArguments) #contains other info
+    configProfile = get_config_profile(commandLineArguments)  #contains other info
+    credentialsProfile = get_credentials_profile(configProfile, commandLineArguments) #contains access keys
 
     #handle those profiles
     handle_profiles(configProfile, credentialsProfile)
