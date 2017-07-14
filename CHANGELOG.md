@@ -1,5 +1,11 @@
 # AWSume Changelog
 
+## [1.1.7] - 2017-07-13 - Bug Fix
+
+### Changed
+
+- Fixed bug that writes the alias and comment on one line when doing a new install
+
 ## [1.1.6] - 2017-07-07 - Bug Fix
 
 ### Changed
