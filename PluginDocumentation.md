@@ -243,7 +243,7 @@ class SomePlugin(IPlugin.IPlugin):
         if not session:
             return userSession #if the call didn't return anything, return the previous state
         # format the session into an object that is compatible with AWSume
-        awsumepy.create_awsume_session(session, configSection)
+        userSession = awsumepy.create_awsume_session(session, configSection)
     return session
 ```
 
@@ -283,7 +283,7 @@ class SomePlugin(IPlugin.IPlugin):
         if not roleSession:
             return roleSession
         # format the session into an object that is compatible with AWSume
-        awsumepy.create_awsume_session(roleSession, configSection)
+        roleSession = awsumepy.create_awsume_session(roleSession, configSection)
     return roleSession
 ```
 
