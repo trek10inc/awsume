@@ -1,75 +1,32 @@
-import sys, os
-import unittest
-import collections
-import datetime
-import argparse
-import mock
-import copy
-import StringIO
-import boto3
+import sys
+import collections, datetime, argparse, copy, StringIO, unittest, mock
 from awsume import awsumepy
 
-    #parse_arguments
-    #handle_command_line_arguments
-    #get_profiles_from_ini_file
-    #get_ini_profile_by_name
-    #get_config_profile
-    #get_credentials_profile
-    #validate_profiles
-    #handle_profiles
-    #get_awsume_user_credentials
-    #get_awsume_role_credentials
-    #start_auto_refresher
-    #handle_getting_role_credentials
-    #validate_credentials_profile
-    #get_source_profile_from_role
-    #is_role_profile
-    #read_mfa
-    #is_valid_mfa_token
-    #create_boto_sts_client
-    #get_session_token_credentials
-    #get_assume_role_credentials
-    #create_awsume_session
-    #session_string
-    #parse_session_string
-    #write_awsume_session_to_file
-    #read_awsume_session_from_file
-    #is_valid_awsume_session
-    #write_auto_awsume_session
-#kill_all_auto_processes
-#remove_all_auto_profiles
-#remove_auto_awsume_profile_by_name
-#is_auto_refresh_profiles
-#stop_auto_refresh
-#generate_formatted_data
-#print_formatted_data
-#list_profile_data
+class TestGenerateAwsumeArgumentParser(unittest.TestCase):
+    @mock.patch('argparse.ArgumentParser')
+    def test_generate_awsume_argument_parser(self, mock_arg_parser):
+        awsumepy.generate_awsume_argument_parser()
+        mock_arg_parser.assert_called_once()
 
 class TestParseArguments(unittest.TestCase):
     def test_parse_arguments(self):
-        #various command-line flags
-        defaultFlag = '-d'
-        showFlag = '-s'
-        refreshFlag = '-r'
-        autoRefreshFlag = '-a'
-        killAutoRefresherFlag = '-k'
-        versionFlag = '-v'
-        listProfilesFlag = '-l'
+        mock_parse_args = mock.Mock()
+        mock_argumentParser = mock.Mock()
+        mock_argumentParser.parse_args = mock_parse_args
 
-        #normal use-cases
-        self.assertTrue(awsumepy.parse_arguments([defaultFlag]).default)
-        self.assertTrue(awsumepy.parse_arguments([showFlag]).show)
-        self.assertTrue(awsumepy.parse_arguments([refreshFlag]).refresh)
-        self.assertTrue(awsumepy.parse_arguments([autoRefreshFlag]).auto_refresh)
-        self.assertTrue(awsumepy.parse_arguments([killAutoRefresherFlag]).kill)
-        self.assertTrue(awsumepy.parse_arguments([versionFlag]).version)
-        self.assertTrue(awsumepy.parse_arguments([listProfilesFlag]).list_profiles)
-        self.assertEqual(awsumepy.parse_arguments(['input_name']).profile_name, 'input_name')
+        sysArgs = ['sys', 'args']
 
-        #invalid inputs will exit
-        with self.assertRaises(SystemExit) as cm:
-            awsumepy.parse_arguments(['one_name', 'two_name'])
-        self.assertEqual(cm.exception.code, 2)
+        awsumepy.parse_arguments(mock_argumentParser, sysArgs)
+        mock_parse_args.assert_called_with(sysArgs)
+
+class TestAddArguments(unittest.TestCase):
+    def test_add_arguments(self):
+        mock_add_argument = mock.Mock()
+        mock_argumentParser = mock.Mock()
+        mock_argumentParser.add_argument = mock_add_argument
+
+        awsumepy.add_arguments(mock_argumentParser)
+        mock_add_argument.assert_called()
 
 class TestPrintVersion(unittest.TestCase):
     def test_print_version(self):
@@ -79,16 +36,15 @@ class TestPrintVersion(unittest.TestCase):
         sys.stdout = sys.__stdout__
         self.assertEqual(capturedOut.getvalue(), 'Version ' + awsumepy.__version__ + '\n')
 
-class TestSetDefaultProfile(unittest.TestCase):
+class TestSetDefaultFlag(unittest.TestCase):
     def test_set_default_profile(self):
         args = argparse.Namespace()
-        awsumepy.set_default_profile(args)
+        awsumepy.set_default_flag(args)
 
         self.assertTrue(args.default)
-        self.assertEqual(args.profile_name, 'default')
 
 class TestHandleCommandLineArguments(unittest.TestCase):
-    @mock.patch('awsume.awsumepy.set_default_profile')
+    @mock.patch('awsume.awsumepy.set_default_flag')
     @mock.patch('awsume.awsumepy.stop_auto_refresh')
     @mock.patch('awsume.awsumepy.list_profile_data')
     @mock.patch('awsume.awsumepy.print_version')
@@ -96,7 +52,7 @@ class TestHandleCommandLineArguments(unittest.TestCase):
                                            mock_print_version,
                                            mock_list_profile_data,
                                            mock_stop_auto_refresh,
-                                           mock_set_default_profile):
+                                           mock_set_default_flag):
 
         emptyArgs = argparse.Namespace()
         emptyArgs.version = False
@@ -131,7 +87,7 @@ class TestHandleCommandLineArguments(unittest.TestCase):
         self.assertEqual(mock_print_version.call_count, 1)
         self.assertEqual(mock_stop_auto_refresh.call_count, 1)
         self.assertEqual(mock_list_profile_data.call_count, 1)
-        self.assertEqual(mock_set_default_profile.call_count, 3)
+        self.assertEqual(mock_set_default_flag.call_count, 3)
 
 class TestGetProfilesFromINIFile(unittest.TestCase):
     @mock.patch('ConfigParser.ConfigParser')
@@ -173,45 +129,57 @@ class TestGetINIProfileByName(unittest.TestCase):
         self.assertEqual(user3, getUser3)
         self.assertEqual(noUser, collections.OrderedDict())
 
-class TestGetConfigProfile(unittest.TestCase):
+class TestGetConfigProfileList(unittest.TestCase):
     @mock.patch('awsume.awsumepy.get_profiles_from_ini_file')
+    def test_get_config_profile_list(self, mock_get_profiles):
+        awsumepy.get_config_profile_list('arguments', './config/path')
+        mock_get_profiles.assert_called_once_with('./config/path')
+
+class TestGetCredentialsProfileList(unittest.TestCase):
+    @mock.patch('awsume.awsumepy.get_profiles_from_ini_file')
+    def test_get_credentials_profile_list(self, mock_get_profiles):
+        awsumepy.get_credentials_profile_list('arguments', './credentials/path')
+        mock_get_profiles.assert_called_once_with('./credentials/path')
+
+class TestGetConfigProfile(unittest.TestCase):
     @mock.patch('awsume.awsumepy.get_ini_profile_by_name')
-    def test_get_config_profile(self, mock_get_ini_profile, mock_get_profiles):
+    def test_get_config_profile(self, mock_get_ini_profile):
         defaultArgs = argparse.Namespace()
         defaultArgs.default = True
         nonDefaultArgs = argparse.Namespace()
         nonDefaultArgs.default = False
         nonDefaultArgs.profile_name = 'name'
 
-        mock_get_profiles.return_value = 'profiles'
-
-        awsumepy.get_config_profile(defaultArgs)
+        awsumepy.get_config_profile('profiles', defaultArgs)
         mock_get_ini_profile.assert_called_with('default', 'profiles')
-        awsumepy.get_config_profile(nonDefaultArgs)
+        awsumepy.get_config_profile('profiles', nonDefaultArgs)
         mock_get_ini_profile.assert_called_with('profile name', 'profiles')
 
 class TestGetCredentialsProfile(unittest.TestCase):
-    @mock.patch('awsume.awsumepy.get_source_profile_from_role')
-    @mock.patch('awsume.awsumepy.get_profiles_from_ini_file')
     @mock.patch('awsume.awsumepy.get_ini_profile_by_name')
     @mock.patch('awsume.awsumepy.is_role_profile')
     def test_get_credentials_profile(self,
                                      mock_is_role_profile,
-                                     mock_get_ini_profile,
-                                     mock_get_profiles,
-                                     mock_get_source_profile):
+                                     mock_get_ini_profile):
 
         args = argparse.Namespace()
         args.profile_name = 'profile-name'
+        args.default = True
+
+        configProfile = collections.OrderedDict()
+        configProfile['source_profile'] = 'the-source'
 
         mock_is_role_profile.return_value = True
-        awsumepy.get_credentials_profile(collections.OrderedDict(), args)
-        self.assertEqual(mock_get_source_profile.call_count, 1)
+        awsumepy.get_credentials_profile('profiles', configProfile, args, './credentials/path')
+        self.assertEqual(mock_get_ini_profile.call_count, 1)
 
         mock_is_role_profile.return_value = False
-        awsumepy.get_credentials_profile(collections.OrderedDict(), args)
-        self.assertEqual(mock_get_ini_profile.call_count, 1)
-        self.assertEqual(mock_get_profiles.call_count, 1)
+        awsumepy.get_credentials_profile('profiles', configProfile, args, './credentials/path')
+        self.assertEqual(mock_get_ini_profile.call_count, 2)
+
+        args.default = False
+        awsumepy.get_credentials_profile('profiles', configProfile, args, './credentials/path')
+        self.assertEqual(mock_get_ini_profile.call_count, 3)
 
 class TestValidateProfiles(unittest.TestCase):
     @mock.patch('awsume.awsumepy.validate_credentials_profile')
@@ -236,25 +204,27 @@ class TestHandleProfiles(unittest.TestCase):
                              mock_requires_mfa):
         config = collections.OrderedDict()
         credentials = collections.OrderedDict()
+        arguments = argparse.Namespace()
 
         mock_requires_mfa.return_value = False
         mock_is_role_profile.return_value = False
         capturedOut = StringIO.StringIO()
         sys.stdout = capturedOut
+
         with self.assertRaises(SystemExit):
-            awsumepy.handle_profiles(config, credentials)
+            awsumepy.handle_profiles(config, credentials, arguments)
         sys.stdout = sys.__stdout__
         self.assertTrue('Awsume' in capturedOut.getvalue())
 
         mock_is_role_profile.return_value = True
-        awsumepy.handle_profiles(config, credentials)
+        awsumepy.handle_profiles(config, credentials, arguments)
 
         mock_requires_mfa.return_value = True
         mock_is_role_profile.return_value = False
-        awsumepy.handle_profiles(config, credentials)
+        awsumepy.handle_profiles(config, credentials, arguments)
 
         mock_is_role_profile.return_value = True
-        awsumepy.handle_profiles(config, credentials)
+        awsumepy.handle_profiles(config, credentials, arguments)
 
         self.assertEqual(mock_validate_profiles.call_count, 4)
 
@@ -285,10 +255,12 @@ class TestGetUserCredentials(unittest.TestCase):
         credentials = collections.OrderedDict()
         credentials['__name__'] = 'credentials-name'
         args = argparse.Namespace()
+        userSession = collections.OrderedDict()
+        cachePath = './cache/path'
 
         args.refresh = False
         mock_valid_session.return_value = True
-        awsumepy.get_user_credentials(config, credentials, args)
+        awsumepy.get_user_credentials(config, credentials, userSession, cachePath, args)
         self.assertEqual(mock_create_sts_client.call_count, 0)
         self.assertEqual(mock_get_session_token.call_count, 0)
         self.assertEqual(mock_create_awsume_session.call_count, 0)
@@ -296,7 +268,7 @@ class TestGetUserCredentials(unittest.TestCase):
 
         args.refresh = False
         mock_valid_session.return_value = False
-        awsumepy.get_user_credentials(config, credentials, args)
+        awsumepy.get_user_credentials(config, credentials, userSession, cachePath, args)
         self.assertEqual(mock_create_sts_client.call_count, 1)
         self.assertEqual(mock_get_session_token.call_count, 1)
         self.assertEqual(mock_create_awsume_session.call_count, 1)
@@ -304,7 +276,7 @@ class TestGetUserCredentials(unittest.TestCase):
 
         args.refresh = True
         mock_valid_session.return_value = True
-        awsumepy.get_user_credentials(config, credentials, args)
+        awsumepy.get_user_credentials(config, credentials, userSession, cachePath, args)
         self.assertEqual(mock_create_sts_client.call_count, 2)
         self.assertEqual(mock_get_session_token.call_count, 2)
         self.assertEqual(mock_create_awsume_session.call_count, 2)
@@ -312,7 +284,7 @@ class TestGetUserCredentials(unittest.TestCase):
 
         args.refresh = True
         mock_valid_session.return_value = False
-        awsumepy.get_user_credentials(config, credentials, args)
+        awsumepy.get_user_credentials(config, credentials, userSession, cachePath, args)
         self.assertEqual(mock_create_sts_client.call_count, 3)
         self.assertEqual(mock_get_session_token.call_count, 3)
         self.assertEqual(mock_create_awsume_session.call_count, 3)
@@ -377,22 +349,23 @@ class TestHandleGettingRoleCredentials(unittest.TestCase):
         config = collections.OrderedDict()
         credentials = collections.OrderedDict()
         userSession = collections.OrderedDict()
+        roleSession = collections.OrderedDict()
         args = argparse.Namespace()
 
         mock_is_role.return_value = True
         args.auto_refresh = True
-        awsumepy.handle_getting_role_credentials(config, credentials, userSession, args)
+        awsumepy.handle_getting_role_credentials(config, credentials, userSession, roleSession, args)
         self.assertEqual(mock_start_auto.call_count, 1)
         self.assertEqual(mock_get_role.call_count, 0)
         args.auto_refresh = False
-        awsumepy.handle_getting_role_credentials(config, credentials, userSession, args)
+        awsumepy.handle_getting_role_credentials(config, credentials, userSession, roleSession, args)
         mock_get_role.assert_called_with(config, userSession)
 
         mock_is_role.return_value = False
         args.auto_refresh = True
-        self.assertIsNone(awsumepy.handle_getting_role_credentials(config, credentials, userSession, args))
+        self.assertIsNone(awsumepy.handle_getting_role_credentials(config, credentials, userSession, roleSession, args))
         args.auto_refresh = False
-        self.assertIsNone(awsumepy.handle_getting_role_credentials(config, credentials, userSession, args))
+        self.assertIsNone(awsumepy.handle_getting_role_credentials(config, credentials, userSession, roleSession, args))
 
 class TestValidateCredentialsProfile(unittest.TestCase):
     def test_validate_credentials_profile(self):
@@ -411,36 +384,6 @@ class TestValidateCredentialsProfile(unittest.TestCase):
 
         credentials['aws_access_key_id'] = 'the-access-key-id'
         awsumepy.validate_credentials_profile(credentials)
-
-class TestGetSourceProfileFromRole(unittest.TestCase):
-    @mock.patch('awsume.awsumepy.get_profiles_from_ini_file')
-    @mock.patch('awsume.awsumepy.get_ini_profile_by_name')
-    @mock.patch('awsume.awsumepy.is_role_profile')
-    @mock.patch('os.path.exists')
-    def test_get_source_profile_from_role(self,
-                                          mock_os_path_exists,
-                                          mock_is_role_profile,
-                                          mock_get_ini_profile,
-                                          mock_get_profiles):
-
-        config = collections.OrderedDict()
-        config['source_profile'] = 'the-source'
-        path = './path'
-        expected = collections.OrderedDict()
-        expected['some_key'] = 'some_value'
-
-        mock_os_path_exists.return_value = True
-        mock_is_role_profile.return_value = True
-        mock_get_ini_profile.return_value = collections.OrderedDict()
-        with self.assertRaises(SystemExit):
-            awsumepy.get_source_profile_from_role(config, path)
-        mock_get_ini_profile.return_value = expected
-        self.assertEqual(awsumepy.get_source_profile_from_role(config, path), expected)
-        mock_is_role_profile.return_value = False
-        self.assertEqual(awsumepy.get_source_profile_from_role(config, path), collections.OrderedDict())
-        mock_os_path_exists.return_value = False
-        with self.assertRaises(SystemExit):
-            awsumepy.get_source_profile_from_role(config, path)
 
 class TestIsRoleProfile(unittest.TestCase):
     def test_is_role_profile(self):
@@ -470,6 +413,9 @@ class TestIsValidMFA(unittest.TestCase):
     def test_is_valid_mfa(self):
         #for i in range(0, 1000000):
             #self.assertTrue(awsumepy.is_valid_mfa_token(str(i).rjust(6, '0')))
+        self.assertTrue(awsumepy.is_valid_mfa_token('123456'))
+        self.assertTrue(awsumepy.is_valid_mfa_token('000000'))
+        self.assertTrue(awsumepy.is_valid_mfa_token('999999'))
         self.assertFalse(awsumepy.is_valid_mfa_token('abcdef'))
         self.assertFalse(awsumepy.is_valid_mfa_token('12345a'))
         self.assertFalse(awsumepy.is_valid_mfa_token('!@#$%^'))
@@ -499,18 +445,29 @@ class TestGetSessionTokenCredentials(unittest.TestCase):
                                            mock_valid_mfa):
         profile = collections.OrderedDict()
         mock_get_session_token = mock.Mock()
-        mock_get_session_token.return_value = 'session-token'
         mock_token_client = mock.Mock()
         mock_token_client.get_session_token = mock_get_session_token
-        mock_read_mfa.return_value = '000000'
 
-        self.assertEqual(awsumepy.get_session_token_credentials(mock_token_client, profile), 'session-token')
+        awsumepy.get_session_token_credentials(mock_token_client, profile)
+        self.assertEqual(mock_get_session_token.call_count, 1)
+
         profile['mfa_serial'] = 'some-mfa-serial'
-        self.assertEqual(awsumepy.get_session_token_credentials(mock_token_client, profile), 'session-token')
-        mock_get_session_token.assert_called_with(SerialNumber='some-mfa-serial', TokenCode='000000')
-        mock_get_session_token.side_effect = SystemExit
+        mock_valid_mfa.return_value = False
+
         with self.assertRaises(SystemExit):
             awsumepy.get_session_token_credentials(mock_token_client, profile)
+
+        mock_valid_mfa.return_value = True
+
+        awsumepy.get_session_token_credentials(mock_token_client, profile)
+        self.assertEqual(mock_get_session_token.call_count, 2)
+        self.assertEqual(mock_read_mfa.call_count, 2)
+
+        import botocore
+        mock_get_session_token.side_effect = Exception
+        with self.assertRaises(SystemExit):
+            awsumepy.get_session_token_credentials(mock_token_client, profile)
+
 
 class TestGetAssumeRoleCredentials(unittest.TestCase):
     def test_get_assume_role_credentials(self):
@@ -523,7 +480,7 @@ class TestGetAssumeRoleCredentials(unittest.TestCase):
         awsumepy.get_assume_role_credentials(mock_assume_role_client, roleArn, roleSessionName)
         mock_assume_role_function.assert_called_once_with(RoleArn='role-arn', RoleSessionName='role-session-name')
 
-        mock_assume_role_function.side_effect = SystemExit
+        mock_assume_role_function.side_effect = Exception
         with self.assertRaises(SystemExit):
             awsumepy.get_assume_role_credentials(mock_assume_role_client, roleArn, roleSessionName)
 
@@ -648,9 +605,11 @@ class TestIsValidAwsumeSession(unittest.TestCase):
         self.assertTrue(awsumepy.is_valid_awsume_session(session))
 
 class TestWriteAutoAwsumeSession(unittest.TestCase):
+    @mock.patch('__builtin__.open')
     @mock.patch('ConfigParser.ConfigParser')
     def test_write_auto_awsume_session(self,
-                                       mock_config_parser):
+                                       mock_config_parser,
+                                       mock_open):
         mock_parser = mock.Mock()
         mock_parser_write = mock.Mock()
         mock_parser_read = mock.Mock()
@@ -665,7 +624,7 @@ class TestWriteAutoAwsumeSession(unittest.TestCase):
         mock_config_parser.return_value = mock_parser
 
         name = 'name'
-        file = './path'
+        path = './path'
         roleArn = 'role-arn'
         session = collections.OrderedDict()
         session['SessionToken'] = 'session-token'
@@ -674,11 +633,11 @@ class TestWriteAutoAwsumeSession(unittest.TestCase):
         session['region'] = 'region'
 
         mock_parser_has_section.return_value = True
-        awsumepy.write_auto_awsume_session(name, session, file, roleArn)
+        awsumepy.write_auto_awsume_session(name, session, path, roleArn, path)
         mock_parser_remove_section.assert_called_with(name)
 
         mock_parser_has_section.return_value = False
-        awsumepy.write_auto_awsume_session(name, session, file, roleArn)
+        awsumepy.write_auto_awsume_session(name, session, path, roleArn, path)
         self.assertEqual(mock_parser_write.call_count, 2)
 
 class TestKillAllAutoProcesses(unittest.TestCase):
@@ -706,6 +665,10 @@ class TestKillAllAutoProcesses(unittest.TestCase):
 
         self.assertEqual(mock_auto_kill.call_count, 1)
         self.assertEqual(mock_norm_kill.call_count, 0)
+
+        mock_auto_kill.side_effect = Exception
+        awsumepy.kill_all_auto_processes()
+
 
 class TestRemoveAllAutoProfiles(unittest.TestCase):
     @mock.patch('__builtin__.open')
@@ -831,6 +794,67 @@ class TestListProfileData(unittest.TestCase):
         self.assertEqual(mock_generate_data.call_count, 1)
         self.assertEqual(mock_print_data.call_count, 1)
 
+class TestRegisterPlugins(unittest.TestCase):
+    def test_register_plugins(self):
+        mock_register = mock.Mock()
+        mock_app = mock.Mock()
+        mock_app.register = mock_register
+
+        mock_get_all_plugins = mock.Mock()
+        mock_manager = mock.Mock()
+        mock_manager.getAllPlugins = mock_get_all_plugins
+        
+        mock_full_plugin = mock.Mock()
+        mock_full_plugin_object = mock.Mock()
+        mock_full_plugin.plugin_object = mock_full_plugin_object
+        mock_empty_plugin = mock.Mock()
+        mock_empty_plugin_object = mock.Mock()
+        mock_empty_plugin.plugin_object = mock_empty_plugin_object
+        mock_get_all_plugins.return_value = [mock_full_plugin, mock_empty_plugin]
+
+        mock_full_plugin_object.add_arguments_func = mock.Mock()
+        mock_full_plugin_object.handle_arguments_func = mock.Mock()
+        mock_full_plugin_object.get_config_profile_func = mock.Mock()
+        mock_full_plugin_object.get_credentials_profile_func = mock.Mock()
+        mock_full_plugin_object.handle_profiles_func = mock.Mock()
+        mock_full_plugin_object.get_user_credentials_func = mock.Mock()
+        mock_full_plugin_object.handle_getting_role_func = mock.Mock()
+        mock_full_plugin_object.post_awsume_func = mock.Mock()
+
+        awsumepy.register_plugins(mock_app, mock_manager)
+
+        self.assertEqual(mock_register.call_count, 8)
+
+class TestLocatePlugins(unittest.TestCase):
+    @mock.patch('os.makedirs')
+    @mock.patch('os.path.exists')
+    def test_locate_plugins(self, mock_path_exists, mock_mkdirs):
+        mock_manager = mock.Mock()
+        mock_set_plugin_places = mock.Mock()
+        mock_manager.setPluginPlaces = mock_set_plugin_places
+
+        mock_path_exists.return_value = False
+        awsumepy.locate_plugins(mock_manager, './plugin/path')
+        self.assertEqual(mock_set_plugin_places.call_count, 1)
+        self.assertEqual(mock_mkdirs.call_count, 1)
+
+        mock_path_exists.return_value = True
+        awsumepy.locate_plugins(mock_manager, './plugin/path')
+        self.assertEqual(mock_set_plugin_places.call_count, 2)
+        self.assertEqual(mock_mkdirs.call_count, 1)
+
+class TestCreateAwsumePluginManager(unittest.TestCase):
+    @mock.patch('awsume.awsumepy.locate_plugins')
+    @mock.patch('yapsy.PluginManager.PluginManager')
+    def test_create_awsume_plugin_manager(self, mock_manager, mock_locate_plugins):
+        mock_collect_plugins = mock.Mock()
+        mock_manager_object = mock.Mock()
+        mock_manager_object.collectPlugins = mock_collect_plugins
+        mock_manager.return_value = mock_manager_object
+
+        awsumepy.create_awsume_plugin_manager('./plugin/path')
+        self.assertEqual(mock_locate_plugins.call_count, 1)
+        self.assertEqual(mock_collect_plugins.call_count, 1)
 
 if __name__ == '__main__':
     unittest.main()
