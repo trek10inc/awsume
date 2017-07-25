@@ -3,7 +3,7 @@ import sys, os
 import ConfigParser, re, argparse, collections, datetime, dateutil, boto3, psutil
 from yapsy import PluginManager
 
-__version__ = '1.1.10'
+__version__ = '1.2.0'
 
 #get cross-platform home directory
 HOME_PATH = os.path.expanduser('~')
