@@ -1,64 +1,6 @@
-<#
-.Synopsis
-    Assumes an AWS IAM role
-.DESCRIPTION
-    This script will reset all AWS environment variables,
-    get the required credentials from the profile name,
-    get a session security token for the source profile,
-    if required, assume the role from the source profile,
-    and set all of the AWS environment variables
-.EXAMPLE
-    awsume -d -r
-    This will assume the role of the default profile,
-    and force refresh the session token, requiring you
-    to re-enter your MFA token
-.EXAMPLE
-    awsume profile_name -s
-    This will assume the role of the profile named
-    "profile_name", and will show the commands
-    required to assume the same role.
-.EXAMPLE
-    awsume
-    This will assume the default role
-.LINK
-    https://www.trek10.com/blog/awsume-aws-assume-made-awesome/
-    https://github.com/trek10inc/awsume
-#>
-
-Param (
-    [string]$AWSUME_PROFILE_NAME = "",
-    [switch]$h = $false,
-    [switch]$d = $false,
-    [switch]$r = $false,
-    [switch]$s = $false,
-    [switch]$a = $false,
-    [switch]$k = $false,
-    [switch]$v = $false,
-    [switch]$l = $false
-)
-
-if ($args) {
-    Write-Warning "Unknown arguments: $args"
-    exit 1
-}
-
-#check all of the parameter switches
-$h_string = ""
-if ($h) { $h_string = "-h"}
-$d_string = ""
-if ($d) { $d_string = "-d"}
-$r_string = ""
-if ($r) { $r_string = "-r"}
-$s_string = ""
-if ($s) { $s_string = "-s"}
-$a_string = ""
-if ($a) { $a_string = "-a"}
-$k_string = ""
-if ($k) { $k_string = "-k"}
-$v_string = ""
-if ($v) { $v_string = "-v"}
-$l_string = ""
-if ($l) { $l_string = "-l"}
+#Author: Michael Barney, Trek10 Intern
+#Date: June 2, 2017
+#AWSume - a powershell script to assume an AWS IAM role from the command-line
 
 #grab the environment variables from the python script
 #AWSUME_FLAG - what awsumepy told the shell to do
@@ -66,9 +8,8 @@ if ($l) { $l_string = "-l"}
 #AWSUME_2 - security token / fileName
 #AWSUME_3 - access key id
 #awsume_4 - region
-
 $AWSUME_FLAG, $AWSUME_1, $AWSUME_2, $AWSUME_3, $AWSUME_4 = `
-$(awsumepy $AWSUME_PROFILE_NAME $h_string $d_string $r_string $s_string $a_string $k_string $v_string $l_string) -split '\s+'
+$(awsumepy $args) -split '\s+'
 
 #if incorrect flag/help
 if ( $AWSUME_FLAG -eq "usage:" ) {
@@ -90,10 +31,9 @@ elseif ( $AWSUME_FLAG -eq "Auto" ) {
     $env:AWS_DEFAULT_REGION = ""
     $env:AWS_PROFILE = ""
     $env:AWS_DEFAULT_PROFILE = ""
-
+    #set the profile that will contain the session credentials
     $env:AWS_PROFILE = $AWSUME_1
     $env:AWS_DEFAULT_PROFILE = $AWSUME_1
-
     #run the background autoAwsume process
     Start-Process powershell -ArgumentList "autoAwsume" -WindowStyle hidden
 
@@ -136,7 +76,8 @@ elseif ( $AWSUME_FLAG -eq "Awsume") {
         $env:AWS_DEFAULT_REGION = $AWSUME_4
     }
 
-    if ($s) {
+    #if enabled, show the exact commands to use in order to assume the role we just assumed
+    if ($args -like "-s") {
         Write-Host "`$env:AWS_SECRET_ACCESS_KEY =" $env:AWS_SECRET_ACCESS_KEY
         Write-Host "`$env:AWS_ACCESS_KEY_ID =" $env:AWS_ACCESS_KEY_ID
         
