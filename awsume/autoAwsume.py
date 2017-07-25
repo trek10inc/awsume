@@ -1,9 +1,9 @@
-import ConfigParser
+from __future__ import print_function
+import sys
 import datetime
-import os, sys
 import time
-import awsumepy
-from awsumepy import AWS_CACHE_DIRECTORY, AWS_CREDENTIALS_FILE
+from awsume import awsumepy
+from awsume.awsumepy import AWS_CACHE_DIRECTORY, AWS_CREDENTIALS_FILE
 
 def refresh_session(oldSession, roleArn, sessionName):
     """
@@ -47,11 +47,11 @@ def scan_through_auto_refresh_profiles(credentialsProfiles):
                 #refresh the session
                 refreshedCredentials = refresh_session(sourceProfileCredentials, credentialsProfiles[profile]['aws_role_arn'], cacheFileName + '-auto-awsume-session')
                 #write the session
-                awsumepy.write_auto_awsume_session(profile, refreshedCredentials, cacheFileName, credentialsProfiles[profile]['aws_role_arn'])
+                awsumepy.write_auto_awsume_session(profile, refreshedCredentials, cacheFileName, credentialsProfiles[profile]['aws_role_arn'], AWS_CREDENTIALS_FILE)
                 expirationList.append(min(sourceProfileCredentials['Expiration'], refreshedCredentials['Expiration']))
             #if credentials are expired
             else:
-                awsumepy.remove_auto_awsume_profile_by_name(profile)
+                awsumepy.remove_auto_awsume_profile_by_name(profile, AWS_CREDENTIALS_FILE)
     if expirationList:
         return min(expirationList)
     else:
@@ -71,7 +71,7 @@ def main():
         #wait until the next session expires to run again
         time.sleep(timeUntilEarliestExpiration)
 
-    print >> sys.stderr, "#autoAwsume: No more credentials left to refresh, shutting down"
+    print("#autoAwsume: No more credentials left to refresh, shutting down", file=sys.stderr)
 
 if __name__ == '__main__':
     main()
