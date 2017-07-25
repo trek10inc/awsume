@@ -3,7 +3,7 @@ from setuptools import setup, find_packages
 from setuptools.command.install import install
 from setuptools.command.install_scripts import install_scripts
 
-version = '1.1.7'
+version = '1.2.0'
 
 class CustomInstall(install):
     def run(self):
@@ -53,7 +53,7 @@ class CustomInstallScripts(install_scripts):
 
 setup(
     name="awsume",
-    packages=find_packages(exclude=("*test*", "./awsumepy/test*", "./awsumepy/testAwsume.py")),
+    packages=find_packages(exclude=("*test*", "./awsume/test*", "./awsume/testAwsume.py")),
     version=version,
     author="Trek10, Inc",
     author_email="package-management@trek10.com",
@@ -63,20 +63,21 @@ setup(
     url='https://github.com/trek10inc/awsume',
     download_url='https://github.com/trek10inc/awsume/archive/' + version + '.tar.gz',
     scripts=[
-        'awsumepy/shellScripts/awsume',
-        'awsumepy/shellScripts/awsume.ps1',
-        'awsumepy/shellScripts/awsume.bat',
+        'awsume/shellScripts/awsume',
+        'awsume/shellScripts/awsume.ps1',
+        'awsume/shellScripts/awsume.bat',
     ],
     include_package_data=True,
     install_requires=[
         'python-dateutil',
         'boto3',
-        'psutil'
+        'psutil',
+        'yapsy'
     ],
     entry_points={
         "console_scripts": [
-            'awsumepy=awsumepy.awsumepy:main',
-            'autoAwsume=awsumepy.autoAwsume:main'
+            'awsumepy=awsume.awsumepy:main',
+            'autoAwsume=awsume.autoAwsume:main'
         ]
     },
     cmdclass={
