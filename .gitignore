@@ -4,3 +4,5 @@ temp.txt
 dist/
 build/
 awsumepy.egg-info/
+*.pyc
+*.egg-info
