@@ -135,6 +135,10 @@ AutoAwsume is a program itself, so if you want to run it in a dedicated terminal
 
 AWSume is now extensible. It now comes with a built-in plugin manager! To get started developing plugins, check out our [plugin documentation](https://github.com/trek10inc/awsume/blob/master/PluginDocumentation.md).
 
+#### AWSume Console Plugin
+
+To demonstrate the plugin manager, we've extended the functionality of AWSume through the AWSume Console plugin. This plugin will open the AWS console to the assumed role. Read about it [here](https://github.com/trek10inc/awsume/blob/master/examplePlugin/awsumeConsole.md)
+
 ### Examples
 
 `awsume client1-source-profile`
