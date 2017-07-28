@@ -91,7 +91,7 @@ aws_access_key_id = AKIAIOSFODNN7EXAMPLE
 aws_secret_access_key = wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY
 ```
 
-## Usage:
+## Usage
 
 ```
 usage: awsumepy [-h] [-d] [-s] [-r] [-a] [-k] [-v] [-l] [profile name]
@@ -112,11 +112,8 @@ optional arguments:
   -l            List useful information about available profiles
 ```
 
-<p align="center">
-  <img src="https://content.trek10.com/blog/awsume-demo.gif">
-</p>
-
 ### AutoAwsume
+
 AutoAwsume is a program bundled with AWSume. With it comes a new feature that brings in the ability to auto-refresh your role credentials, so that you don't have to worry about refreshing them yourself every hour. Lets say you want to work under your `client-admin` role, whose source profile is `client-source`. If you want to AWSume `client-admin` credentials, but want them to be auto-refreshed when they expire, simply call `awsume client-admin -a`.
 
 Then, AWSume will add an `auto-refresh-client-admin` profile to your `.aws/credentials` file, and export that profile to your environment's `AWS_PROFILE` and `AWS_DEFAULT_PROFILE` variables. Then, any AWS calls you make will be under that profile.
@@ -134,7 +131,11 @@ AutoAwsume is a program itself, so if you want to run it in a dedicated terminal
 - When working on Windows, use the same shell to shut autoAwsume down that you used to start it up. Do not try to close the autoAwsume process with PowerShell if it has been started with Command Prompt, and vise versa.
 - AutoAwsume works using the `AWS_PROFILE` and `AWS_DEFAULT_PROFILE` environment variables that point to a specific profile in your `.aws/credentials` file, so when that profiles' source profile credentials expire (They usually last around 12 hours), you may get an error telling you that `The config profile ([profile]) could not be found`. If this happens just call AWSume again to continue working.
 
-### Examples:
+### Plugins
+
+AWSume is now extensible. It now comes with a built-in plugin manager! To get started developing plugins, check out our [plugin documentation](https://github.com/trek10inc/awsume/blob/master/PluginDocumentation.md).
+
+### Examples
 
 `awsume client1-source-profile`
 Exports `client1-source-profile` credentials into current shell, will ask for MFA if needed
