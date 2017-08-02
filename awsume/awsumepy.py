@@ -1,6 +1,6 @@
 from __future__ import print_function
 import sys, os
-import ConfigParser, re, argparse, collections, datetime, dateutil, boto3, psutil
+import ConfigParser, re, argparse, collections, datetime, dateutil, boto3, psutil, logging
 from yapsy import PluginManager
 
 __version__ = '1.2.0'
@@ -71,7 +71,7 @@ def set_default_flag(arguments):
     #arguments.profile_name = 'default'
     arguments.default = True
 
-def handle_command_line_arguments(arguments):
+def handle_command_line_arguments(arguments, app):
     """
     arguments - the arguments to handle;
     scan the arguments for anything special that only requires one function call and then exit
@@ -83,7 +83,17 @@ def handle_command_line_arguments(arguments):
 
     #check for list profiles flag
     if arguments.list_profiles:
-        list_profile_data(AWS_CONFIG_FILE, AWS_CREDENTIALS_FILE)
+        #get the list of config profiles
+        configProfileList = collections.OrderedDict()
+        for func in app.get_config_profile_list_funcs:
+            configProfileList.update(func(arguments, AWS_CONFIG_FILE))
+
+        #get the list of credentials profiles
+        credentialsProfileList = collections.OrderedDict()
+        for func in app.get_credentials_profile_list_funcs:
+            credentialsProfileList.update(func(arguments, AWS_CREDENTIALS_FILE))
+
+        list_profile_data(configProfileList, credentialsProfileList)
         exit(0)
 
     #check for the kill auto-refresher flag
@@ -661,12 +671,10 @@ def print_formatted_data(formattedProfileData):
     for row in formattedProfileData:
         print("  ".join((val.ljust(width) for val, width in zip(row, widths))), file=sys.stderr)
 
-def list_profile_data(configPath, credentialsPath):
+def list_profile_data(configSections, credentialsSections):
     """
     List useful information about awsume-able profiles
     """
-    configSections = get_config_profile_list(None, configPath)
-    credentialsSections = get_credentials_profile_list(credentialsPath)
     formattedProfiles = generate_formatted_data(configSections, credentialsSections)
     print_formatted_data(formattedProfiles)
 
@@ -682,6 +690,10 @@ def register_plugins(app, manager):
             app.register('add_arguments_func', plugin.plugin_object.add_arguments_func)
         if 'handle_arguments_func' in dir(plugin.plugin_object):
             app.register('handle_arguments_func', plugin.plugin_object.handle_arguments_func)
+        if 'get_config_profile_list_func' in dir(plugin.plugin_object):
+            app.register('get_config_profile_list_func', plugin.plugin_object.get_config_profile_list_func)
+        if 'get_credentials_profile_list_func' in dir(plugin.plugin_object):
+            app.register('get_credentials_profile_list_func', plugin.plugin_object.get_credentials_profile_list_func)
         if 'get_config_profile_func' in dir(plugin.plugin_object):
             app.register('get_config_profile_func', plugin.plugin_object.get_config_profile_func)
         if 'get_credentials_profile_func' in dir(plugin.plugin_object):
@@ -784,7 +796,7 @@ class App(object):
 
         #handle arguments
         for func in self.handle_arguments_funcs:
-            func(commandLineArguments)
+            func(commandLineArguments, self)
 
         #get the list of config profiles
         configProfileList = collections.OrderedDict()
@@ -845,4 +857,5 @@ def main():
     awsumeApp.run()
 
 if __name__ == '__main__':
+    logging.basicConfig()
     main()
