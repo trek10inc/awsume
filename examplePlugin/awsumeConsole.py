@@ -19,7 +19,7 @@ class AwsumeConsole(IPlugin.IPlugin):
                             help='Open the AWS console to the AWSume\'d credentials')
         return parser
 
-    def handle_arguments_func(self, arguments):
+    def handle_arguments_func(self, arguments, app):
         #use the environment variables to open
         if arguments.open_console is True and arguments.profile_name is None:
             credentials, region = self.get_temp_credentials_from_environment()

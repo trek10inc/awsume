@@ -44,6 +44,7 @@ class TestSetDefaultFlag(unittest.TestCase):
         self.assertTrue(args.default)
 
 class TestHandleCommandLineArguments(unittest.TestCase):
+    @mock.patch('collections.OrderedDict')
     @mock.patch('awsume.awsumepy.set_default_flag')
     @mock.patch('awsume.awsumepy.stop_auto_refresh')
     @mock.patch('awsume.awsumepy.list_profile_data')
@@ -52,7 +53,15 @@ class TestHandleCommandLineArguments(unittest.TestCase):
                                            mock_print_version,
                                            mock_list_profile_data,
                                            mock_stop_auto_refresh,
-                                           mock_set_default_flag):
+                                           mock_set_default_flag,
+                                           mock_ordered_dict):
+        mock_ordered_dict_update = mock.Mock()
+        mock_ordered_dict.update = mock_ordered_dict_update
+        mock_get_config_list = mock.Mock()
+        mock_get_credential_list = mock.Mock()
+        mock_app = mock.Mock()
+        mock_app.get_config_profile_list_funcs = [mock_get_config_list]
+        mock_app.get_credentials_profile_list_funcs = [mock_get_credential_list]
 
         emptyArgs = argparse.Namespace()
         emptyArgs.version = False
@@ -64,25 +73,25 @@ class TestHandleCommandLineArguments(unittest.TestCase):
         versionArgs = copy.copy(emptyArgs)
         versionArgs.version = True
         with self.assertRaises(SystemExit):
-            awsumepy.handle_command_line_arguments(versionArgs)
+            awsumepy.handle_command_line_arguments(versionArgs, mock_app)
 
         listProfileArgs = copy.copy(emptyArgs)
         listProfileArgs.list_profiles = True
         with self.assertRaises(SystemExit):
-            awsumepy.handle_command_line_arguments(listProfileArgs)
+            awsumepy.handle_command_line_arguments(listProfileArgs, mock_app)
 
         killArgs = copy.copy(emptyArgs)
         killArgs.kill = True
         with self.assertRaises(SystemExit):
-            awsumepy.handle_command_line_arguments(killArgs)
+            awsumepy.handle_command_line_arguments(killArgs, mock_app)
 
         defaultArgs = copy.copy(emptyArgs)
         defaultArgs.default = True
         defaultProfileArgs = copy.copy(emptyArgs)
         defaultProfileArgs.profile_name = "default"
-        awsumepy.handle_command_line_arguments(defaultArgs)
-        awsumepy.handle_command_line_arguments(defaultProfileArgs)
-        awsumepy.handle_command_line_arguments(emptyArgs)
+        awsumepy.handle_command_line_arguments(defaultArgs, mock_app)
+        awsumepy.handle_command_line_arguments(defaultProfileArgs, mock_app)
+        awsumepy.handle_command_line_arguments(emptyArgs, mock_app)
 
         self.assertEqual(mock_print_version.call_count, 1)
         self.assertEqual(mock_stop_auto_refresh.call_count, 1)
@@ -784,13 +793,10 @@ class TestPrintFormattedData(unittest.TestCase):
 class TestListProfileData(unittest.TestCase):
     @mock.patch('awsume.awsumepy.print_formatted_data')
     @mock.patch('awsume.awsumepy.generate_formatted_data')
-    @mock.patch('awsume.awsumepy.get_profiles_from_ini_file')
     def test_list_profile_data(self,
-                               mock_get_profiles,
                                mock_generate_data,
                                mock_print_data):
         awsumepy.list_profile_data('./path', './path')
-        self.assertEqual(mock_get_profiles.call_count, 2)
         self.assertEqual(mock_generate_data.call_count, 1)
         self.assertEqual(mock_print_data.call_count, 1)
 

@@ -70,6 +70,7 @@ class SomePlugin(IPlugin.IPlugin):
 - ***Function Name:*** `handle_arguments_func`
 - ***Arguments:***
   - `arguments` What was returned from `add_arguments_func`
+  - `app` The App object itself that contains all of the AWSume functions
 - This function is called to handle anything special that should happen when an argument is in acertain state.
 - For instance, when the `-v` flag is passed, to display the version, the displaying of the versionis handled in the default `handle_arguments_func`. For any arguments you add, this is where you canhandle those arguments.
 - This function does not return anything.
@@ -82,7 +83,7 @@ from awsume import awsumepy
 
 class SomePlugin(IPlugin.IPlugin):
     def handle_arguments_func(self, arguments):
-        awsumepy.handle_command_line_arguments(arguments)
+        awsumepy.handle_command_line_arguments(arguments, app)
         if arguments.special_flag:
             print("Special flag triggered!", file=sys.stderr)
             exit(0)
