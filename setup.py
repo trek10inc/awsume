@@ -21,6 +21,10 @@ class CustomInstall(install):
                 rc_file = os.path.abspath('%s/.bashrc' % homefolder)
             elif os.path.exists(os.path.abspath('%s/.bash_profile' % homefolder)):
                 rc_file = os.path.abspath('%s/.bash_profile' % homefolder)
+            elif os.path.exists(os.path.abspath('%s/.profile' % homefolder)):
+                rc_file = os.path.abspath('%s/.profile' % homefolder)
+            elif os.path.exists(os.path.abspath('%s/.login' % homefolder)):
+                rc_file = os.path.abspath('%s/.login' % homefolder)
             #the possible zsh rc files
             if os.path.exists(os.path.abspath('%s/.zshrc' % homefolder)):
                 rc_file = os.path.abspath('%s/.zshrc' % homefolder)
@@ -28,6 +32,8 @@ class CustomInstall(install):
                 rc_file = os.path.abspath('%s/.zshenv' % homefolder)
             elif os.path.exists(os.path.abspath('%s/.zprofile' % homefolder)):
                 rc_file = os.path.abspath('%s/.zprofile' % homefolder)
+            elif os.path.exists(os.path.abspath('%s/.zlogin' % homefolder)):
+                rc_file = os.path.abspath('%s/.zlogin' % homefolder)
 
             #now add the alias to the user's rc file
             if os.path.exists(rc_file):
