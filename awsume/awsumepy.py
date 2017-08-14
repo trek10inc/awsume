@@ -847,6 +847,7 @@ class App(object):
         print('Awsume' + ' ' + session_string(sessionToUse))
 
 def main():
+    logging.basicConfig()
     #create the plugin manager
     pluginManager = create_awsume_plugin_manager(HOME_PATH + '/.aws/awsumePlugins/')
     #create AWSume
@@ -857,5 +858,4 @@ def main():
     awsumeApp.run()
 
 if __name__ == '__main__':
-    logging.basicConfig()
     main()
