@@ -1,5 +1,20 @@
 # AWSume Changelog
 
+## [1.2.2] - 2017-08-15 - Compatibility
+
+- Fixes issues around Python 3 compatibility. All features should be compatible with both Python 2 and 3.
+- Fixes edge case in which there is an auto-refresh role profile in the user's credentials file that the user no longer has permission to assume.
+
+## [1.2.1] - 2017-08-02 - Bug Fix
+
+- Fixes logging issue with the plugin manager.
+
+## [1.2.0] - 2017-07-28 - Plugin System
+
+### Added
+
+- Adds new plugin system, built on the Yapsy plugin manager. Full documentation on the plugin system can be read [here](https://github.com/trek10inc/awsume/blob/master/PluginDocumentation.md).
+
 ## [1.1.7] - 2017-07-13 - Bug Fix
 
 ### Changed
@@ -43,7 +58,6 @@
 - Fixed redundant MFA prompt bug
 - Replaced the `-n` option with an automatic check for `mfa_serial` in the config profile to determine if MFA is required for that profile
 
-### Removed
 
 ## [1.0.4] - 2017-06-30 - Bug Fixes
 
