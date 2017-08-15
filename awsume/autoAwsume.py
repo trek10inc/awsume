@@ -44,14 +44,21 @@ def scan_through_auto_refresh_profiles(credentialsProfiles):
 
             #if credentials are not expired
             if sourceProfileCredentials['Expiration'] > datetime.datetime.now():
-                #refresh the session
-                refreshedCredentials = refresh_session(sourceProfileCredentials, credentialsProfiles[profile]['aws_role_arn'], cacheFileName + '-auto-awsume-session')
-                #write the session
-                awsumepy.write_auto_awsume_session(profile, refreshedCredentials, cacheFileName, credentialsProfiles[profile]['aws_role_arn'], AWS_CREDENTIALS_FILE)
-                expirationList.append(min(sourceProfileCredentials['Expiration'], refreshedCredentials['Expiration']))
+                try:
+                    #refresh the session
+                    refreshedCredentials = refresh_session(sourceProfileCredentials, credentialsProfiles[profile]['aws_role_arn'], cacheFileName + '-auto-awsume-session')
+                except Exception as e:
+                    #if refreshing the session failed, remove that profile
+                    print("autoAwsume: Refreshing profile [" + profile.replace('auto-refresh-', '') + "] failed. That profile will no longer be auto-refreshed.")
+                    print(str(e))
+                    awsumepy.remove_auto_awsume_profile_by_name(profile.replace('auto-refresh-',''), AWS_CREDENTIALS_FILE)
+                else:
+                    #write the session
+                    awsumepy.write_auto_awsume_session(profile, refreshedCredentials, cacheFileName, credentialsProfiles[profile]['aws_role_arn'], AWS_CREDENTIALS_FILE)
+                    expirationList.append(min(sourceProfileCredentials['Expiration'], refreshedCredentials['Expiration']))
             #if credentials are expired
             else:
-                awsumepy.remove_auto_awsume_profile_by_name(profile, AWS_CREDENTIALS_FILE)
+                awsumepy.remove_auto_awsume_profile_by_name(profile.replace('auto-refresh-',''), AWS_CREDENTIALS_FILE)
     if expirationList:
         return min(expirationList)
     else:

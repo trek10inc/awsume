@@ -1,5 +1,6 @@
 import sys
-import collections, datetime, argparse, copy, StringIO, unittest, mock
+from six.moves import cStringIO as StringIO
+import collections, datetime, argparse, copy, unittest, mock
 from awsume import awsumepy
 
 class TestGenerateAwsumeArgumentParser(unittest.TestCase):
@@ -30,7 +31,7 @@ class TestAddArguments(unittest.TestCase):
 
 class TestPrintVersion(unittest.TestCase):
     def test_print_version(self):
-        capturedOut = StringIO.StringIO()
+        capturedOut = StringIO()
         sys.stdout = capturedOut
         awsumepy.print_version()
         sys.stdout = sys.__stdout__
@@ -99,7 +100,7 @@ class TestHandleCommandLineArguments(unittest.TestCase):
         self.assertEqual(mock_set_default_flag.call_count, 3)
 
 class TestGetProfilesFromINIFile(unittest.TestCase):
-    @mock.patch('ConfigParser.ConfigParser')
+    @mock.patch('six.moves.configparser.ConfigParser')
     @mock.patch('os.path.exists')
     def test_get_profiles_from_ini_file(self, mock_os_path_exists, mock_config_parser):
         mock_os_path_exists.return_value = True
@@ -217,7 +218,7 @@ class TestHandleProfiles(unittest.TestCase):
 
         mock_requires_mfa.return_value = False
         mock_is_role_profile.return_value = False
-        capturedOut = StringIO.StringIO()
+        capturedOut = StringIO()
         sys.stdout = capturedOut
 
         with self.assertRaises(SystemExit):
@@ -330,7 +331,7 @@ class TestStartAutoRefresher(unittest.TestCase):
     @mock.patch('awsume.awsumepy.kill_all_auto_processes')
     @mock.patch('awsume.awsumepy.write_auto_awsume_session')
     def test_start_auto_refresher(self, mock_write_auto_session, mock_kill_all):
-        capturedOut = StringIO.StringIO()
+        capturedOut = StringIO()
         sys.stdout = capturedOut
 
         args = argparse.Namespace()
@@ -411,12 +412,6 @@ class TestIsRoleProfile(unittest.TestCase):
             awsumepy.is_role_profile(brokenRole1)
         with self.assertRaises(SystemExit):
             awsumepy.is_role_profile(brokenRole2)
-
-class TestReadMFA(unittest.TestCase):
-    @mock.patch('__builtin__.raw_input')
-    def test_read_mfa(self, mock_input):
-        mock_input.return_value = 'input'
-        self.assertEqual(awsumepy.read_mfa(), 'input')
 
 class TestIsValidMFA(unittest.TestCase):
     def test_is_valid_mfa(self):
@@ -547,7 +542,7 @@ class TestParseSessionString(unittest.TestCase):
 
 class TestWriteAwsumeSessionToFile(unittest.TestCase):
     @mock.patch('datetime.datetime')
-    @mock.patch('__builtin__.open')
+    @mock.patch('six.moves.builtins.open')
     @mock.patch('os.makedirs')
     @mock.patch('os.path.exists')
     def test_write_awsume_session_to_file(self,
@@ -581,7 +576,7 @@ class TestWriteAwsumeSessionToFile(unittest.TestCase):
         self.assertEqual(mock_file.close.call_count, 2)
 
 class TestReadAwsumeSessionFromFile(unittest.TestCase):
-    @mock.patch('__builtin__.open')
+    @mock.patch('six.moves.builtins.open')
     @mock.patch('os.path.isfile')
     @mock.patch('awsume.awsumepy.parse_session_string')
     def test_read_awsume_session_from_file(self,
@@ -614,8 +609,8 @@ class TestIsValidAwsumeSession(unittest.TestCase):
         self.assertTrue(awsumepy.is_valid_awsume_session(session))
 
 class TestWriteAutoAwsumeSession(unittest.TestCase):
-    @mock.patch('__builtin__.open')
-    @mock.patch('ConfigParser.ConfigParser')
+    @mock.patch('six.moves.builtins.open')
+    @mock.patch('six.moves.configparser.ConfigParser')
     def test_write_auto_awsume_session(self,
                                        mock_config_parser,
                                        mock_open):
@@ -680,8 +675,8 @@ class TestKillAllAutoProcesses(unittest.TestCase):
 
 
 class TestRemoveAllAutoProfiles(unittest.TestCase):
-    @mock.patch('__builtin__.open')
-    @mock.patch('ConfigParser.ConfigParser')
+    @mock.patch('six.moves.builtins.open')
+    @mock.patch('six.moves.configparser.ConfigParser')
     def test_remove_all_auto_profiles(self,
                                       mock_config_parser,
                                       mock_open):
@@ -701,8 +696,8 @@ class TestRemoveAllAutoProfiles(unittest.TestCase):
         mock_parser_remove.assert_called_once_with('auto-refresh-profile')
 
 class TestRemoveAutoAwsumeProfileByName(unittest.TestCase):
-    @mock.patch('__builtin__.open')
-    @mock.patch('ConfigParser.ConfigParser')
+    @mock.patch('six.moves.builtins.open')
+    @mock.patch('six.moves.configparser.ConfigParser')
     def test_remove_auto_awsume_profile_by_name(self,
                                                 mock_config_parser,
                                                 mock_open):
@@ -723,7 +718,7 @@ class TestRemoveAutoAwsumeProfileByName(unittest.TestCase):
         self.assertTrue('auto-refresh-profileToStay' not in mock_parser_remove.call_args_list)
 
 class TestIsAutoRefreshProfiles(unittest.TestCase):
-    @mock.patch('ConfigParser.ConfigParser')
+    @mock.patch('six.moves.configparser.ConfigParser')
     def test_is_auto_refresh_profiles(self,
                                       mock_config_parser):
         mock_parser_object = mock.Mock()
@@ -761,7 +756,7 @@ class TestStopAutoRefresh(unittest.TestCase):
         self.assertEqual(mock_remove_all_auto_profiles.call_count, 1)
         self.assertEqual(mock_remove_auto_profile_by_name.call_count, 1)
 
-        capturedOut = StringIO.StringIO()
+        capturedOut = StringIO()
         sys.stdout = capturedOut
         with self.assertRaises(SystemExit):
             awsumepy.stop_auto_refresh('some-profile')
@@ -770,7 +765,7 @@ class TestStopAutoRefresh(unittest.TestCase):
         self.assertEqual(mock_kill_all_auto_processes.call_count, 3)
 
         mock_is_auto_refresh_profiles.return_value = True
-        capturedOut = StringIO.StringIO()
+        capturedOut = StringIO()
         sys.stdout = capturedOut
         with self.assertRaises(SystemExit):
             awsumepy.stop_auto_refresh('some-profile')
@@ -784,7 +779,7 @@ class TestGenerateFormattedData(unittest.TestCase):
 
 class TestPrintFormattedData(unittest.TestCase):
     def test_print_formatted_data(self):
-        capturedOut = StringIO.StringIO()
+        capturedOut = StringIO()
         sys.stderr = capturedOut
         awsumepy.print_formatted_data('some-formatted-data')
         sys.stderr = sys.__stderr__
