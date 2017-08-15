@@ -1,9 +1,11 @@
 from __future__ import print_function
 import sys, os
-import ConfigParser, re, argparse, collections, datetime, dateutil, boto3, psutil, logging
+import re, argparse, collections, datetime, dateutil, boto3, psutil, logging
+from six.moves import configparser as ConfigParser
+from builtins import input
 from yapsy import PluginManager
 
-__version__ = '1.2.1'
+__version__ = '1.2.2'
 
 #get cross-platform home directory
 HOME_PATH = os.path.expanduser('~')
@@ -112,6 +114,8 @@ def get_profiles_from_ini_file(iniFilePath):
     if os.path.exists(iniFilePath):
         iniFileParser = ConfigParser.ConfigParser()
         iniFileParser.read(iniFilePath)
+        for section in iniFileParser._sections:
+          iniFileParser._sections[section]['__name__'] = section 
         return iniFileParser._sections
     print('AWSume Error: Trying to access non-existant file path: ' + iniFilePath, file=sys.stderr)
     exit(1)
@@ -337,7 +341,7 @@ def read_mfa():
     return the string entered by the user
     """
     print('Enter MFA Code: ', file=sys.stderr, end='')
-    return raw_input()
+    return input()
 
 def is_valid_mfa_token(mfaToken):
     """
@@ -518,6 +522,8 @@ def write_auto_awsume_session(autoAwsumeName, awsumeSession, awsumeCacheFile, ro
     #check to see if profile exists
     autoAwsumeParser = ConfigParser.ConfigParser()
     autoAwsumeParser.read(awsumeCredentialsPath)
+    for section in autoAwsumeParser._sections:
+        autoAwsumeParser._sections[section]['__name__'] = section 
     #if the section already exists, remove it to overwrite
     if autoAwsumeParser.has_section(autoAwsumeName):
         autoAwsumeParser.remove_section(autoAwsumeName)

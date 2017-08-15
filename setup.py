@@ -3,7 +3,7 @@ from setuptools import setup, find_packages
 from setuptools.command.install import install
 from setuptools.command.install_scripts import install_scripts
 
-version = '1.2.1'
+version = '1.2.2'
 
 class CustomInstall(install):
     def run(self):
@@ -78,7 +78,8 @@ setup(
         'python-dateutil',
         'boto3',
         'psutil',
-        'yapsy'
+        'yapsy',
+        'future'
     ],
     entry_points={
         "console_scripts": [
