@@ -5,7 +5,7 @@ from six.moves import configparser as ConfigParser
 from builtins import input
 from yapsy import PluginManager
 
-__version__ = '1.2.2'
+__version__ = '1.2.3'
 
 #get cross-platform home directory
 HOME_PATH = os.path.expanduser('~')
@@ -620,7 +620,7 @@ def generate_formatted_data(configSections, credentialsSections):
     format the config profiles for easy printing
     """
     #list headers
-    for section in configSections:
+    for section in list(configSections):
         if 'profile ' in section:
             configSections[section.replace('profile ', '')] = configSections.pop(section)
 

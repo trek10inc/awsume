@@ -3,7 +3,7 @@ from setuptools import setup, find_packages
 from setuptools.command.install import install
 from setuptools.command.install_scripts import install_scripts
 
-version = '1.2.2'
+version = '1.2.3'
 
 class CustomInstall(install):
     def run(self):
