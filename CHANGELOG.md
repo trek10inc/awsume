@@ -1,13 +1,17 @@
 # AWSume Changelog
 
+## [1.2.3] - 2017-08-16 - Bug Fix
+
+- Fixed bug in which running `awsume -l` would crash for Python 3 users.
+
 ## [1.2.2] - 2017-08-15 - Compatibility
 
-- Fixes issues around Python 3 compatibility. All features should be compatible with both Python 2 and 3.
-- Fixes edge case in which there is an auto-refresh role profile in the user's credentials file that the user no longer has permission to assume.
+- Fixed issues around Python 3 compatibility. All features should be compatible with both Python 2 and 3.
+- Fixed edge case in which there is an auto-refresh role profile in the user's credentials file that the user no longer has permission to assume.
 
 ## [1.2.1] - 2017-08-02 - Bug Fix
 
-- Fixes logging issue with the plugin manager.
+- Fixed logging issue with the plugin manager.
 
 ## [1.2.0] - 2017-07-28 - Plugin System
 
