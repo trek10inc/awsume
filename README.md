@@ -16,7 +16,7 @@ AWSume has the ability to spawn a background process that waits for your role cr
 
 AWSume has been conveniently wrapped into a Python package and installable with just one simple command:
 
-```
+```bash
 pip install awsume
 ```
 
@@ -55,7 +55,7 @@ Add profiles to
 
 #### ~/.aws/config
 
-```
+```ini
 [default]
 region = us-east-1
 [profile internal-admin]
@@ -82,7 +82,7 @@ Add credentials to
 
 #### ~/.aws/credentials
 
-```
+```ini
 [default]
 aws_access_key_id = AKIAIOIEUFSN9EXAMPLE
 aws_secret_access_key = wJalrXIneUATF/K7MDENG/jeuFHEnfEXAMPLEKEY
@@ -93,7 +93,7 @@ aws_secret_access_key = wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY
 
 ## Usage
 
-```
+```bash
 usage: awsumepy [-h] [-d] [-s] [-r] [-a] [-k] [-v] [-l] [profile name]
 
 AWSume
@@ -110,7 +110,13 @@ optional arguments:
   -k            Kill the auto-refreshing process
   -v            Display the current version of AWSume
   -l            List useful information about available profiles
+  --info        Print any info logs to stderr
+  --debug       Print any debug logs to stderr
 ```
+
+#### NOTES
+- `--info` will list only basic information about each step in the AWSume process.
+- `--debug` will list detailed information about what is happening during AWSume's runtime. It will definitely spam your screen if you don't direct it's output elsewhere: most commonly `awsume --debug 2> logs.txt`
 
 ### AutoAwsume
 
