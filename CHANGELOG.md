@@ -1,5 +1,11 @@
 # AWSume Changelog
 
+## [1.2.4] - 2017-08-18 - Logging
+
+- Adds two new command-line options: `--info` and `--debug`, both used for logging purposes.
+- `--info` will list only basic information about each step in the AWSume process.
+- `--debug` will list detailed information about what is happening during AWSume's runtime. It will definitely spam your screen if you don't direct it's output elsewhere: most commonly `awsume --debug 2> logs.txt`
+
 ## [1.2.3] - 2017-08-16 - Bug Fix
 
 - Fixed bug in which running `awsume -l` would crash for Python 3 users.
