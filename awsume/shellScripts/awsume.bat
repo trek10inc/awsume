@@ -38,7 +38,7 @@ for /f "tokens=1,2,3,4,5 delims= " %%a in ("%AWSUME_TEXT%") do (
         set AWS_DEFAULT_PROFILE=
         )
     )
-    if "%%a" == "True" (
+    if "%%a" == "Awsume" (
         set AWS_SECRET_ACCESS_KEY=
         set AWS_SESSION_TOKEN=
         set AWS_SECURITY_TOKEN=
@@ -63,7 +63,7 @@ for /f "tokens=1,2,3,4,5 delims= " %%a in ("%AWSUME_TEXT%") do (
 
 IF defined SHOW (
     for /f "tokens=1,2,3,4,5 delims= " %%a in ("%AWSUME_TEXT%") do (
-    if "%%a" == "True" (
+    if "%%a" == "Awsume" (
         echo set AWS_SECRET_ACCESS_KEY=%%b
         echo set AWS_ACCESS_KEY_ID=%%d
 
