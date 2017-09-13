@@ -75,6 +75,7 @@ setup(
     ],
     include_package_data=True,
     install_requires=[
+        'awscli',
         'python-dateutil',
         'boto3',
         'psutil',

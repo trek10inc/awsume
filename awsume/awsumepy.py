@@ -74,10 +74,14 @@ def add_arguments(argumentParser):
     argumentParser.add_argument('-v', action='store_true', default=False,
                                 dest='version',
                                 help='Display the current version of AWSume')
-    #list profiles flag
+    #list profile data flag
     argumentParser.add_argument('-l', action='store_true', default=False,
                                 dest='list_profiles',
                                 help='List useful information about available profiles')
+    #list roles/users
+    argumentParser.add_argument('--rolesusers', action='store_true', default=False,
+                                dest='rolesusers',
+                                help='List all awsume-able roles/users')
     #info flag
     argumentParser.add_argument('--info', action='store_true',
                                 dest='info',
@@ -114,9 +118,21 @@ def handle_command_line_arguments(arguments, app):
         log.setLevel(logging.DEBUG)
     log.info('Info logs are visible')
     log.debug('Debug logs are visible')
+
     #check for version flag
     if arguments.version:
         print_version()
+        exit(0)
+
+    #check for list roles and users flag
+    if arguments.rolesusers:
+        #get the list of roles and users
+        rolesUsers = []
+        for func in app.list_roles_users_funcs:
+            rolesUsers.extend(func())
+
+        for item in rolesUsers:
+            print(item, file=sys.stderr, end=' ')
         exit(0)
 
     #check for list profiles flag
@@ -828,6 +844,17 @@ def list_profile_data(configSections, credentialsSections):
     formattedProfiles = generate_formatted_data(configSections, credentialsSections)
     print_formatted_data(formattedProfiles)
 
+def list_roles_users():
+    rolesUsersList = []
+    configSections = get_config_profile_list(None)
+    credentialsSections = get_credentials_profile_list(None)
+
+    for profile in configSections:
+        rolesUsersList.append(profile.replace('profile ', ''))
+    for profile in credentialsSections:
+        rolesUsersList.append(profile.replace('profile ', ''))
+    return rolesUsersList
+
 def register_plugins(app, manager):
     """
     app - the app to modify;
@@ -858,6 +885,8 @@ def register_plugins(app, manager):
             app.register('handle_getting_role_func', plugin.plugin_object.handle_getting_role_func)
         if 'post_awsume_func' in dir(plugin.plugin_object):
             app.register('post_awsume_func', plugin.plugin_object.post_awsume_func)
+        if 'list_roles_users_func' in dir(plugin.plugin_object):
+            app.register('list_roles_users_func', plugin.plugin_object.list_roles_users_func)
 
 def locate_plugins(manager, pluginPath):
     """
@@ -898,6 +927,7 @@ class App(object):
     get_user_credentials_funcs = []
     handle_getting_role_funcs = []
     post_awsume_funcs = []
+    list_roles_users_funcs = []
 
     def __init__(self):
         """
@@ -912,6 +942,7 @@ class App(object):
         self.handle_profiles_funcs.append(handle_profiles)
         self.get_user_credentials_funcs.append(get_user_credentials)
         self.handle_getting_role_funcs.append(handle_getting_role_credentials)
+        self.list_roles_users_funcs.append(list_roles_users)
 
     def register(self, functionType, newFunction):
         """
@@ -939,6 +970,8 @@ class App(object):
             self.handle_getting_role_funcs.append(newFunction)
         elif functionType == 'post_awsume_func':
             self.post_awsume_funcs.append(newFunction)
+        elif functionType == 'list_roles_users_func':
+            self.list_roles_users_funcs.append(newFunction)
 
     def run(self):
         """
