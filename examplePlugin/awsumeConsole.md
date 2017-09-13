@@ -2,6 +2,14 @@
 
 This is a plugin that enables you to use your assumed role credentials to open the AWS console in your default browser. To install, just place the `awsumeConsole.py` and `awsumeConsole.yapsy-plugin` within your `~/.aws/awsumePlugins` directory, as you would install any other AWSume plugin.
 
+## Dependencies
+
+This plugin does require you to have the python module `requests` installed, which can be done with a simple command:
+
+```bash
+pip install requests
+```
+
 ### Use
 
 There are two ways to use this plugin.
