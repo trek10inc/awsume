@@ -5,7 +5,7 @@ from six.moves import configparser as ConfigParser
 from builtins import input
 from yapsy import PluginManager
 
-__version__ = '1.2.5'
+__version__ = '1.2.6'
 
 #initialize logging
 logging.getLogger('yapsy').addHandler(logging.StreamHandler())
@@ -735,7 +735,7 @@ def stop_auto_refresh(profileName=None, filePath=AWS_CREDENTIALS_FILE):
     clean up autoAwsume's mess, kill autoAwsume, and exit
     """
     log.info('Removing all autoAwsume processes and stopping autoAwsume')
-    log.debug('Profile name: ' + profileName0)
+    log.debug('Profile name: ' + str(profileName))
 
     if profileName is None:
         log.debug('Profile name not given, deleting all autoAwsume profiles')
