@@ -3,7 +3,7 @@ from setuptools import setup, find_packages
 from setuptools.command.install import install
 from setuptools.command.install_scripts import install_scripts
 
-version = '1.2.5'
+version = '1.2.6'
 
 class CustomInstall(install):
     def run(self):
@@ -25,6 +25,17 @@ class CustomInstall(install):
                 rc_file = os.path.abspath('%s/.profile' % homefolder)
             elif os.path.exists(os.path.abspath('%s/.login' % homefolder)):
                 rc_file = os.path.abspath('%s/.login' % homefolder)
+
+            #now add the alias to the user's rc file
+            if os.path.exists(rc_file):
+                with open(rc_file, 'r') as f:
+                    lines = f.readlines()
+                    if alias not in lines:
+                        out = open(rc_file, 'a')
+                        out.write("#AWSume alias to source the AWSume script\n")
+                        out.write(alias)
+                        out.close()
+
             #the possible zsh rc files
             if os.path.exists(os.path.abspath('%s/.zshrc' % homefolder)):
                 rc_file = os.path.abspath('%s/.zshrc' % homefolder)
