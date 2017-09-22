@@ -132,7 +132,7 @@ def handle_command_line_arguments(arguments, app):
             rolesUsers.extend(func())
 
         for item in rolesUsers:
-            print(item, file=sys.stderr, end=' ')
+            print(item, end='\n')
         exit(0)
 
     #check for list profiles flag
