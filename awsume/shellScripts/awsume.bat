@@ -7,6 +7,11 @@ set /p AWSUME_TEXT=<./temp.txt
 
 FOR %%A IN (%*) DO (
     IF "%%A"=="-s" (set "SHOW=y")
+    echo %%A | findstr "^-" > nul
+
+    if errorlevel 1 (
+        set AWSUME_PROFILE=%%A
+    )
 )
 
 for /f "tokens=1,2,3,4,5 delims= " %%a in ("%AWSUME_TEXT%") do (

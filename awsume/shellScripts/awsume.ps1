@@ -35,6 +35,12 @@ elseif ( $AWSUME_FLAG -eq "Auto" ) {
     $env:AWS_PROFILE = $AWSUME_1
     $env:AWS_DEFAULT_PROFILE = $AWSUME_1
     #run the background autoAwsume process
+    #if enabled, show the exact commands to use in order to assume the role we just assumed
+    foreach ($arg in $args) {
+        if ($arg -notlike "-*") {
+            $env:AWSUME_PROFILE = $arg
+        }
+    }
     Start-Process powershell -ArgumentList "autoAwsume" -WindowStyle hidden
 
 }
@@ -50,6 +56,7 @@ elseif ( $AWSUME_FLAG -eq "Stop" ) {
         $env:AWS_DEFAULT_PROFILE = ""
     }
 }
+
 #awsume the profile
 elseif ( $AWSUME_FLAG -eq "Awsume") {
     #Remove the environment variables associated with the AWS CLI,
@@ -74,6 +81,13 @@ elseif ( $AWSUME_FLAG -eq "Awsume") {
     if ( $AWSUME_4 -ne "None" ) {
         $env:AWS_REGION = $AWSUME_4
         $env:AWS_DEFAULT_REGION = $AWSUME_4
+    }
+
+    #set the AWSUME_PROFILE variable
+    foreach ($arg in $args) {
+        if ($arg -notlike "-*") {
+            $env:AWSUME_PROFILE = $arg
+        }
     }
 
     #if enabled, show the exact commands to use in order to assume the role we just assumed
