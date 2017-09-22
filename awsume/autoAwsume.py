@@ -46,7 +46,7 @@ def scan_through_auto_refresh_profiles(credentialsProfiles):
             if sourceProfileCredentials['Expiration'] > datetime.datetime.now():
                 try:
                     #refresh the session
-                    refreshedCredentials = refresh_session(sourceProfileCredentials, credentialsProfiles[profile]['aws_role_arn'], cacheFileName + '-auto-awsume-session')
+                    refreshedCredentials = refresh_session(sourceProfileCredentials, credentialsProfiles[profile]['aws_role_arn'], profile.replace('auto-awsume-', '') + '-auto-awsume-session')
                 except Exception as e:
                     #if refreshing the session failed, remove that profile
                     print("autoAwsume: Refreshing profile [" + profile.replace('auto-refresh-', '') + "] failed. That profile will no longer be auto-refreshed.")
