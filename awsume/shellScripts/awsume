@@ -30,6 +30,13 @@ elif [ "$AWSUME_FLAG" = "Auto" ]; then
     #set the profile that will contain the session credentials
     export AWS_PROFILE=$AWSUME_1
     export AWS_DEFAULT_PROFILE=$AWSUME_1
+    #get the profile name from the arguments
+    for AWSUME_var in "$@"
+    do
+        if [[ "$AWSUME_var" != "-"* ]]; then
+            export AWSUME_PROFILE=$AWSUME_var
+        fi
+    done
     #run the background autoAwsume process
     autoAwsume & disown
 
@@ -73,6 +80,11 @@ elif [ "$AWSUME_FLAG" = "Awsume" ]; then
     #if enabled, show the exact commands to use in order to assume the role we just assumed
     for AWSUME_var in "$@"
     do
+        #set AWSUME_PROFILE
+        if [[ "$AWSUME_var" != "-"* ]]; then
+            export AWSUME_PROFILE=$AWSUME_var
+        fi
+        #show commands
         if [[ "$AWSUME_var" == "-s"* ]]; then
             echo export AWS_SECRET_ACCESS_KEY=$AWSUME_1
             echo export AWS_SESSION_TOKEN=$AWSUME_2
