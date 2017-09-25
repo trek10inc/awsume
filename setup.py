@@ -3,7 +3,7 @@ from setuptools import setup, find_packages
 from setuptools.command.install import install
 from setuptools.command.install_scripts import install_scripts
 
-version = '1.2.6'
+version = '1.2.7'
 
 class CustomInstall(install):
     #the auto-complete scripts

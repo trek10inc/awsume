@@ -5,7 +5,7 @@ from six.moves import configparser as ConfigParser
 from builtins import input
 from yapsy import PluginManager
 
-__version__ = '1.2.6'
+__version__ = '1.2.7'
 
 #initialize logging
 logging.getLogger('yapsy').addHandler(logging.StreamHandler())
