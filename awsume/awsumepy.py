@@ -763,9 +763,8 @@ def generate_formatted_data(configSections, credentialsSections):
     for section in list(configSections):
         if 'profile ' in section:
             configSections[section.replace('profile ', '')] = configSections.pop(section)
-
-    configSections.update(credentialsSections)
-    configSections = collections.OrderedDict(sorted(configSections.items()))
+    credentialsSections.update(configSections)
+    credentialsSections = collections.OrderedDict(sorted(credentialsSections.items()))
 
     profileList = []
     profileList.append([])
@@ -776,34 +775,24 @@ def generate_formatted_data(configSections, credentialsSections):
     profileList[0].append('REGION')
     #now fill the tables with the appropriate data
     index = 1
-    for section in configSections:
-        if is_role_profile(configSections[section]):
-            profileList.append([])
-            profileList[index].append(section.replace('profile ', ''))
-            profileList[index].append('Role')
-            profileList[index].append(configSections[section]['source_profile'])
-            profileList[index].append('Yes' if 'mfa_serial' in configSections[section] else 'No')
-            profileList[index].append(str(configSections[section].get('region')))
-        else:
-            profileList.append([])
-            profileList[index].append(section.replace('profile ', ''))
-            profileList[index].append('User')
-            profileList[index].append('None')
-            profileList[index].append('Yes' if 'mfa_serial' in configSections[section] else 'No')
-            profileList[index].append(str(configSections[section].get('region')))
-        index += 1
-    #add profiles that are in credentials but not config
     for section in credentialsSections:
-        if section not in [row[0] for row in profileList]:
-            if 'auto-refresh-' not in section:
+        #don't add any autoAwsume profiles
+        if 'auto-refresh-' not in section:
+            if is_role_profile(credentialsSections[section]):
+                profileList.append([])
+                profileList[index].append(section.replace('profile ', ''))
+                profileList[index].append('Role')
+                profileList[index].append(credentialsSections[section]['source_profile'])
+                profileList[index].append('Yes' if 'mfa_serial' in credentialsSections[section] else 'No')
+                profileList[index].append(str(credentialsSections[section].get('region')))
+            else:
                 profileList.append([])
                 profileList[index].append(section.replace('profile ', ''))
                 profileList[index].append('User')
                 profileList[index].append('None')
-                profileList[index].append('No')
-                profileList[index].append('None')
+                profileList[index].append('Yes' if 'mfa_serial' in credentialsSections[section] else 'No')
+                profileList[index].append(str(credentialsSections[section].get('region')))
             index += 1
-
     return profileList
 
 def print_formatted_data(formattedProfileData):
