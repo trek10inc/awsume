@@ -1,4 +1,4 @@
-import atexit, os
+import atexit, os, subprocess
 from setuptools import setup, find_packages
 from setuptools.command.install import install
 from setuptools.command.install_scripts import install_scripts
@@ -6,6 +6,7 @@ from setuptools.command.install_scripts import install_scripts
 version = '1.2.7'
 
 class CustomInstall(install):
+
     #the auto-complete scripts
     bashScript = """#auto-completion script for Awsume
 _awsume() {
@@ -21,6 +22,16 @@ complete -F _awsume awsume"""
 
     zshScript = """#compdef awsume
 _arguments "*: :($(awsumepy --rolesusers))" """
+
+    powershellScript = """Register-ArgumentCompleter -Native -CommandName awsume -ScriptBlock {
+    param($wordToComplete, $commandAst, $cursorPosition)
+    $(awsumepy --rolesusers) |
+    Where-Object { $_ -like "$wordToComplete*" } |
+    Sort-Object |
+    ForEach-Object {
+        [System.Management.Automation.CompletionResult]::new($_, $_, 'ParameterValue', $_)
+    }
+}"""
 
     def use_bash(self, homefolder):
         #the possible bash rc files
@@ -90,6 +101,19 @@ _arguments "*: :($(awsumepy --rolesusers))" """
                 out.write(zshScript + '\n')
                 out.close()
 
+    def use_powershell(self):
+        cmd_exists = lambda x: any(os.access(os.path.join(path, x), os.X_OK) for path in os.environ["PATH"].split(os.pathsep))
+        if cmd_exists('powershell.exe'):
+            return True
+        return False
+
+    def add_powershell_script(self, script, file):
+        contents = open(file, 'w+').read()
+        if script not in contents:
+            f = open(file, 'a+')
+            f.write('\n' + script + '\n')
+            f.close()
+
     def run(self):
         def _post_install():
             #cross platform home folder
@@ -110,6 +134,12 @@ _arguments "*: :($(awsumepy --rolesusers))" """
                 fpath_dir = os.path.abspath('/usr/local/share/zsh/site-functions')
                 self.add_alias(rc_file, alias)
                 self.add_zsh_script(self.zshScript, rc_file, fpath_dir)
+
+            #add powershell script
+            if self.use_powershell():
+                (file_name, err) = subprocess.Popen(["powershell", "$profile"], stdout=subprocess.PIPE, shell=True).communicate()
+                file_name = file_name.replace('\r\n', '')
+                self.add_powershell_script(self.powershellScript, file_name)
 
         atexit.register(_post_install)
         install.run(self)
