@@ -6,7 +6,7 @@ There are various types of plugins you can write, and there is some boilerplate 
 
 ## How To Make Plugins
 
-These Plugins must be written in Python. AWSume's uses *Yapsy* as it's plugin manager.
+These Plugins must be written in Python. AWSume uses *Yapsy* as it's plugin manager.
 The plugins must be placed in the `~/.aws/awsumePlugins/` directory. You must create two files for each plugin you make, `plugin_name.py` and `plugin_name.yapsy-plugin`. 
 The contents of the `.yapsy-plugin` file should be:
 
@@ -42,7 +42,7 @@ When displaying information, always print to `sys.stderr`, so that the `stdout` 
 
 ## Plugin Functions
 
- ### Add Arguments
+### Add Arguments
 
 - ***Function Name:*** `add_arguments_func`
 - ***Arguments:***
@@ -87,6 +87,27 @@ class SomePlugin(IPlugin.IPlugin):
         if arguments.special_flag:
             print("Special flag triggered!", file=sys.stderr)
             exit(0)
+```
+
+### List Roles and Users
+
+- ***Function Name:*** `list_roles_users_func`
+- ***Arguments:***
+  - There are no arguments for this plugin function
+- This plugin only returns a list of awsume-able profiles this plugin extends to Awsume.
+- The purpose of this plugin is to add any plugin-specific profiles to the autocomplete.
+- Make sure that what you return is a list, even if the plugin is only adding one profile.
+- Remember, this plugin is returning profile names, as strings, and not the profiles themselves.
+
+``` python
+import argparse
+from yapsy import IPlugin
+from awsume import awsumepy
+
+class SomePlugin(IPlugin.IPlugin):
+    def list_roles_profiles_func(self):
+        profiles = ['my-plugin-profile', 'my-admin-profile']
+        return profiles
 ```
 
 ### Get Config Profile List
