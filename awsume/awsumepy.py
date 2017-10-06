@@ -15,7 +15,6 @@ logHandler.setFormatter(logging.Formatter('%(name)s.%(funcName)s : %(message)s')
 log.addHandler(logHandler)
 def logDatetimeConverter(o): return o.__str__() if isinstance(o, datetime.datetime) else o
 
-
 #get cross-platform home directory
 HOME_PATH = os.path.expanduser('~')
 AWS_CONFIG_FILE = HOME_PATH + '/.aws/config'
@@ -841,7 +840,8 @@ def list_roles_users():
     for profile in configSections:
         rolesUsersList.append(profile.replace('profile ', ''))
     for profile in credentialsSections:
-        rolesUsersList.append(profile.replace('profile ', ''))
+        if 'auto-refresh-' not in profile:
+            rolesUsersList.append(profile.replace('profile ', ''))
     return rolesUsersList
 
 def register_plugins(app, manager):
