@@ -1,37 +1,47 @@
 # AWSume Changelog
 
+## [1.3.0] - 2017-10-06 - Auto-Complete
+
+- Adds auto-completion/tab-completion for Bash, Zsh, and Powershell
+- Adds new flag, `--rolesusers`, which is used for only listing the names of each awsume-able profile
+- Adds new plugin function type, "rolesusers_func", which is meant for any plugins to list their awsume-able profiles
+
+## [1.2.7] - 2017-09-14 - Bug Fix
+
+- Fixes a list profiles bug
+
 ## [1.2.6] - 2017-09-14 - Bug Fix
 
 - Fixes logging bug that causes an error when killing autoAwsume
 
 ## [1.2.5] - 2017-09-06 - Bug Fix
 
-- Fixes issue where awsuming with command prompt would not set environment variables.
+- Fixes issue where awsuming with command prompt would not set environment variables
 
 ## [1.2.4] - 2017-08-18 - Logging
 
 - Adds two new command-line options: `--info` and `--debug`, both used for logging purposes.
-- `--info` will list only basic information about each step in the AWSume process.
+- `--info` will list only basic information about each step in the AWSume process
 - `--debug` will list detailed information about what is happening during AWSume's runtime. It will definitely spam your screen if you don't direct it's output elsewhere: most commonly `awsume --debug 2> logs.txt`
 
 ## [1.2.3] - 2017-08-16 - Bug Fix
 
-- Fixed bug in which running `awsume -l` would crash for Python 3 users.
+- Fixed bug in which running `awsume -l` would crash for Python 3 users
 
 ## [1.2.2] - 2017-08-15 - Compatibility
 
-- Fixed issues around Python 3 compatibility. All features should be compatible with both Python 2 and 3.
-- Fixed edge case in which there is an auto-refresh role profile in the user's credentials file that the user no longer has permission to assume.
+- Fixed issues around Python 3 compatibility. All features should be compatible with both Python 2 and 3
+- Fixed edge case in which there is an auto-refresh role profile in the user's credentials file that the user no longer has permission to assume
 
 ## [1.2.1] - 2017-08-02 - Bug Fix
 
-- Fixed logging issue with the plugin manager.
+- Fixed logging issue with the plugin manager
 
 ## [1.2.0] - 2017-07-28 - Plugin System
 
 ### Added
 
-- Adds new plugin system, built on the Yapsy plugin manager. Full documentation on the plugin system can be read [here](https://github.com/trek10inc/awsume/blob/master/PluginDocumentation.md).
+- Adds new plugin system, built on the Yapsy plugin manager. Full documentation on the plugin system can be read [here](https://github.com/trek10inc/awsume/blob/master/PluginDocumentation.md)
 
 ## [1.1.7] - 2017-07-13 - Bug Fix
 
