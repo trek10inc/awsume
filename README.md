@@ -189,4 +189,7 @@ Removes all `auto-refresh-` profiles from the `.aws/credentials` file, and kills
 - **I'm getting an installation error when pip is trying to uninstall six, I get "Operation not permitted"**
   - Run your `pip install awsume` command with the option `--ignore-installed six`. The issue here is that OS X ships with `six-1.4.1` preinstalled. AWSume depends on boto3 and python-dateutil, which both depend on six >= 1.5. When installing AWSume, pip needs to uninstall six to upgrade it to the required version. However, due to Apple's "System Integrity Protection", not even root can modify/uninstall six. So, the only way around this is to ignore upgrading six when installing AWSume.
 
+- **I'm using Pyenv and my terminal closes whenever I run AWSume**
+  - This issue was fixed in release `1.3.1`. The issue is that the `awsume` command calls a shell script. Because of that, the way that Pyenv shims work, and the alias that sources AWSume, calling it would result in the shim, in bash, is sourced, and trying to execute python on a bash script, the terminal would close whenever running `awsume`. The solution implemented is to alter the alias to point to the `awsume` script within the `~/pyenv/versions/<VERSION>/bin/` directory, so that the `awsume` shim isn't being called anymore. 
+
 See our [blog](https://www.trek10.com/blog/awsume-aws-assume-made-awesome) for more details.
