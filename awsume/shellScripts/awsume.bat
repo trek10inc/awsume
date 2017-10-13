@@ -5,6 +5,7 @@ set SHOW=
 awsumepy %* > ./temp.txt
 set /p AWSUME_TEXT=<./temp.txt
 
+set AWSUME_PROFILE=
 FOR %%A IN (%*) DO (
     IF "%%A"=="-s" (set "SHOW=y")
     echo %%A | findstr "^-" > nul

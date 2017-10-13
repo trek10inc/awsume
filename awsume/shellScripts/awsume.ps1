@@ -31,6 +31,7 @@ elseif ( $AWSUME_FLAG -eq "Auto" ) {
     $env:AWS_DEFAULT_REGION = ""
     $env:AWS_PROFILE = ""
     $env:AWS_DEFAULT_PROFILE = ""
+    $env:AWSUME_PROFILE = ""
     #set the profile that will contain the session credentials
     $env:AWS_PROFILE = $AWSUME_1
     $env:AWS_DEFAULT_PROFILE = $AWSUME_1
@@ -69,6 +70,7 @@ elseif ( $AWSUME_FLAG -eq "Awsume") {
     $env:AWS_DEFAULT_REGION = ""
     $env:AWS_PROFILE = ""
     $env:AWS_DEFAULT_PROFILE = ""
+    $env:AWSUME_PROFILE = ""
 
     $env:AWS_SECRET_ACCESS_KEY = $AWSUME_1
     $env:AWS_ACCESS_KEY_ID = $AWSUME_3

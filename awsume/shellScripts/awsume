@@ -27,6 +27,7 @@ elif [ "$AWSUME_FLAG" = "Auto" ]; then
     unset AWS_DEFAULT_REGION
     unset AWS_PROFILE
     unset AWS_DEFAULT_PROFILE
+    unset AWSUME_PROFILE
     #set the profile that will contain the session credentials
     export AWS_PROFILE=$AWSUME_1
     export AWS_DEFAULT_PROFILE=$AWSUME_1
@@ -63,6 +64,7 @@ elif [ "$AWSUME_FLAG" = "Awsume" ]; then
     unset AWS_DEFAULT_REGION
     unset AWS_PROFILE
     unset AWS_DEFAULT_PROFILE
+    unset AWSUME_PROFILE
 
     export AWS_SECRET_ACCESS_KEY=$AWSUME_1
     export AWS_ACCESS_KEY_ID=$AWSUME_3
