@@ -1,5 +1,10 @@
 # AWSume Changelog
 
+## [1.3.1] - 2017-10-13 - Bug Fix
+
+- Adds compatibility with pyenv installations
+  - Since `awsume` is actually a shell script, and not a python script, pyenv would crash your terminal when calling awsume, this update fixes this issue
+
 ## [1.3.0] - 2017-10-06 - Auto-Complete
 
 - Adds auto-completion/tab-completion for Bash, Zsh, and Powershell

@@ -1,15 +1,16 @@
 import atexit, os, subprocess
+import urllib
 from setuptools import setup, find_packages
 from setuptools.command.install import install
 from setuptools.command.install_scripts import install_scripts
+from distutils.spawn import find_executable
 
-version = '1.3.0'
+version = '1.3.1'
 
 class CustomInstall(install):
 
     #the auto-complete scripts
-    bashScript = """#auto-completion script for Awsume
-_awsume() {
+    bashScript = """_awsume() {
     local cur prev opts
     COMPREPLY=()
     cur="${COMP_WORDS[COMP_CWORD]}"
@@ -121,6 +122,11 @@ _arguments "*: :($(awsumepy --rolesusers))" """
 
             #alias string to add
             alias = 'alias awsume=". awsume"\n'
+
+            #pyenv compatibility
+            if find_executable('pyenv'):
+                pyenv_version = os.popen('pyenv version').read().split('(')[0].strip()
+                alias = 'alias awsume=". ~/.pyenv/versions/' + pyenv_version + '/bin/awsume"'
 
             #add bash alias/script
             if self.use_bash(homefolder):
