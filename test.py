@@ -70,6 +70,9 @@ class TestHandleCommandLineArguments(unittest.TestCase):
         emptyArgs.kill = False
         emptyArgs.default = False
         emptyArgs.profile_name = None
+        emptyArgs.info = False
+        emptyArgs.debug = False
+        emptyArgs.rolesusers = False
 
         versionArgs = copy.copy(emptyArgs)
         versionArgs.version = True
@@ -104,15 +107,16 @@ class TestGetProfilesFromINIFile(unittest.TestCase):
     @mock.patch('os.path.exists')
     def test_get_profiles_from_ini_file(self, mock_os_path_exists, mock_config_parser):
         mock_os_path_exists.return_value = True
-        expected = 'dict-of-profiles'
         mock_config_object = mock.Mock()
         mock_config_read = mock.Mock()
         mock_config_object.read = mock_config_read
         mock_config_parser.return_value = mock_config_object
-        mock_config_object._sections = expected
+        mock_config_object._sections = []
 
-        sections = awsumepy.get_profiles_from_ini_file('./path')
-        self.assertEqual(sections, expected)
+        path = './path'
+
+        awsumepy.get_profiles_from_ini_file(path)
+        mock_config_read.assert_called_with(path)
 
         mock_os_path_exists.return_value = False
         with self.assertRaises(SystemExit):
@@ -624,6 +628,7 @@ class TestWriteAutoAwsumeSession(unittest.TestCase):
         mock_parser.read = mock_parser_read
         mock_parser.has_section = mock_parser_has_section
         mock_parser.remove_section = mock_parser_remove_section
+        mock_parser._sections = []
 
         mock_config_parser.return_value = mock_parser
 
