@@ -1,5 +1,9 @@
 # AWSume Changelog
 
+## [1.3.2] - 2017-10-30 - Region Change
+
+- When using AWSume on a profile in which the region is absent, AWSume will pull the region from the default profile and set the `AWS_REGION` environment variable to that
+
 ## [1.3.1] - 2017-10-13 - Bug Fix
 
 - Adds compatibility with pyenv installations

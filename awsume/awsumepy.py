@@ -5,7 +5,7 @@ from six.moves import configparser as ConfigParser
 from builtins import input
 from yapsy import PluginManager
 
-__version__ = '1.3.1'
+__version__ = '1.3.2'
 
 #initialize logging
 logging.getLogger('yapsy').addHandler(logging.StreamHandler())
@@ -557,14 +557,23 @@ def create_awsume_session(awsCredentialsProfile, awsConfigProfile):
     print('AWSume Error: Invalid Credentials', file=sys.stderr)
     exit(1)
 
-def session_string(awsumeSession):
+def session_string(awsumeSession, arguments=None):
     """
     awsumeSession - the session to create a string out of;
+    arguments - the command-line arguments;
     create a formatted and space-delimited string containing useful credential information;
     if an empty session is given, an empty string is returned
     """
     log.info('Converting the session object to a session string')
-
+    #Get the default profile for region fallback
+    if arguments:
+        tempDefault = arguments.default
+        #spoof default needing default profile
+        arguments.default = True
+        defaultProfile = get_config_profile(get_config_profile_list(arguments), arguments)
+        arguments.default = tempDefault
+        if not awsumeSession['region']:
+            awsumeSession['region'] = defaultProfile.get('region')
     if all(cred in awsumeSession for cred in ('SecretAccessKey', 'SessionToken', 'AccessKeyId', 'region')):
         return str(awsumeSession['SecretAccessKey']) + ' ' + \
             str(awsumeSession['SessionToken']) + ' ' + \
@@ -1037,7 +1046,7 @@ class App(object):
 
         #send shell script wrapper the session environment variables
         log.debug("Sending data to shell wrappers")
-        print('Awsume' + ' ' + session_string(sessionToUse))
+        print('Awsume' + ' ' + session_string(sessionToUse, commandLineArguments))
 
 def main():
     #create the plugin manager
