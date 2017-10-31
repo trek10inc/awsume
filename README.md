@@ -117,6 +117,7 @@ optional arguments:
 #### NOTES
 - `--info` will list only basic information about each step in the AWSume process.
 - `--debug` will list detailed information about what is happening during AWSume's runtime. It will definitely spam your screen if you don't direct it's output elsewhere: most commonly `awsume --debug 2> logs.txt`
+- If a profile does not have a region, AWSume will use the default profile's region
 
 ### AutoAwsume
 
