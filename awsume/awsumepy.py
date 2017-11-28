@@ -77,10 +77,14 @@ def add_arguments(argumentParser):
     argumentParser.add_argument('-l', action='store_true', default=False,
                                 dest='list_profiles',
                                 help='List useful information about available profiles')
+    #set Session name
+    argumentParser.add_argument('--session-name',  default=None, dest='sessionname',
+                                help='set Session Name')
     #list roles/users
     argumentParser.add_argument('--rolesusers', action='store_true', default=False,
                                 dest='rolesusers',
                                 help='List all awsume-able roles/users')
+
     #info flag
     argumentParser.add_argument('--info', action='store_true',
                                 dest='info',
@@ -168,7 +172,7 @@ def get_profiles_from_ini_file(iniFilePath):
         iniFileParser = ConfigParser.ConfigParser()
         iniFileParser.read(iniFilePath)
         for section in iniFileParser._sections:
-          iniFileParser._sections[section]['__name__'] = section 
+          iniFileParser._sections[section]['__name__'] = section
         return iniFileParser._sections
     print('AWSume Error: Trying to access non-existant file path: ' + iniFilePath, file=sys.stderr)
     exit(1)
@@ -324,8 +328,9 @@ def get_user_credentials(configSection, credentialsSection, userSession, cachePa
         print('User profile credentials will expire: ' + str(cacheSession['Expiration']), file=sys.stderr)
         return cacheSession
 
-def get_role_credentials(configSection, userSession):
+def get_role_credentials(arguments, configSection, userSession):
     """
+    arguments - the command-line arguments passed into AWSume;
     configSection - the profile from the config file;
     userSession - the session credentials for the user calling assume_role;
     get awsume-formatted role credentials from calling assume_role with `userSession` credentials
@@ -339,9 +344,13 @@ def get_role_credentials(configSection, userSession):
                                         userSession['AccessKeyId'],
                                         userSession['SessionToken'])
     #assume the role
+    if arguments.sessionname:
+        session_name = arguments.sessionname
+    else:
+        session_name = configSection['__name__'].replace('profile ', '') + '-awsume-session'
     awsRoleSession = get_assume_role_credentials(roleClient,
                                                  configSection['role_arn'],
-                                                 configSection['__name__'].replace('profile ', '') + '-awsume-session')
+                                                 session_name)
 
     roleSession = create_awsume_session(awsRoleSession, configSection)
     return roleSession
@@ -386,7 +395,7 @@ def handle_getting_role_credentials(configSection, credentialsSection, userSessi
         #if the user is assuming a role normally
         else:
             log.debug('Assuming the role normally')
-            roleSession = get_role_credentials(configSection, userSession)
+            roleSession = get_role_credentials(arguments, configSection, userSession)
             print('Role profile credentials will expire: ' + str(roleSession['Expiration']), file=sys.stderr)
             return roleSession
     else:
@@ -667,7 +676,7 @@ def write_auto_awsume_session(autoAwsumeName, awsumeSession, awsumeCacheFile, ro
     autoAwsumeParser = ConfigParser.ConfigParser()
     autoAwsumeParser.read(awsumeCredentialsPath)
     for section in autoAwsumeParser._sections:
-        autoAwsumeParser._sections[section]['__name__'] = section 
+        autoAwsumeParser._sections[section]['__name__'] = section
     #if the section already exists, remove it to overwrite
     if autoAwsumeParser.has_section(autoAwsumeName):
         autoAwsumeParser.remove_section(autoAwsumeName)
