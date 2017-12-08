@@ -9,7 +9,7 @@
 #AWSUME_2 - security token / fileName
 #AWSUME_3 - access key id
 #awsume_4 - region
-read AWSUME_FLAG AWSUME_1 AWSUME_2 AWSUME_3 AWSUME_4 AWSUME_5 <<< $(awsumepy "$@")
+read AWSUME_FLAG AWSUME_1 AWSUME_2 AWSUME_3 AWSUME_4 AWSUME_5 AWSUME_6 <<< $(awsumepy "$@")
 
 #if incorrect flag/help
 if [ "$AWSUME_FLAG" = "usage:" ]; then
