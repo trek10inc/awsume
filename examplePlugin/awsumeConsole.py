@@ -4,14 +4,12 @@ import sys, os, json, requests, webbrowser, urllib
 from yapsy import IPlugin
 from awsume import awsumepy
 
-PLUGIN_PATH = os.path.expanduser('~') + '/.aws/awsumePlugins'
-CONFIG_FILE = PLUGIN_PATH + '/trek10gcplugin.config'
-CACHE_FILE = PLUGIN_PATH + '/trek10gcCache.json'
-
 # Python 3 compatibility (python 3 has urlencode in parse sub-module)
 urlencode = getattr(urllib, 'parse', urllib).urlencode
 
 class AwsumeConsole(IPlugin.IPlugin):
+    TARGET_VERSION = '2.0.0'
+
     def add_arguments_func(self, parser):
         #console flag
         parser.add_argument('-c', action='store_true', default='False',
@@ -19,7 +17,7 @@ class AwsumeConsole(IPlugin.IPlugin):
                             help='Open the AWS console to the AWSume\'d credentials')
         return parser
 
-    def handle_arguments_func(self, arguments, app):
+    def handle_arguments_func(self, arguments, app, out_data):
         #use the environment variables to open
         if arguments.open_console is True and arguments.profile_name is None:
             credentials, region = self.get_temp_credentials_from_environment()
@@ -29,7 +27,14 @@ class AwsumeConsole(IPlugin.IPlugin):
             self.open_browser_to_url(consoleURL)
             exit(0)
 
-    def post_awsume_func(self, configProfileList, credentialsProfileList, configProfile, credentialsProfile, sessionToUse, arguments):
+    def post_awsume_func(self,
+                         configProfileList,
+                         credentialsProfileList,
+                         configProfile,
+                         credentialsProfile,
+                         sessionToUse,
+                         arguments,
+                         out_data):
         if arguments.open_console is True:
             credentials, region = self.get_temp_credentials_from_session(sessionToUse)
             r = self.make_aws_federation_request(credentials)
