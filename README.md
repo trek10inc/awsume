@@ -94,7 +94,7 @@ aws_secret_access_key = wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY
 ## Usage
 
 ```bash
-usage: awsumepy [-h] [-d] [-s] [-r] [-a] [-k] [-v] [-l] [profile name]
+usage: awsumepy [-h] [-d] [-s] [-r] [-a] [-k] [-v] [-l] [--rolesusers] [--info] [profile name]
 
 AWSume
 
@@ -110,6 +110,7 @@ optional arguments:
   -k            Kill the auto-refreshing process
   -v            Display the current version of AWSume
   -l            List useful information about available profiles
+  --rolesusers  List all awsume-able roles/users
   --info        Print any info logs to stderr
   --debug       Print any debug logs to stderr
 ```
