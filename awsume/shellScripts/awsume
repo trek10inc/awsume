@@ -9,7 +9,7 @@
 #AWSUME_2 - security token / fileName
 #AWSUME_3 - access key id
 #awsume_4 - region
-read AWSUME_FLAG AWSUME_1 AWSUME_2 AWSUME_3 AWSUME_4 <<< $(awsumepy "$@")
+read AWSUME_FLAG AWSUME_1 AWSUME_2 AWSUME_3 AWSUME_4 AWSUME_5 <<< $(awsumepy "$@")
 
 #if incorrect flag/help
 if [ "$AWSUME_FLAG" = "usage:" ]; then
@@ -28,16 +28,11 @@ elif [ "$AWSUME_FLAG" = "Auto" ]; then
     unset AWS_PROFILE
     unset AWS_DEFAULT_PROFILE
     unset AWSUME_PROFILE
+
     #set the profile that will contain the session credentials
     export AWS_PROFILE=$AWSUME_1
     export AWS_DEFAULT_PROFILE=$AWSUME_1
-    #get the profile name from the arguments
-    for AWSUME_var in "$@"
-    do
-        if [[ "$AWSUME_var" != "-"* ]]; then
-            export AWSUME_PROFILE=$AWSUME_var
-        fi
-    done
+    export AWSUME_PROFILE=$AWSUME_2
     #run the background autoAwsume process
     autoAwsume & disown
 
@@ -45,6 +40,13 @@ elif [ "$AWSUME_FLAG" = "Auto" ]; then
 elif [ "$AWSUME_FLAG" = "Kill" ]; then
     unset AWS_PROFILE
     unset AWS_DEFAULT_PROFILE
+    unset AWS_SECRET_ACCESS_KEY
+    unset AWS_SESSION_TOKEN
+    unset AWS_SECURITY_TOKEN
+    unset AWS_ACCESS_KEY_ID
+    unset AWS_REGION
+    unset AWS_DEFAULT_REGION
+    unset AWSUME_PROFILE
     return
 
 elif [ "$AWSUME_FLAG" = "Stop" ]; then
@@ -79,6 +81,8 @@ elif [ "$AWSUME_FLAG" = "Awsume" ]; then
         export AWS_DEFAULT_REGION=$AWSUME_4
     fi
 
+    export AWSUME_PROFILE=$AWSUME_5
+
     #if enabled, show the exact commands to use in order to assume the role we just assumed
     for AWSUME_var in "$@"
     do
@@ -89,13 +93,20 @@ elif [ "$AWSUME_FLAG" = "Awsume" ]; then
         #show commands
         if [[ "$AWSUME_var" == "-s"* ]]; then
             echo export AWS_SECRET_ACCESS_KEY=$AWSUME_1
-            echo export AWS_SESSION_TOKEN=$AWSUME_2
-            echo export AWS_SECURITY_TOKEN=$AWSUME_2
             echo export AWS_ACCESS_KEY_ID=$AWSUME_3
+
+            if [ ! "$AWSUME_2" = "None" ]; then
+                echo export AWS_SESSION_TOKEN=$AWSUME_2
+                echo export AWS_SECURITY_TOKEN=$AWSUME_2
+            fi
+
             if [ ! "$AWSUME_4" = "None" ]; then
                 echo export AWS_REGION=$AWSUME_4
                 echo export AWS_DEFAULT_REGION=$AWSUME_4
             fi
+
+            echo export AWSUME_PROFILE=$AWSUME_5
+
         fi
     done
 fi

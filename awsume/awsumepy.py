@@ -1,11 +1,11 @@
 from __future__ import print_function
 import sys, os
-import re, argparse, collections, datetime, dateutil, boto3, psutil, logging, json
+import re, argparse, collections, datetime, dateutil, boto3, psutil, logging, json, atexit
 from six.moves import configparser as ConfigParser
 from builtins import input
 from yapsy import PluginManager
 
-__version__ = '1.3.2'
+__version__ = '2.0.0'
 
 #initialize logging
 logging.getLogger('yapsy').addHandler(logging.StreamHandler())
@@ -20,6 +20,22 @@ HOME_PATH = os.path.expanduser('~')
 AWS_CONFIG_FILE = HOME_PATH + '/.aws/config'
 AWS_CREDENTIALS_FILE = HOME_PATH + '/.aws/credentials'
 AWS_CACHE_DIRECTORY = HOME_PATH + '/.aws/cli/cache/'
+
+class OutData():
+    """
+    Contains the data to be sent to the shell wrappers;
+    Will only store the first data added to it
+    """
+    data = ''
+    def set_data(self, added_data):
+        log.info("Setting Data!")
+        if not self.data:
+            log.debug("Data Set: " + str(added_data))
+            self.data = added_data
+    def print_data(self):
+        log.info("Sending data to shell wrappers!")
+        log.debug("Data: " + str(self.data))
+        print(self.data)
 
 def generate_awsume_argument_parser():
     """
@@ -103,7 +119,7 @@ def set_default_flag(arguments):
     #arguments.profile_name = 'default'
     arguments.default = True
 
-def handle_command_line_arguments(arguments, app):
+def handle_command_line_arguments(arguments, app, out_data):
     """
     arguments - the arguments to handle;
     scan the arguments for anything special that only requires one function call and then exit
@@ -139,7 +155,7 @@ def handle_command_line_arguments(arguments, app):
         #get the list of config profiles
         configProfileList = collections.OrderedDict()
         for func in app.get_config_profile_list_funcs:
-            configProfileList.update(func(arguments, AWS_CONFIG_FILE))
+            configProfileList.update(func(arguments, out_data, AWS_CONFIG_FILE))
 
         #get the list of credentials profiles
         credentialsProfileList = collections.OrderedDict()
@@ -151,7 +167,7 @@ def handle_command_line_arguments(arguments, app):
 
     #check for the kill auto-refresher flag
     if arguments.kill:
-        stop_auto_refresh(arguments.profile_name, AWS_CREDENTIALS_FILE)
+        stop_auto_refresh(out_data, arguments.profile_name, AWS_CREDENTIALS_FILE)
         exit(0)
 
     if arguments.profile_name is None or arguments.profile_name == 'default':
@@ -187,7 +203,7 @@ def get_ini_profile_by_name(iniProfileName, iniProfiles):
     #if profile doesn't exist, return an empty OrderedDict
     return collections.OrderedDict()
 
-def get_config_profile_list(arguments, configFilePath=AWS_CONFIG_FILE):
+def get_config_profile_list(arguments, out_data, configFilePath=AWS_CONFIG_FILE):
     """
     arguments - the command-line arguments;
     configFilePath - the path to the config file;
@@ -197,7 +213,7 @@ def get_config_profile_list(arguments, configFilePath=AWS_CONFIG_FILE):
 
     return get_profiles_from_ini_file(configFilePath)
 
-def get_credentials_profile_list(arguments, credentialsFilePath=AWS_CREDENTIALS_FILE):
+def get_credentials_profile_list(arguments, out_data, credentialsFilePath=AWS_CREDENTIALS_FILE):
     """
     arguments - the command-line arguments;
     credentialsFilePath - the path to the config file;
@@ -207,7 +223,7 @@ def get_credentials_profile_list(arguments, credentialsFilePath=AWS_CREDENTIALS_
 
     return get_profiles_from_ini_file(credentialsFilePath)
 
-def get_config_profile(configProfiles, arguments):
+def get_config_profile(configProfiles, arguments, out_data):
     """
     configProfiles - the list of config profiles;
     arguments - the command-line arguments;
@@ -220,7 +236,7 @@ def get_config_profile(configProfiles, arguments):
     else:
         return get_ini_profile_by_name('profile ' + arguments.profile_name, configProfiles)
 
-def get_credentials_profile(credentialsProfiles, configSection, arguments, credentialsPath=AWS_CREDENTIALS_FILE):
+def get_credentials_profile(credentialsProfiles, configSection, arguments, out_data, credentialsPath=AWS_CREDENTIALS_FILE):
     """
     credentialsProfiles - the list of credentials profiles;
     configSection - the config profile that tells which credentials profile to get;
@@ -260,7 +276,7 @@ def validate_profiles(configSection, credentialsSection):
     #make sure credentials profile has its credentials
     validate_credentials_profile(credentialsSection)
 
-def handle_profiles(configSection, credentialsSection, arguments):
+def handle_profiles(configSection, credentialsSection, arguments, out_data):
     """
     configSection - the config profile from the config file;
     credentialsSection - the credentials profile from the credentials file;
@@ -275,12 +291,16 @@ def handle_profiles(configSection, credentialsSection, arguments):
     #no more work is required
     if not is_role_profile(configSection) and not requires_mfa(configSection):
         log.debug('Profile is not a role and does not require mfa, exporting credentials')
-        print('Awsume' +  ' ' + \
-              str(credentialsSection.get('aws_secret_access_key')) + ' ' + \
-              'None' + ' ' + \
-              str(credentialsSection.get('aws_access_key_id')) + ' ' + \
-              str(configSection.get('region'))) #region may or may not be 'NoneType'
-        exit(0)
+        user_out_data = 'Awsume' +  ' ' + \
+                        str(credentialsSection.get('aws_secret_access_key')) + ' ' + \
+                        'None' + ' ' + \
+                        str(credentialsSection.get('aws_access_key_id')) + ' ' + \
+                        str(configSection.get('region')) + ' '
+        if arguments.profile_name != None:
+            user_out_data += str(arguments.profile_name)
+        else:
+            user_out_data += 'Default'
+        out_data.set_data(user_out_data)
 
 def requires_mfa(profileToCheck):
     """
@@ -295,7 +315,7 @@ def requires_mfa(profileToCheck):
     log.debug('The profile does not require MFA')
     return False
 
-def get_user_credentials(configSection, credentialsSection, userSession, cachePath, arguments):
+def get_user_credentials(configSection, credentialsSection, userSession, cachePath, arguments, out_data):
     """
     configSection - the profile from the config file;
     credentialsSection - the profile from the credentials file;
@@ -346,7 +366,7 @@ def get_role_credentials(configSection, userSession):
     roleSession = create_awsume_session(awsRoleSession, configSection)
     return roleSession
 
-def start_auto_refresher(arguments, userSession, configSection, credentialsSection, credentialsPath=AWS_CREDENTIALS_FILE):
+def start_auto_refresher(arguments, userSession, configSection, credentialsSection, out_data, credentialsPath=AWS_CREDENTIALS_FILE):
     """
     arguments - the command-line arguments passed into AWSume;
     userSession - the session credentials for the user to call assume_role with;
@@ -364,10 +384,10 @@ def start_auto_refresher(arguments, userSession, configSection, credentialsSecti
     #kill all autoAwsume processes before starting a new one
     log.debug('Killing all autoAwsume processes before we start a new one')
     kill_all_auto_processes()
-    print('Auto' + ' ' + autoAwsumeProfileName + ' ' + cacheFileName)
-    exit(0)
+    auto_awsume_out_data = 'Auto' + ' ' + autoAwsumeProfileName + ' ' + str(arguments.profile_name)
+    out_data.set_data(auto_awsume_out_data)
 
-def handle_getting_role_credentials(configSection, credentialsSection, userSession, roleSession, arguments):
+def handle_getting_role_credentials(configSection, credentialsSection, userSession, roleSession, arguments, out_data):
     """
     configSection - the profile from the config file;
     credentialsSection - the profile from the credentials file;
@@ -382,13 +402,12 @@ def handle_getting_role_credentials(configSection, credentialsSection, userSessi
         #if the user wants to auto-refresh the role credentials
         if arguments.auto_refresh is True:
             log.debug('AutoRefresh flag is up, starting autoAwsume')
-            start_auto_refresher(arguments, userSession, configSection, credentialsSection)
+            start_auto_refresher(arguments, userSession, configSection, credentialsSection, out_data)
         #if the user is assuming a role normally
-        else:
-            log.debug('Assuming the role normally')
-            roleSession = get_role_credentials(configSection, userSession)
-            print('Role profile credentials will expire: ' + str(roleSession['Expiration']), file=sys.stderr)
-            return roleSession
+        log.debug('Assuming the role normally')
+        roleSession = get_role_credentials(configSection, userSession)
+        print('Role profile credentials will expire: ' + str(roleSession['Expiration']), file=sys.stderr)
+        return roleSession
     else:
         log.debug('The profile is not a role')
         if arguments.auto_refresh is True:
@@ -570,7 +589,7 @@ def session_string(awsumeSession, arguments=None):
         tempDefault = arguments.default
         #spoof default needing default profile
         arguments.default = True
-        defaultProfile = get_config_profile(get_config_profile_list(arguments), arguments)
+        defaultProfile = get_config_profile(get_config_profile_list(arguments, None), arguments, None)
         arguments.default = tempDefault
         if not awsumeSession['region']:
             awsumeSession['region'] = defaultProfile.get('region')
@@ -753,7 +772,7 @@ def is_auto_refresh_profiles(filePath):
             return True
     return False
 
-def stop_auto_refresh(profileName=None, filePath=AWS_CREDENTIALS_FILE):
+def stop_auto_refresh(out_data, profileName=None, filePath=AWS_CREDENTIALS_FILE):
     """
     profileName - the profile to stop auto-refreshing for;
     clean up autoAwsume's mess, kill autoAwsume, and exit
@@ -771,10 +790,11 @@ def stop_auto_refresh(profileName=None, filePath=AWS_CREDENTIALS_FILE):
     if not is_auto_refresh_profiles(filePath):
         log.debug('There are no auto-refresh profiles remaining, killing autoAwsume')
         kill_all_auto_processes()
-        print('Kill')
+        kill_out_data = 'Kill'
+        out_data.set_data(kill_out_data)
     else:
-        print('Stop ' + profileName)
-    exit(0)
+        stop_out_data = 'Stop ' + profileName
+        out_data.set_data(stop_out_data)
 
 def generate_formatted_data(configSections, credentialsSections):
     """
@@ -843,8 +863,8 @@ def list_profile_data(configSections, credentialsSections):
 
 def list_roles_users():
     rolesUsersList = []
-    configSections = get_config_profile_list(None)
-    credentialsSections = get_credentials_profile_list(None)
+    configSections = get_config_profile_list(None, None)
+    credentialsSections = get_credentials_profile_list(None, None)
 
     for profile in configSections:
         rolesUsersList.append(profile.replace('profile ', ''))
@@ -863,6 +883,13 @@ def register_plugins(app, manager):
     log.info('Register plugins')
 
     for plugin in manager.getAllPlugins():
+        # verify major versions
+        try:
+            if plugin.plugin_object.TARGET_VERSION.split('.')[0] != __version__.split('.')[0]:
+                print("AWSume Warning: [" + str(plugin.name) + "] Target version: " + str(plugin.plugin_object.TARGET_VERSION) + ", AWSume version: " + __version__, file=sys.stderr)
+        except AttributeError:
+            print("AWSume Warning: [" + str(plugin.name) + "] has no `TARGET_VERSION` attribute", file=sys.stderr)
+
         if 'add_arguments_func' in dir(plugin.plugin_object):
             app.register('add_arguments_func', plugin.plugin_object.add_arguments_func)
         if 'handle_arguments_func' in dir(plugin.plugin_object):
@@ -975,6 +1002,10 @@ class App(object):
         """
         Execute AWSume
         """
+        #object for sending data to the shell scripts
+        out_data = OutData()
+        atexit.register(out_data.print_data)
+
         #parse command-line arguments
         awsumeArgParser = generate_awsume_argument_parser()
         for func in self.add_arguments_funcs:
@@ -983,20 +1014,20 @@ class App(object):
 
         #handle arguments
         for func in self.handle_arguments_funcs:
-            func(commandLineArguments, self)
+            func(commandLineArguments, self, out_data)
 
         #get the list of config profiles
         log.debug("Getting a list of config profiles")
         configProfileList = collections.OrderedDict()
         for func in self.get_config_profile_list_funcs:
-            configProfileList.update(func(commandLineArguments, AWS_CONFIG_FILE))
+            configProfileList.update(func(commandLineArguments, out_data, AWS_CONFIG_FILE))
         log.debug("Config profile list:\n" + json.dumps(configProfileList, indent=4))
 
         #get the list of credentials profiles
         log.debug("Getting a list of credentials profiles")
         credentialsProfileList = collections.OrderedDict()
         for func in self.get_credentials_profile_list_funcs:
-            credentialsProfileList.update(func(commandLineArguments, AWS_CREDENTIALS_FILE))
+            credentialsProfileList.update(func(commandLineArguments, out_data, AWS_CREDENTIALS_FILE))
         log.debug("Credentials profile list:\n" + json.dumps(credentialsProfileList, indent=4))
 
         #get the config profiles
@@ -1004,7 +1035,7 @@ class App(object):
         configProfile = None
         for func in self.get_config_profile_funcs:
             if not configProfile:
-                configProfile = func(configProfileList, commandLineArguments)
+                configProfile = func(configProfileList, commandLineArguments, out_data)
         log.debug("Config profile:\n" + json.dumps(configProfile, indent=4))
 
         #get the credentials profile
@@ -1012,18 +1043,18 @@ class App(object):
         credentialsProfile = None
         for func in self.get_credentials_profile_funcs:
             if not credentialsProfile:
-                credentialsProfile = func(credentialsProfileList, configProfile, commandLineArguments, AWS_CREDENTIALS_FILE)
+                credentialsProfile = func(credentialsProfileList, configProfile, commandLineArguments, out_data, AWS_CREDENTIALS_FILE)
         log.debug("Credentials profile:\n" + json.dumps(credentialsProfile, indent=4))
 
         #handle those profiles
         for func in self.handle_profiles_funcs:
-            func(configProfile, credentialsProfile, commandLineArguments)
+            func(configProfile, credentialsProfile, commandLineArguments, out_data)
 
         #now we have to get the session token
         log.debug("Getting users session")
         awsumeUserSession = None
         for func in self.get_user_credentials_funcs:
-            awsumeUserSession = func(configProfile, credentialsProfile, awsumeUserSession, AWS_CACHE_DIRECTORY, commandLineArguments)
+            awsumeUserSession = func(configProfile, credentialsProfile, awsumeUserSession, AWS_CACHE_DIRECTORY, commandLineArguments, out_data)
         sessionToUse = awsumeUserSession
         log.debug("User session:\n" + json.dumps(awsumeUserSession, default=logDatetimeConverter, indent=4))
 
@@ -1031,7 +1062,7 @@ class App(object):
         log.debug("Getting the role session")
         awsumeRoleSession = None
         for func in self.handle_getting_role_funcs:
-            awsumeRoleSession = func(configProfile, credentialsProfile, awsumeUserSession, awsumeRoleSession, commandLineArguments)
+            awsumeRoleSession = func(configProfile, credentialsProfile, awsumeUserSession, awsumeRoleSession, commandLineArguments, out_data)
         log.debug("Role session:\n" + json.dumps(awsumeRoleSession, indent=4, default=logDatetimeConverter))
 
         #if the role session is valid
@@ -1042,11 +1073,12 @@ class App(object):
         #post AWSume functions
         log.debug("Running post-awsume operations")
         for func in self.post_awsume_funcs:
-            func(configProfileList, credentialsProfileList, configProfile, credentialsProfile, sessionToUse, commandLineArguments)
+            func(configProfileList, credentialsProfileList, configProfile, credentialsProfile, sessionToUse, commandLineArguments, out_data)
 
         #send shell script wrapper the session environment variables
         log.debug("Sending data to shell wrappers")
-        print('Awsume' + ' ' + session_string(sessionToUse, commandLineArguments))
+        awsume_out_data = 'Awsume' + ' ' + session_string(sessionToUse, commandLineArguments) + ' ' + str(commandLineArguments.profile_name)
+        out_data.set_data(awsume_out_data)
 
 def main():
     #create the plugin manager
