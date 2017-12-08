@@ -1,6 +1,6 @@
 # AWSume Plugins!
 
-AWSume is now extensible, you can write your own plugins to extend the functionality of AWSume to your needs.
+AWSume is now extensible; you can write your own plugins to extend the functionality of AWSume to your needs.
 
 There are various types of plugins you can write, and there is some boilerplate that you must follow when writing them.
 
@@ -29,6 +29,7 @@ from yapsy import IPlugin
 from awsume import awsumepy
 
 class SomePlugin(IPlugin):
+    TARGET_VERSION = 'x.y.z'
     def function_name(self):
         #Do new things
         return someImportantData
@@ -36,9 +37,29 @@ class SomePlugin(IPlugin):
 
 It's always a good idea to import the `awsumepy` library when using plugins. Each plugin consists of a class with various function definitions. Each function definition has a list of arguments it takes and what should be returned from each function.
 
+Please include a `TARGET_VERSION` string in the plugin's class, so that when a breaking change is released, Awsume can alert the user that the plugin may be out of date.
+
 The function definition must match exactly what AWSume expects for the plugin to be fully functional. All plugins are called along-side their default counterparts.
 
 When displaying information, always print to `sys.stderr`, so that the `stdout` is not interfered with. This is because the shell wrappers are reading from `stdout` and if you print there, it will disrupt the functionality of AWSume.
+
+If you desire to send data to the shell wrappers (Understanding how the shell wrappers parse the string), do so through the `out_data` object. This object is passed into most plugin functions. The definition for the object is as follows:
+
+``` python
+class OutData():
+    """
+    Contains the data to be sent to the shell wrappers;
+    Will only store the first data added to it
+    """
+    data = ''
+    def set_data(self, added_data):
+        if not self.data:
+            self.data = added_data
+    def print_data(self):
+        print(self.data)
+```
+
+As you can see, the only data that will be sent to the shell wrappers is the very first data sent to the object. **It is important to understand the shell wrappers and how they parse data before manipulating this aspect of the Awsume workflow.**
 
 ## Plugin Functions
 
@@ -71,6 +92,7 @@ class SomePlugin(IPlugin.IPlugin):
 - ***Arguments:***
   - `arguments` What was returned from `add_arguments_func`
   - `app` The App object itself that contains all of the AWSume functions
+  - `out_data` The OutData class object that holds the data to be sent to the shell wrappers
 - This function is called to handle anything special that should happen when an argument is in acertain state.
 - For instance, when the `-v` flag is passed, to display the version, the displaying of the versionis handled in the default `handle_arguments_func`. For any arguments you add, this is where you canhandle those arguments.
 - This function does not return anything.
@@ -82,10 +104,10 @@ from yapsy import IPlugin
 from awsume import awsumepy
 
 class SomePlugin(IPlugin.IPlugin):
-    def handle_arguments_func(self, arguments):
+    def handle_arguments_func(self, arguments, out_data):
         awsumepy.handle_command_line_arguments(arguments, app)
         if arguments.special_flag:
-            print("Special flag triggered!", file=sys.stderr)
+            print("Special flag triggered! Aborting!", file=sys.stderr)
             exit(0)
 ```
 
@@ -115,6 +137,7 @@ class SomePlugin(IPlugin.IPlugin):
 - ***Function Name:*** `get_config_profile_list_func`
 - ***Arguments:***
   - `arguments` What was returned from `add_arguments_func`
+  - `out_data` The OutData class object that holds the data to be sent to the shell wrappers
   - `configFilePath` The path to the config file.
 - This function returns a list of all config profiles in the format of an `OrderedDict`.
 - The format to return is the format that Python's *ConfigParser* library returns when it reads anINI file. The OrderedDict contains a list of tuples. Each tuple consists of the profile name and thenan OrderedDict of the profile itself.
@@ -138,7 +161,10 @@ from collections import OrderedDict
 from awsume import awsumepy
 
 class SomePlugin(IPlugin.IPlugin):
-    def get_config_profile_list_func(self, configFilePath):
+    def get_config_profile_list_func(self,
+                                     commandLineArguments,
+                                     out_data,
+                                     configFilePath):
         profile = OrderedDict([('__name__', 'my-profile'),
                                ('mfa_serial', 'arn:aws:iam::ACCOUNT_ID:mfa/Name'),
                                ('region', 'us-east-1')])
@@ -152,6 +178,7 @@ class SomePlugin(IPlugin.IPlugin):
 - ***Function Name:*** `get_credentials_profile_list_func`
 - ***Arguments:***
   - `arguments` What was returned from `add_arguments_func`
+  - `out_data` The OutData class object that holds the data to be sent to the shell wrappers
   - `credentialsFilePath` The path to the credentials file
 - This function returns a list of all credentials profiles in the format of an `OrderedDict`.
 - The format to return is the format that Python's *ConfigParser* library returns when it reads an INI file. The OrderedDict contains a list of tuples. Each tuple consists of the profile name and then an OrderedDict of the profile itself.
@@ -163,7 +190,10 @@ from collections import OrderedDict
 from awsume import awsumepy
 
 class SomePlugin(IPlugin.IPlugin):
-    def get_credentials_profile_list_func(self, configFilePath):
+    def get_credentials_profile_list_func(self,
+                                          commandLineArguments,
+                                          out_data,
+                                          configFilePath):
         profile = OrderedDict([('__name__', 'my-source'),
                                ('aws_access_key_id', 'SOMEACCESSKEYID'),
                                ('aws_secret_access_key', 'SOMESECRETACCESSKEY')])
@@ -178,6 +208,7 @@ class SomePlugin(IPlugin.IPlugin):
 - ***Arguments:***
   - `configProfileList` What was returned from `get_config_profile_list_func`
   - `arguments` What was returned from `add_arguments_func`
+  - `out_data` The OutData class object that holds the data to be sent to the shell wrappers
 - This function returns the config profile that will be used in assuming the role or setting the session. This could be either a role profile with a `role_arn` and a `source_profile`, or it could just be a user profile.
 - AWSume will call each registered function until it is able to find a config profile. If the default function returns a config profile, the plugin function will not be called. For any case in which your plugin function doesn't find a config profile to return, always return an empty `OrderedDict()` for best compatibility.
 
@@ -187,7 +218,10 @@ from collections import OrderedDict
 from awsume import awsumepy
 
 class SomePlugin(IPlugin.IPlugin):
-    def get_config_profile_func(self, configFilePath):
+    def get_config_profile_func(self,
+                                configFilePath,
+                                commandLineArguments,
+                                out_data):
         profile = OrderedDict([('__name__', 'my-profile'),
                                ('mfa_serial', 'arn:aws:iam::ACCOUNT_ID:mfa/Name'),
                                ('region', 'us-east-1')])
@@ -201,6 +235,7 @@ class SomePlugin(IPlugin.IPlugin):
   - `credentialsProfileList` What was returned from `get_config_profile_list_func`
   - `configProfile` What was returned from `get_config_profile_func`
   - `arguments` What was returned from `add_arguments_func`
+  - `out_data` The OutData class object that holds the data to be sent to the shell wrappers
   - `credentialsFilePath` The path to the credentials file
 - This function returns the credentials profile that will be used in assuming the role or setting the session. This is the profile that contains the `aws_access_key_id` and the `aws_secret_access_key`.
 - AWSume will call each registered function until it is able to find a credentials profile. If the default function returns a credentials profile, the plugin function will not be called. For any case in which your plugin function doesn't find a credentials profile to return, always return an empty `OrderedDict()` for best compatibility.
@@ -211,7 +246,12 @@ from collections import OrderedDict
 from awsume import awsumepy
 
 class SomePlugin(IPlugin.IPlugin):
-    def get_credentials_profile_func(self, configFilePath):
+    def get_credentials_profile_func(self,
+                                     credentialsProfiles,
+                                     configProfile,
+                                     commandLineArguments,
+                                     out_data,
+                                     configFilePath):
         profile = OrderedDict([('__name__', 'my-source'),
                                ('aws_access_key_id', 'SOMEACCESSKEYID'),
                                ('aws_secret_access_key', 'SOMESECRETACCESSKEY')])
@@ -225,6 +265,7 @@ class SomePlugin(IPlugin.IPlugin):
   - `configProfile` What was returned from `get_config_profile_func`
   - `credentialsProfile` What was returned from `get_credentials_profile_func`
   - `arguments` What was returned from `add_arguments_func`
+  - `out_data` The OutData class object that holds the data to be sent to the shell wrappers
 - This function handles any special cases that the profiles may be in. The default function validates these profiles to make sure they'll work.
 - This profile does not return anything.
 
@@ -234,7 +275,11 @@ from collections import OrderedDict
 from awsume import awsumepy
 
 class SomePlugin(IPlugin.IPlugin):
-    def handle_profiles_func(self, configProfile, credentialsProfile, commandLineArguments):
+    def handle_profiles_func(self,
+                             configProfile,
+                             credentialsProfile,
+                             commandLineArguments,
+                             out_data):
         if configProfile is special and credentialsProfile is special:
             do_something_special()
             exit(0)
@@ -249,6 +294,7 @@ class SomePlugin(IPlugin.IPlugin):
   - `userSession` The session returned from the previous `get_user_credentials_func` call
   - `cachePath` The path that AWSume will write the cache'd credentials to
   - `arguments` What was returned from `add_arguments_func`
+  - `out_data` The OutData class object that holds the data to be sent to the shell wrappers
 - This function handles the actual `get_session_token` call to AWS to get the user credentials.
 - This function returns those credentials that will be used in assuming the role or setting the session.
 - This function will run with the state of the previous `get_user_credentials_func` function.
@@ -260,7 +306,12 @@ from collections import OrderedDict
 from awsume import awsumepy
 
 class SomePlugin(IPlugin.IPlugin):
-    def get_user_credentials_func(configSection, credentialsSection, userSession, cachePath, arguments):
+    def get_user_credentials_func(configSection,
+                                  credentialsSection,
+                                  userSession,
+                                  cachePath,
+                                  arguments,
+                                  out_data):
         session = make_custom_aws_call( ... )
         if not session:
             return userSession #if the call didn't return anything, return the previous state
@@ -271,7 +322,7 @@ class SomePlugin(IPlugin.IPlugin):
 
 def get_user_credentials(configSection, credentialsSection, userSession, cachePath, arguments):
 
-### Handle Getting Role
+### Handle Getting Role Credentials
 
 - ***Function Name:*** `handle_getting_role_func`
 - ***Arguments:***
@@ -279,8 +330,8 @@ def get_user_credentials(configSection, credentialsSection, userSession, cachePa
   - `credentialsProfile` What was returned from `get_credentials_profile_func`
   - `userSession` What was returned from the `get_user_session
   - `roleSession` The session returned from the previous `handle_getting_role_func` call
-  - `cachePath` The path that AWSume will write the cache'd credentials to
   - `arguments` What was returned from `add_arguments_func`
+  - `out_data` The OutData class object that holds the data to be sent to the shell wrappers
 - This function handles the actual `assume_role` call to AWS that gets the role credentials.
 - It should verify that the configSection is actually a role with `awsumepy.is_role_profile(configSection)`. If it is not a role, then it should return `None`
 - This returns those credentidals that will be used in assuming the role.
@@ -297,7 +348,8 @@ class SomePlugin(IPlugin.IPlugin):
                                              credentialsSection,
                                              userSession,
                                              roleSession,
-                                             arguments):
+                                             arguments,
+                                             out_data):
         if not awsumepy.is_role_profile(configSection):
             return None
         roleSession = make_custom_aws_call( ... )
@@ -319,6 +371,7 @@ class SomePlugin(IPlugin.IPlugin):
   - `credentialsSection` What was returned from `get_credentials_profile_func`
   - `sessionToUse` The session that will be sent into the environment variables
   - `arguments` What was returned from `add_arguments_func`
+  - `out_data` The OutData class object that holds the data to be sent to the shell wrappers
 - This function is used to handle anything you may need to handle after AWSume runs.
 - Note: Since this is still in the Python space of AWSume, actual environment variables have not been set. However, you can access that data through `sessionToUse`.
 
@@ -334,7 +387,8 @@ class SomePlugin(IPlugin.IPlugin):
                          credentialsSection,
                          userSession,
                          roleSession,
-                         arguments):
+                         arguments,
+                         out_data):
         print("Congrats! You've finished running AWSume!", file=sys.stderr)
     return roleSession
 ```
