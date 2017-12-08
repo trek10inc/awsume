@@ -86,10 +86,6 @@ elif [ "$AWSUME_FLAG" = "Awsume" ]; then
     #if enabled, show the exact commands to use in order to assume the role we just assumed
     for AWSUME_var in "$@"
     do
-        #set AWSUME_PROFILE
-        if [[ "$AWSUME_var" != "-"* ]]; then
-            export AWSUME_PROFILE=$AWSUME_var
-        fi
         #show commands
         if [[ "$AWSUME_var" == "-s"* ]]; then
             echo export AWS_SECRET_ACCESS_KEY=$AWSUME_1
