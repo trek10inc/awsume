@@ -412,12 +412,11 @@ def handle_getting_role_credentials(configSection, credentialsSection, userSessi
         if arguments.auto_refresh is True:
             log.debug('AutoRefresh flag is up, starting autoAwsume')
             start_auto_refresher(arguments, userSession, configSection, credentialsSection, out_data)
-        #if the user is assuming a role normally
-        else:
-            log.debug('Assuming the role normally')
-            roleSession = get_role_credentials(arguments, configSection, userSession)
-            print('Role profile credentials will expire: ' + str(roleSession['Expiration']), file=sys.stderr)
-            return roleSession
+        #do this anyway in case a plugin needs it
+        log.debug('Assuming the role normally')
+        roleSession = get_role_credentials(arguments, configSection, userSession)
+        print('Role profile credentials will expire: ' + str(roleSession['Expiration']), file=sys.stderr)
+        return roleSession
     else:
         log.debug('The profile is not a role')
         if arguments.auto_refresh is True:
