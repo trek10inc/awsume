@@ -7,8 +7,9 @@
 #AWSUME_1 - secret access key / autoAwsumeProfileName
 #AWSUME_2 - security token / fileName
 #AWSUME_3 - access key id
-#awsume_4 - region
-$AWSUME_FLAG, $AWSUME_1, $AWSUME_2, $AWSUME_3, $AWSUME_4 = `
+#AWSUME_4 - region
+#AWSUME_5 - profile name
+$AWSUME_FLAG, $AWSUME_1, $AWSUME_2, $AWSUME_3, $AWSUME_4, $AWSUME_5 = `
 $(awsumepy $args) -split '\s+'
 
 #if incorrect flag/help
@@ -32,23 +33,27 @@ elseif ( $AWSUME_FLAG -eq "Auto" ) {
     $env:AWS_PROFILE = ""
     $env:AWS_DEFAULT_PROFILE = ""
     $env:AWSUME_PROFILE = ""
+
     #set the profile that will contain the session credentials
     $env:AWS_PROFILE = $AWSUME_1
     $env:AWS_DEFAULT_PROFILE = $AWSUME_1
+    $env:AWSUME_PROFILE = $AWSUME_2
+
     #run the background autoAwsume process
-    #if enabled, show the exact commands to use in order to assume the role we just assumed
-    foreach ($arg in $args) {
-        if ($arg -notlike "-*") {
-            $env:AWSUME_PROFILE = $arg
-        }
-    }
     Start-Process powershell -ArgumentList "autoAwsume" -WindowStyle hidden
 
 }
 #if user sent kill flag
 elseif ( $AWSUME_FLAG -eq "Kill" ) {
+    $env:AWS_SECRET_ACCESS_KEY = ""
+    $env:AWS_SESSION_TOKEN = ""
+    $env:AWS_SECURITY_TOKEN = ""
+    $env:AWS_ACCESS_KEY_ID = ""
+    $env:AWS_REGION = ""
+    $env:AWS_DEFAULT_REGION = ""
     $env:AWS_PROFILE = ""
     $env:AWS_DEFAULT_PROFILE = ""
+    $env:AWSUME_PROFILE = ""
     exit
 }
 elseif ( $AWSUME_FLAG -eq "Stop" ) {
@@ -85,12 +90,7 @@ elseif ( $AWSUME_FLAG -eq "Awsume") {
         $env:AWS_DEFAULT_REGION = $AWSUME_4
     }
 
-    #set the AWSUME_PROFILE variable
-    foreach ($arg in $args) {
-        if ($arg -notlike "-*") {
-            $env:AWSUME_PROFILE = $arg
-        }
-    }
+    $env:AWSUME_PROFILE = $AWSUME_5
 
     #if enabled, show the exact commands to use in order to assume the role we just assumed
     if ($args -like "-s") {
@@ -106,5 +106,7 @@ elseif ( $AWSUME_FLAG -eq "Awsume") {
             Write-Host "`$env:AWS_REGION =" $env:AWS_REGION
             Write-Host "`$env:AWS_DEFAULT_REGION =" $env:AWS_DEFAULT_REGION
         }
+
+        Write-Host "`$env:AWSUME_PROFILE =" $env:AWSUME_PROFILE
     }
 }
