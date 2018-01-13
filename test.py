@@ -320,6 +320,8 @@ class TestGetRoleCredentials(unittest.TestCase):
 
         mock_create_sts_client.return_value = 'the-role-client'
 
+        args = argparse.Namespace()
+        args.sessionname = 'the-name-awsume-session'
         config = collections.OrderedDict()
         config['__name__'] = 'profile the-name'
         config['role_arn'] = 'the-role-arn'
@@ -328,7 +330,7 @@ class TestGetRoleCredentials(unittest.TestCase):
         userSession['AccessKeyId'] = 'the-access-key-id'
         userSession['SessionToken'] = 'the-session-token'
 
-        awsumepy.get_role_credentials(config, userSession)
+        awsumepy.get_role_credentials(args, config, userSession)
         self.assertEqual(mock_create_session.call_count, 1)
         self.assertEqual(mock_get_role_credentials.call_count, 1)
         mock_get_role_credentials.assert_called_with('the-role-client', 'the-role-arn', 'the-name-awsume-session')
@@ -377,7 +379,7 @@ class TestHandleGettingRoleCredentials(unittest.TestCase):
         self.assertEqual(mock_get_role.call_count, 1)
         args.auto_refresh = False
         awsumepy.handle_getting_role_credentials(config, credentials, userSession, roleSession, args, None)
-        mock_get_role.assert_called_with(config, userSession)
+        mock_get_role.assert_called_with(args, config, userSession)
 
         mock_is_role.return_value = False
         args.auto_refresh = True
@@ -790,9 +792,9 @@ class TestGenerateFormattedData(unittest.TestCase):
 class TestPrintFormattedData(unittest.TestCase):
     def test_print_formatted_data(self):
         capturedOut = StringIO()
-        sys.stderr = capturedOut
+        sys.stdout = capturedOut
         awsumepy.print_formatted_data('some-formatted-data')
-        sys.stderr = sys.__stderr__
+        sys.stdout = sys.__stdout__
         self.assertNotEqual(capturedOut.getvalue(), '')
 
 class TestListProfileData(unittest.TestCase):
@@ -814,13 +816,15 @@ class TestRegisterPlugins(unittest.TestCase):
         mock_get_all_plugins = mock.Mock()
         mock_manager = mock.Mock()
         mock_manager.getAllPlugins = mock_get_all_plugins
-        
+
         mock_full_plugin = mock.Mock()
         mock_full_plugin_object = mock.Mock()
+        mock_full_plugin_object.TARGET_VERSION = '2.0.0'
         mock_full_plugin.plugin_object = mock_full_plugin_object
         mock_empty_plugin = mock.Mock()
         mock_empty_plugin_object = mock.Mock()
         mock_empty_plugin.plugin_object = mock_empty_plugin_object
+        mock_empty_plugin.plugin_object.TARGET_VERSION = '2.0.0'
         mock_get_all_plugins.return_value = [mock_full_plugin, mock_empty_plugin]
 
         mock_full_plugin_object.add_arguments_func = mock.Mock()
