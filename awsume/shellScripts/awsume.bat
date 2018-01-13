@@ -25,6 +25,9 @@ for /f "tokens=1,2,3,4,5,6 delims= " %%a in ("%AWSUME_TEXT%") do (
     if "%%a" == "Version" (
         echo %%b
     )
+    if "%%a" == "Listing..." (
+        awsumepy -l
+    )
     if "%%a" == "Kill" (
         set AWS_SECRET_ACCESS_KEY=
         set AWS_SESSION_TOKEN=
