@@ -17,6 +17,9 @@ if [ "$AWSUME_FLAG" = "usage:" ]; then
 #if version check
 elif [ "$AWSUME_FLAG" = "Version" ]; then
     echo "$AWSUME_1"
+#if -l flag passed
+elif [ "$AWSUME_FLAG" = "Listing..." ]; then
+    awsumepy -l
 #set up auto-refreshing role
 elif [ "$AWSUME_FLAG" = "Auto" ]; then
     unset AWS_SECRET_ACCESS_KEY
