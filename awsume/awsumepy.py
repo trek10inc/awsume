@@ -5,7 +5,7 @@ from six.moves import configparser as ConfigParser
 from builtins import input
 from yapsy import PluginManager
 
-__version__ = '2.1.1'
+__version__ = '2.1.2'
 
 #initialize logging
 logging.getLogger('yapsy').addHandler(logging.StreamHandler())
@@ -805,6 +805,23 @@ def stop_auto_refresh(out_data, profileName=None, filePath=AWS_CREDENTIALS_FILE)
         stop_out_data = 'Stop ' + profileName
         out_data.set_data(stop_out_data)
 
+def get_account_id(profile):
+    """
+    profile - the combined config/credentials profile;
+    return the account ID of the given profile as a string
+    """
+    if profile.get('role_arn'):
+        return profile['role_arn'].replace('arn:aws:iam::','').split(':')[0]
+    if profile.get('mfa_serial'):
+        return profile['mfa_serial'].replace('arn:aws:iam::','').split(':')[0]
+    # return "STS: " + str(
+    #   boto3.client('sts',
+    #                aws_access_key_id=profile['aws_access_key_id'],
+    #                aws_secret_access_key=profile['aws_secret_access_key'])
+    #                .get_caller_identity()
+    #                .get('Account'))
+    return "Unavailable"
+
 def generate_formatted_data(configSections, credentialsSections):
     """
     configSections - the profile from the config file;
@@ -816,7 +833,14 @@ def generate_formatted_data(configSections, credentialsSections):
     for section in list(configSections):
         if 'profile ' in section:
             configSections[section.replace('profile ', '')] = configSections.pop(section)
-    credentialsSections.update(configSections)
+
+    #combine config and credentials sections
+    for prof in set(configSections.keys() + credentialsSections.keys()):
+        if credentialsSections.get(prof) and configSections.get(prof):
+            credentialsSections[prof].update(configSections[prof])
+        elif configSections.get(prof):
+            credentialsSections[prof] = configSections[prof]
+
     credentialsSections = collections.OrderedDict(sorted(credentialsSections.items()))
 
     profileList = []
@@ -826,6 +850,7 @@ def generate_formatted_data(configSections, credentialsSections):
     profileList[0].append('SOURCE')
     profileList[0].append('MFA?')
     profileList[0].append('REGION')
+    profileList[0].append('ACCOUNT')
     #now fill the tables with the appropriate data
     index = 1
     for section in credentialsSections:
@@ -838,6 +863,7 @@ def generate_formatted_data(configSections, credentialsSections):
                 profileList[index].append(credentialsSections[section]['source_profile'])
                 profileList[index].append('Yes' if 'mfa_serial' in credentialsSections[section] else 'No')
                 profileList[index].append(str(credentialsSections[section].get('region')))
+                profileList[index].append(get_account_id(credentialsSections[section]))
             else:
                 profileList.append([])
                 profileList[index].append(section.replace('profile ', ''))
@@ -845,6 +871,7 @@ def generate_formatted_data(configSections, credentialsSections):
                 profileList[index].append('None')
                 profileList[index].append('Yes' if 'mfa_serial' in credentialsSections[section] else 'No')
                 profileList[index].append(str(credentialsSections[section].get('region')))
+                profileList[index].append(get_account_id(credentialsSections[section]))
             index += 1
     return profileList
 
@@ -854,12 +881,12 @@ def print_formatted_data(formattedProfileData):
     display `formattedProfileData` in a nice, proper way
     """
     log.info('Printing formatted profile data')
+    print("Listing...\n")
 
     widths = [max(map(len, col)) for col in zip(*formattedProfileData)]
-    print("", file=sys.stderr)
-    print('AWS Profiles'.center(sum(widths) + 8, '='), file=sys.stderr)
+    print('AWS Profiles'.center(sum(widths) + 10, '='))
     for row in formattedProfileData:
-        print("  ".join((val.ljust(width) for val, width in zip(row, widths))), file=sys.stderr)
+        print("  ".join((val.ljust(width) for val, width in zip(row, widths))))
 
 def list_profile_data(configSections, credentialsSections):
     """
