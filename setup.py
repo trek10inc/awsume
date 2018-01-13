@@ -5,7 +5,7 @@ from setuptools.command.install import install
 from setuptools.command.install_scripts import install_scripts
 from distutils.spawn import find_executable
 
-version = '2.1.1'
+version = '2.1.2'
 
 class CustomInstall(install):
 
