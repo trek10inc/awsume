@@ -20,6 +20,10 @@ if ( $AWSUME_FLAG -eq "usage:" ) {
 elseif ( $AWSUME_FLAG -eq "Version" ) {
     Write-Host $AWSUME_1
 }
+#if -l flag passed
+elseif ( $AWSUME_FLAG -eq "Listing..." ) {
+    $(awsumepy -l)
+}
 #set up auto-refreshing role
 elseif ( $AWSUME_FLAG -eq "Auto" ) {
     #Remove the environment variables associated with the AWS CLI,
