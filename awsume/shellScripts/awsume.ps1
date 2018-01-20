@@ -1,5 +1,3 @@
-#Author: Michael Barney, Trek10 Intern
-#Date: June 2, 2017
 #AWSume - a powershell script to assume an AWS IAM role from the command-line
 
 #grab the environment variables from the python script
