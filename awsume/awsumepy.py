@@ -5,7 +5,7 @@ from six.moves import configparser as ConfigParser
 from builtins import input
 from yapsy import PluginManager
 
-__version__ = '2.1.3'
+__version__ = '2.1.4'
 
 #initialize logging
 logging.getLogger('yapsy').addHandler(logging.StreamHandler())
@@ -835,7 +835,7 @@ def generate_formatted_data(configSections, credentialsSections):
             configSections[section.replace('profile ', '')] = configSections.pop(section)
 
     #combine config and credentials sections
-    for prof in set(configSections.keys() + credentialsSections.keys()):
+    for prof in set(list(configSections.keys()) + list(credentialsSections.keys())):
         if credentialsSections.get(prof) and configSections.get(prof):
             credentialsSections[prof].update(configSections[prof])
         elif configSections.get(prof):
