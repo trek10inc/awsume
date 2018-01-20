@@ -1,6 +1,4 @@
 #!/bin/bash
-#Author: Michael Barney, Trek10 Intern
-#Date: June 2, 2017
 #AWSume - a bash script to assume an AWS IAM role from the command-line
 
 #grab the environment variables from the python script
@@ -10,6 +8,8 @@
 #AWSUME_3 - access key id
 #awsume_4 - region
 read AWSUME_FLAG AWSUME_1 AWSUME_2 AWSUME_3 AWSUME_4 AWSUME_5 AWSUME_6 <<< $(awsumepy "$@")
+# remove carraige return
+AWSUME_FLAG=$(echo "$AWSUME_FLAG" | tr -d '\r')
 
 #if incorrect flag/help
 if [ "$AWSUME_FLAG" = "usage:" ]; then
