@@ -5,7 +5,7 @@ from setuptools.command.install import install
 from setuptools.command.install_scripts import install_scripts
 from distutils.spawn import find_executable
 
-version = '2.1.3'
+version = '2.1.4'
 
 class CustomInstall(install):
 
@@ -34,43 +34,33 @@ _arguments "*: :($(awsumepy --rolesusers))" """
     }
 }"""
 
-    def use_bash(self, homefolder):
-        #the possible bash rc files
-        bashFiles = ['%s/.bash_aliases', '%s/.bashrc', '%s/.bash_profile', '%s/.profile', '%s/.login']
-        return any([os.path.exists(os.path.abspath(f % homefolder)) for f in bashFiles])
-
     def get_bash_file(self, homefolder):
+        # default rc_file
+        rc_file = os.path.abspath('%s/.profile' % homefolder)
         if os.path.exists(os.path.abspath('%s/.bash_aliases' % homefolder)):
             rc_file = os.path.abspath('%s/.bash_aliases' % homefolder)
         elif os.path.exists(os.path.abspath('%s/.bashrc' % homefolder)):
             rc_file = os.path.abspath('%s/.bashrc' % homefolder)
         elif os.path.exists(os.path.abspath('%s/.bash_profile' % homefolder)):
             rc_file = os.path.abspath('%s/.bash_profile' % homefolder)
-        elif os.path.exists(os.path.abspath('%s/.profile' % homefolder)):
-            rc_file = os.path.abspath('%s/.profile' % homefolder)
         elif os.path.exists(os.path.abspath('%s/.login' % homefolder)):
             rc_file = os.path.abspath('%s/.login' % homefolder)
         return rc_file
 
-    def use_zsh(self, homefolder):
-        #the possible bash rc files
-        zshFiles = ['%s/.zshrc', '%s/.zshenv', '%s/.zprofile', '%s/.zlogin']
-        return any([os.path.exists(os.path.abspath(f % homefolder)) for f in zshFiles])
-
     def get_zsh_file(self, homefolder):
+        # default
+        rc_file = os.path.abspath('%s/.zprofile' % homefolder)
         if os.path.exists(os.path.abspath('%s/.zshrc' % homefolder)):
             rc_file = os.path.abspath('%s/.zshrc' % homefolder)
         elif os.path.exists(os.path.abspath('%s/.zshenv' % homefolder)):
             rc_file = os.path.abspath('%s/.zshenv' % homefolder)
-        elif os.path.exists(os.path.abspath('%s/.zprofile' % homefolder)):
-            rc_file = os.path.abspath('%s/.zprofile' % homefolder)
         elif os.path.exists(os.path.abspath('%s/.zlogin' % homefolder)):
             rc_file = os.path.abspath('%s/.zlogin' % homefolder)
         return rc_file
 
     def add_alias(self, rc_file, alias):
-        with open(rc_file, 'r') as f:
-            lines = f.readlines()
+        with open(rc_file, 'a+') as read_f:
+            lines = read_f.readlines()
             if alias not in lines:
                 out = open(rc_file, 'a')
                 out.write("#AWSume alias to source the AWSume script\n")
@@ -78,40 +68,35 @@ _arguments "*: :($(awsumepy --rolesusers))" """
                 out.close()
 
     def add_bash_script(self, rc_file, bashScript):
-        with open(rc_file, 'r') as f:
-            content = f.read()
+        with open(rc_file, 'a+') as read_f:
+            content = read_f.read()
             if not bashScript in content:
                 out = open(rc_file, 'a')
                 out.write('\n#Auto-Complete function for AWSume')
                 out.write('\n' + bashScript + '\n')
                 out.close()
 
-    def add_zsh_script(self, zshScript, rc_file, func_dir):
-        #if for some reason /usr/local/share/zsh/site-functions doesn't exist, add it
+    def add_zsh_script(self, zsh_script, rc_file, func_dir):
+        #if /usr/local/share/zsh/site-functions doesn't exist, add it
         if not os.path.exists(func_dir):
             os.makedirs(func_dir)
             #add the directory to fpath
             with open(rc_file, 'r') as original: data = original.read()
             with open(rc_file, 'w') as modified: modified.write('fpath=$(' + func_dir + ' $fpath)\n' + data)
+
         #add _awsume completion function to site-functions directory
         func_file = func_dir + '/_awsume'
         with open(func_file, 'w+') as f:
             content = f.read()
-            if not zshScript in content:
+            if not zsh_script in content:
                 out = open(func_file, 'a')
-                out.write(zshScript + '\n')
+                out.write(zsh_script + '\n')
                 out.close()
 
-    def use_powershell(self):
-        cmd_exists = lambda x: any(os.access(os.path.join(path, x), os.X_OK) for path in os.environ["PATH"].split(os.pathsep))
-        if cmd_exists('powershell.exe'):
-            return True
-        return False
-
-    def add_powershell_script(self, script, file):
-        contents = open(file, 'w+').read()
+    def add_powershell_script(self, script, powershell_file):
+        contents = open(powershell_file, 'w+').read()
         if script not in contents:
-            f = open(file, 'a+')
+            f = open(powershell_file, 'a+')
             f.write('\n' + script + '\n')
             f.close()
 
@@ -128,23 +113,23 @@ _arguments "*: :($(awsumepy --rolesusers))" """
                 pyenv_version = os.popen('pyenv version').read().split('(')[0].strip()
                 alias = 'alias awsume=". ~/.pyenv/versions/' + pyenv_version + '/bin/awsume"'
 
-            #add bash alias/script
-            if self.use_bash(homefolder):
-                rc_file = self.get_bash_file(homefolder)
-                self.add_alias(rc_file, alias)
-                self.add_bash_script(rc_file, self.bashScript)
+            # add bash alias/script, add alias to bash file
+            # regardless of platform for compatibility
+            rc_file = self.get_bash_file(homefolder)
+            self.add_alias(rc_file, alias)
+            self.add_bash_script(rc_file, self.bashScript)
 
             #add zsh alias/script
-            if self.use_zsh(homefolder):
+            if find_executable('zsh'):
                 rc_file = self.get_zsh_file(homefolder)
                 fpath_dir = os.path.abspath('/usr/local/share/zsh/site-functions')
                 self.add_alias(rc_file, alias)
                 self.add_zsh_script(self.zshScript, rc_file, fpath_dir)
 
             #add powershell script
-            if self.use_powershell():
+            if find_executable('powershell'):
                 (file_name, err) = subprocess.Popen(["powershell", "$profile"], stdout=subprocess.PIPE, shell=True).communicate()
-                file_name = file_name.replace('\r\n', '')
+                file_name = str(file_name.decode('ascii')).replace('\r\n', '')
                 self.add_powershell_script(self.powershellScript, file_name)
 
         atexit.register(_post_install)
