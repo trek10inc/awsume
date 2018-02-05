@@ -63,7 +63,7 @@ _arguments "*: :($(awsumepy --rolesusers))" """
             lines = read_f.readlines()
             if alias not in lines:
                 out = open(rc_file, 'a')
-                out.write("#AWSume alias to source the AWSume script\n")
+                out.write("\n#AWSume alias to source the AWSume script\n")
                 out.write(alias)
                 out.close()
 
