@@ -7,8 +7,10 @@ This is a plugin that enables you to use your assumed role credentials to open t
 This plugin does require you to have the python module `requests` installed, which can be done with a simple command:
 
 ```bash
-pip install requests
+pip install requests[security]
 ```
+
+Note: the [security] specifier is not required if you have the latest version of pyopenssl installed on your system already.
 
 ### Use
 
