@@ -5,7 +5,7 @@ from setuptools.command.install import install
 from setuptools.command.install_scripts import install_scripts
 from distutils.spawn import find_executable
 
-version = '2.1.4'
+version = '2.1.5'
 
 class CustomInstall(install):
 
@@ -63,7 +63,7 @@ _arguments "*: :($(awsumepy --rolesusers))" """
             lines = read_f.readlines()
             if alias not in lines:
                 out = open(rc_file, 'a')
-                out.write("#AWSume alias to source the AWSume script\n")
+                out.write("\n#AWSume alias to source the AWSume script\n")
                 out.write(alias)
                 out.close()
 
