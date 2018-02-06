@@ -5,7 +5,7 @@ from six.moves import configparser as ConfigParser
 from builtins import input
 from yapsy import PluginManager
 
-__version__ = '2.1.4'
+__version__ = '2.1.5'
 
 #initialize logging
 logging.getLogger('yapsy').addHandler(logging.StreamHandler())
@@ -84,7 +84,7 @@ def add_arguments(argumentParser):
     #kill auto-refresher flag
     argumentParser.add_argument('-k', action='store_true', default=False,
                                 dest='kill',
-                                help='Kill the auto-refreshing process')
+                                help='Kill the auto-refreshing process, unsets all AWS/AWSUME environment variables')
     #display version flag
     argumentParser.add_argument('-v', action='store_true', default=False,
                                 dest='version',
