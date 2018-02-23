@@ -1,4 +1,4 @@
-## AWSume Console Plugin
+# AWSume Console Plugin
 
 This is a plugin that enables you to use your assumed role credentials to open the AWS console in your default browser. To install, just place the `awsumeConsole.py` and `awsumeConsole.yapsy-plugin` within your `~/.aws/awsumePlugins` directory, as you would install any other AWSume plugin.
 
@@ -12,9 +12,18 @@ pip install requests[security]
 
 Note: the [security] specifier is not required if you have the latest version of pyopenssl installed on your system already.
 
-### Use
+## Installation
+
+To install this plugin, using AWSume's latest `--install-plugin` feature, run:
+
+``` bash
+awsume --install-plugin https://raw.githubusercontent.com/trek10inc/awsume/master/examplePlugin/awsumeConsole.py https://raw.githubusercontent.com/trek10inc/awsume/master/examplePlugin/awsumeConsole.yapsy-plugin
+```
+
+## Use
 
 There are two ways to use this plugin.
+
 - Use your current environment variables to open the console
   - `awsume -c` Will open the AWS console using the current environment variables
 - Use a profile_name
