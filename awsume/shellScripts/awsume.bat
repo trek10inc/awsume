@@ -23,7 +23,7 @@ for /f "tokens=1,2,3,4,5,6 delims= " %%a in ("%AWSUME_TEXT%") do (
         start /min "autoAwsume" autoAwsume
     )
     if "%%a" == "Version" (
-        echo %%b
+        awsumepy -v
     )
     if "%%a" == "Listing..." (
         awsumepy -l
@@ -57,12 +57,12 @@ for /f "tokens=1,2,3,4,5,6 delims= " %%a in ("%AWSUME_TEXT%") do (
         set AWS_DEFAULT_PROFILE=
         set AWSUME_PROFILE=
 
-        set AWS_SECRET_ACCESS_KEY=%%b
-        set AWS_ACCESS_KEY_ID=%%d
+        set AWS_ACCESS_KEY_ID=%%b
+        set AWS_SECRET_ACCESS_KEY=%%c
 
         if "%%c" NEQ "None" (
-            set AWS_SESSION_TOKEN=%%c
-            set AWS_SECURITY_TOKEN=%%c)
+            set AWS_SESSION_TOKEN=%%d
+            set AWS_SECURITY_TOKEN=%%d)
 
 
         if "%%e" NEQ "None" (
