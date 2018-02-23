@@ -1,0 +1,19 @@
+{
+  "name": "awsume",
+  "version": "3.0.0-dev",
+  "description": "Awsume - A cli that makes using AWS IAM credentials easy",
+  "author": {
+    "name":"Trek10, Inc",
+    "email" : "package-management@trek10.com"
+  },
+  "scripts": {
+    "reinstall": "pip uninstall awsume -y && pip install . --user",
+    "test": "pytest --cov --cov-report xml:cov.xml",
+    "coverage": "coverage report",
+    "deploy": "npm run tag && npm run upload",
+    "tag": "git tag $npm_package_version && git push --tags",
+    "upload": "python setup.py sdist upload -r pypi"
+  },
+  "license": "MIT",
+  "homepage": "https://github.com/trek10inc/awsume"
+}
