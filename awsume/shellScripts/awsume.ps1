@@ -1,12 +1,7 @@
 #AWSume - a powershell script to assume an AWS IAM role from the command-line
 
-#grab the environment variables from the python script
 #AWSUME_FLAG - what awsumepy told the shell to do
-#AWSUME_1 - secret access key / autoAwsumeProfileName
-#AWSUME_2 - security token / fileName
-#AWSUME_3 - access key id
-#AWSUME_4 - region
-#AWSUME_5 - profile name
+#AWSUME_n - the data from awsumepy
 $AWSUME_FLAG, $AWSUME_1, $AWSUME_2, $AWSUME_3, $AWSUME_4, $AWSUME_5 = `
 $(awsumepy $args) -split '\s+'
 
@@ -16,7 +11,7 @@ if ( $AWSUME_FLAG -eq "usage:" ) {
 }
 #if version flag
 elseif ( $AWSUME_FLAG -eq "Version" ) {
-    Write-Host $AWSUME_1
+    $(awsumepy -v)
 }
 #if -l flag passed
 elseif ( $AWSUME_FLAG -eq "Listing..." ) {
@@ -43,8 +38,8 @@ elseif ( $AWSUME_FLAG -eq "Auto" ) {
 
     #run the background autoAwsume process
     Start-Process powershell -ArgumentList "autoAwsume" -WindowStyle hidden
-
 }
+
 #if user sent kill flag
 elseif ( $AWSUME_FLAG -eq "Kill" ) {
     $env:AWS_SECRET_ACCESS_KEY = ""
@@ -79,12 +74,12 @@ elseif ( $AWSUME_FLAG -eq "Awsume") {
     $env:AWS_DEFAULT_PROFILE = ""
     $env:AWSUME_PROFILE = ""
 
-    $env:AWS_SECRET_ACCESS_KEY = $AWSUME_1
-    $env:AWS_ACCESS_KEY_ID = $AWSUME_3
-    
+    $env:AWS_ACCESS_KEY_ID = $AWSUME_1
+    $env:AWS_SECRET_ACCESS_KEY = $AWSUME_2
+
     if ( $AWSUME_2 -ne "None" ) {
-        $env:AWS_SESSION_TOKEN = $AWSUME_2
-        $env:AWS_SECURITY_TOKEN = $AWSUME_2
+        $env:AWS_SESSION_TOKEN = $AWSUME_3
+        $env:AWS_SECURITY_TOKEN = $AWSUME_3
     }
 
     if ( $AWSUME_4 -ne "None" ) {
