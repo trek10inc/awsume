@@ -1129,11 +1129,13 @@ def delete_plugin(plugin_name):
         print('That plugin doesn\'t exist', file=sys.stderr)
         return
 
-    print('All plugin files will be deleted, are you sure you want to delete the plugin: ' + plugin_name + ' (y/N)', file=sys.stderr, end='')
+    plugin_files = [item for item in directory if plugin_name in item]
+    print('All plugin files will be deleted, are you sure you want to delete the plugin: [' + plugin_name + ']', file=sys.stderr)
+    print('\n'.join(plugin_files), file=sys.stderr)
+    print('(y/N)? ', file=sys.stderr, end='')
     choice = get_input()
     if not choice.startswith('y') and not choice.startswith('Y'):
         return
-    plugin_files = [item for item in directory if plugin_name in item]
     for item in plugin_files:
         item_path = os.path.join(AWSUME_PLUGIN_DIRECTORY, item)
         if os.path.isfile(item_path):
