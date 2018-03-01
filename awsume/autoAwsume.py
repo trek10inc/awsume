@@ -110,9 +110,9 @@ def main():
         timeUntilEarliestExpiration = (earliestExpiration - get_now().replace(tzinfo=earliestExpiration.tzinfo)).total_seconds()
         if timeUntilEarliestExpiration <= 0:
             break
-        print("autoAwsume: Sleeping for " + str(timeUntilEarliestExpiration) + " seconds", file=sys.stderr)
+        # awsumepy.safe_print("autoAwsume: Sleeping for " + str(timeUntilEarliestExpiration) + " seconds", file=sys.stderr)
         time.sleep(timeUntilEarliestExpiration)
-    print("autoAwsume: No more credentials left to refresh, shutting down", file=sys.stderr)
+    # awsumepy.safe_print("autoAwsume: No more credentials left to refresh, shutting down", file=sys.stderr)
 
 if __name__ == '__main__': # pragma: no cover
     main()
