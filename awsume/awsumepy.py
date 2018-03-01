@@ -6,7 +6,6 @@ import argparse
 import re
 import collections
 import logging
-import textwrap
 import json
 import signal
 import shutil
@@ -46,10 +45,11 @@ def __log_dt_converter(dt_object): # pragma: no cover
 
 #get cross-platform directories
 HOME_PATH = os.path.expanduser('~')
-AWS_CONFIG_FILE = os.path.join(HOME_PATH, '.aws/config')
-AWS_CREDENTIALS_FILE = os.path.join(HOME_PATH, '.aws/credentials')
-AWS_CACHE_DIRECTORY = os.path.join(HOME_PATH, '.aws/cli/cache/')
-AWSUME_PLUGIN_DIRECTORY = os.path.join(HOME_PATH, '.aws/awsumePlugins/')
+AWS_DIRECTORY = os.path.join(HOME_PATH, '.aws')
+AWS_CONFIG_FILE = os.path.join(AWS_DIRECTORY, 'config')
+AWS_CREDENTIALS_FILE = os.path.join(AWS_DIRECTORY, 'credentials')
+AWS_CACHE_DIRECTORY = os.path.join(AWS_DIRECTORY, 'cli/cache/')
+AWSUME_PLUGIN_DIRECTORY = os.path.join(AWS_DIRECTORY, 'awsumePlugins/')
 AWSUME_PLUGIN_CACHE_FILE = os.path.join(AWSUME_PLUGIN_DIRECTORY, '_plugins.json')
 # AWSUME_PLUGIN_DIRECTORY = './examplePlugin/'
 
@@ -161,7 +161,7 @@ def add_arguments(argument_parser):
                                  help='Install a plugin given two urls')
     argument_parser.add_argument('--delete-plugin',
                                  nargs=1,
-                                 dest='plugin_name',
+                                 dest='delete_plugin_name',
                                  metavar=('name_of_plugin'),
                                  default=None,
                                  help='Delete the .py and .yapsy-plugin files of the given plugin')
@@ -238,7 +238,7 @@ def read_ini_file(file_path):
             for option in parser.options(profile):
                 profiles[profile.replace('profile ', '')][option] = parser.get(profile, option)
     else:
-        print('AWSume Error: Directory [' + file_path + '] does not exist', file=sys.stderr)
+        safe_print('AWSume Error: Directory [' + file_path + '] does not exist')
     return profiles
 
 def merge_role_and_source_profile(role_profile, source_profile):
@@ -265,7 +265,7 @@ def mix_role_and_source_profiles(profiles):
 
     Parameters
     ----------
-    - profiles - the dict of aws profiles
+    - profiles - the collected aws profiles
 
     Returns
     -------
@@ -278,7 +278,7 @@ def mix_role_and_source_profiles(profiles):
             if profiles.get(source_profile_name):
                 merge_role_and_source_profile(profiles[profile], profiles[source_profile_name])
             else:
-                print('AWSume profile configuration error: Source Profile [{}] doesn\'t exist'.format(source_profile_name), file=sys.stderr)
+                safe_print('AWSume profile configuration error: Source Profile [{}] doesn\'t exist'.format(source_profile_name))
                 exit(0)
 
 def get_aws_profiles(app, args, config_file_path, credentials_file_path):
@@ -318,7 +318,7 @@ def get_aws_profiles_callback(app, args, profiles): # pragma: no cover
     ----------
     - app - the AWSume app object
     - args - the commandline arguments
-    - profiles - the aws profiles collected from `get_aws_profiles`
+    - profiles - the collected aws profiles
     """
     LOG.info('Validating Profile')
     # list profiles
@@ -329,11 +329,11 @@ def get_aws_profiles_callback(app, args, profiles): # pragma: no cover
     try:
         profile = profiles.get(args.target_profile_name)
         if profile is None:
-            print('AWSume error: Profile not found', file=sys.stderr)
+            safe_print('AWSume error: Profile not found')
             raise ProfileNotFoundError
         else:
             if not valid_profile(profile):
-                print('AWSume error: Invalid profile', file=sys.stderr)
+                safe_print('AWSume error: Invalid profile')
                 raise InvalidProfileError
     except ProfileNotFoundError:
         LOG.debug('Profile not found')
@@ -430,31 +430,31 @@ def print_formatted_data(profile_data): # pragma: no cover
     - profile_data - the list of profile data that's returned from `format_aws_profiles`
     """
     LOG.info('Printing formatted profile data')
-    print("Listing...\n")
+    print('Listing...\n')
 
     widths = [max(map(len, col)) for col in zip(*profile_data)]
     print('AWS Profiles'.center(sum(widths) + 10, '='))
     for row in profile_data:
-        print("  ".join((val.ljust(width) for val, width in zip(row, widths))))
+        print('  '.join((val.ljust(width) for val, width in zip(row, widths))))
 
 def list_profile_data(profiles):
     """List useful information about the collected aws profiles.
 
     Parameters
     ----------
-    - profiles - the profiles to list out
+    - profiles - the collected aws profiles
     """
     LOG.info('Listing aws profiles')
 
     formatted_profiles = format_aws_profiles(profiles)
     print_formatted_data(formatted_profiles)
 
-def get_profile_names(arguments, app):
+def get_profile_names(args, app):
     """Get a list of all awsume-able profile names
 
     Parameters
     ----------
-    - arguments - the commandline arguments
+    - args - the commandline args
     - app - the AWSume app object
 
     Returns
@@ -462,7 +462,7 @@ def get_profile_names(arguments, app):
     A list of profile names
     """
     profiles = {}
-    profiles = get_aws_profiles(app, arguments, AWS_CONFIG_FILE, AWS_CREDENTIALS_FILE)
+    profiles = get_aws_profiles(app, args, AWS_CONFIG_FILE, AWS_CREDENTIALS_FILE)
     mix_role_and_source_profiles(profiles)
     profile_names = []
     for profile in profiles:
@@ -480,7 +480,7 @@ def list_profile_names(args, app):
     profile_names = []
     for func in app.awsumeFunctions['get_profile_names']:
         profile_names.extend(func(args, app))
-    print(' '.join(profile_names))
+    print('\n'.join(profile_names))
 
 #
 #   InspectionAndValidation
@@ -573,7 +573,7 @@ def valid_cache_session(session):
         LOG.debug('Session is invalid')
     return False
 
-def fix_session_credentials(session, profiles, arguments):
+def fix_session_credentials(session, profiles, args):
     """Format the given session.
     In particular fix the expiration to be of local timezone.
 
@@ -581,13 +581,13 @@ def fix_session_credentials(session, profiles, arguments):
     ----------
     - session - the session credentials from the get_session_token api call
     - profiles - the collected aws profiles
-    - arguments - the commandline arguments
+    - args - the commandline args
     """
     LOG.debug('Converting session expiration to local timezone')
     session['Expiration'] = session['Expiration'].astimezone(dateutil.tz.tzlocal())
     session['Expiration'] = session['Expiration'].strftime('%Y-%m-%d %H:%M:%S')
 
-    region = profiles[arguments.target_profile_name].get('region')
+    region = profiles[args.target_profile_name].get('region')
     if not region and profiles.get('default'):
         LOG.debug('region not found in profile, using default profile\'s region')
         region = profiles['default'].get('region')
@@ -607,6 +607,16 @@ def get_input(): # pragma: no cover
     """
     return read_input()
 
+def safe_print(text, end=None): # pragma: no cover
+    """A simple wrapper around the builting `print` function.
+    It should always print to stderr to not interfere with the shell wrappers.
+
+    Parameters
+    ----------
+    - text - the text to print
+    """
+    print(text, file=sys.stderr, end=end)
+
 def read_mfa():
     """Read mfa from the command line.
     If token is invalid, retry.
@@ -615,13 +625,13 @@ def read_mfa():
     -------
     The read mfa token.
     """
-    print('Enter MFA token: ', file=sys.stderr, end='')
+    safe_print('Enter MFA token: ', end='')
     while True:
         mfa_token = get_input()
         if valid_mfa_token(mfa_token):
             return mfa_token
         else:
-            print('Please enter a valid MFA token: ', file=sys.stderr, end='')
+            safe_print('Please enter a valid MFA token: ', end='')
 
 
 
@@ -662,6 +672,8 @@ def write_aws_cache(cache_path, cache_name, session):
     - session - the session to write
     """
     LOG.info('writing aws cache session')
+    if not os.path.exists(cache_path):
+        os.makedirs(cache_path)
     json.dump(session, open(cache_path + cache_name, 'w'), indent=2, default=str)
 
 
@@ -669,15 +681,15 @@ def write_aws_cache(cache_path, cache_name, session):
 #
 #   AWSume workflow
 #
-def pre_awsume(args, app):
+def pre_awsume(app, args):
     """Execute anything that needs to be handled before awsume.
     Check for any specific flags and handle them accordingly.
     Set the `target_profile_name`. If `profile_name` is none, target the default profile.
 
     Parameters
     ----------
-    - args - the commandline arguments
     - app - the AWSume app object
+    - args - the commandline arguments
     """
     LOG.info('Preparing to run the AWSume workflow')
 
@@ -689,7 +701,7 @@ def pre_awsume(args, app):
         LOG.debug('Debug logs are visible')
 
     if args.version: # pragma: no cover
-        print(__version__, file=sys.stderr)
+        safe_print(__version__)
         exit(0)
 
     if args.profile_name is None:
@@ -713,9 +725,9 @@ def pre_awsume(args, app):
         download_plugin(*args.plugin_urls)
         exit(0)
 
-    if args.plugin_name:
-        delete_plugin(args.plugin_name[0])
-        LOG.debug('Attempting to delete plugin: %s', args.plugin_name[0])
+    if args.delete_plugin_name:
+        delete_plugin(args.delete_plugin_name[0])
+        LOG.debug('Attempting to delete plugin: %s', args.delete_plugin_name[0])
         exit(0)
 
     if args.display_plugin_info:
@@ -742,15 +754,15 @@ def create_sts_client(aws_access_key_id=None, aws_secret_access_key=None, aws_se
                               aws_session_token=aws_session_token)
     return sts_client
 
-def get_user_session(args, app, profiles, cache_path, user_session):
+def get_user_session(app, args, profiles, cache_path, user_session):
     """Call get-session-token to get the user session credentials.
     If the profile is a user profile that doesn't require MFA (just an aws_access_key_id and
     an aws_secret_access_key), then return the credentials without a session token.
 
     Parameters
     ----------
-    - args - the command-line args
     - app - the AWSume app object
+    - args - the command-line args
     - profiles - the collected aws profiles
     - cache_path - the directory to the cache file
     - user_session - the state of the previously called get_user_session
@@ -787,23 +799,23 @@ def get_user_session(args, app, profiles, cache_path, user_session):
             write_aws_cache(cache_path, cache_file_name, response['Credentials'])
             return response['Credentials']
         except botocore.exceptions.ClientError as exception:
-            print('AWSume error: ' + exception.response['Error']['Message'], file=sys.stderr)
+            safe_print('AWSume error: ' + exception.response['Error']['Message'])
             raise UserAuthenticationError
     else:
         try:
             response = sts_client.get_session_token()
             return response['Credentials']
         except botocore.exceptions.ClientError as exception:
-            print('AWSume error: ' + exception.response['Error']['Message'], file=sys.stderr)
+            safe_print('AWSume error: ' + exception.response['Error']['Message'])
             raise UserAuthenticationError
 
-def get_role_session(arguments, app, profiles, user_session, role_session):
+def get_role_session(app, args, profiles, user_session, role_session):
     """Call assume-role to get the role session credentials.
 
     Parameters
     ----------
-    - arguments - the command-line arguments
     - app - the AWSume app object
+    - args - the command-line arguments
     - profiles - the collected aws profiles
     - user_session - the user session credentials
     - role_session - the state of the previously called get_role_session
@@ -813,12 +825,12 @@ def get_role_session(arguments, app, profiles, user_session, role_session):
     The session credentials from the assume-role api call
     """
     LOG.info('Getting role session credentials')
-    profile = profiles[arguments.target_profile_name]
-    if arguments.session_name:
-        LOG.debug('using custom session name: %s', arguments.session_name)
-        role_session_name = arguments.session_name
+    profile = profiles[args.target_profile_name]
+    if args.session_name:
+        LOG.debug('using custom session name: %s', args.session_name)
+        role_session_name = args.session_name
     else:
-        role_session_name = 'awsume-session-' + arguments.target_profile_name
+        role_session_name = 'awsume-session-' + args.target_profile_name
     sts_client = create_sts_client(user_session['AccessKeyId'],
                                    user_session['SecretAccessKey'],
                                    user_session['SessionToken'])
@@ -826,19 +838,19 @@ def get_role_session(arguments, app, profiles, user_session, role_session):
     try:
         response = sts_client.assume_role(RoleArn=profile['role_arn'],
                                           RoleSessionName=role_session_name)
-        fix_session_credentials(response['Credentials'], profiles, arguments)
+        fix_session_credentials(response['Credentials'], profiles, args)
         return response['Credentials']
     except botocore.exceptions.ClientError as exception:
-        print('AWSume error: ' + exception.response['Error']['Message'], file=sys.stderr)
+        safe_print('AWSume error: ' + exception.response['Error']['Message'])
         raise RoleAuthenticationError
 
-def get_role_session_callback(args, app, profiles, user_session, role_session): # pragma: no cover
+def get_role_session_callback(app, args, profiles, user_session, role_session): # pragma: no cover
     """Call assume-role to get the role session credentials.
 
     Parameters
     ----------
-    - args - the command-line args
     - app - the AWSume app object
+    - args - the command-line args
     - profiles - the collected aws profiles
     - user_session - the user session credentials
     - role_session - the state of the previously called get_role_session
@@ -923,7 +935,6 @@ def remove_auto_profile(profile_name=None):
             auto_awsume_parser.remove_section(auto_profile_name)
     else:
         LOG.debug('removing all auto-refresh- profiles')
-        print(profile_name, file=sys.stderr)
         for profile in auto_awsume_parser.sections():
             if 'auto-refresh-' in profile:
                 LOG.debug('removing auto-refresh- profile: %s', profile)
@@ -1047,8 +1058,9 @@ def download_file(url):
     a string of the file contents
     """
     response = six.moves.urllib.request.urlopen(url)
-    if get_main_content_type(response.info()) != 'text':
-        print('AWSume error: The file needs to be a plain text file.', file=sys.stderr)
+    content_type = get_main_content_type(response.info())
+    if content_type != 'text' and content_type != 'binary':
+        safe_print('AWSume error: The file needs to be a plain text file, received [' + str(content_type) + ']')
         raise Exception
     download = response.read()
     return download.decode('utf-8')
@@ -1067,11 +1079,11 @@ def write_plugin_files(file1, file2, filename1, filename2):
     filepath2 = os.path.join(AWSUME_PLUGIN_DIRECTORY, filename2)
 
     if os.path.isfile(filepath1) or os.path.isfile(filepath2):
-        print("It looks like that plugin is already installed, would you like to overwrite it? (y/N) : ", end='', file=sys.stderr)
+        safe_print('It looks like that plugin is already installed, would you like to overwrite it? (y/N) : ', end='')
         choice = get_input()
         if not choice.startswith('y') and not choice.startswith('Y'):
             return
-    print('Saving ' + filename1 + ' and ' + filename2 + ' to ' + AWSUME_PLUGIN_DIRECTORY, file=sys.stderr)
+    safe_print('Saving ' + filename1 + ' and ' + filename2 + ' to ' + AWSUME_PLUGIN_DIRECTORY)
     with open(filepath1, 'w') as writefile:
         writefile.write(file1)
     with open(filepath2, 'w') as writefile:
@@ -1086,18 +1098,20 @@ def download_plugin(url1, url2):
     - url2 - ideally the url to the .yapsy-plugin file, but could be switched
     """
     LOG.info('Downloading plugins')
+    url1 = url1.replace('\\', '/')
+    url2 = url2.replace('\\', '/')
     filename1 = url1.split('?')[0].split('/')[-1]
     filename2 = url2.split('?')[0].split('/')[-1]
 
     if not filename1 or not filename2:
-        print('AWSume error: Please provide a url to a valid file.', file=sys.stderr)
+        safe_print('AWSume error: Please provide a url to a valid file.')
         return
 
     if not (filename1.endswith('.py') and filename2.endswith('.yapsy-plugin') or
             filename1.endswith('.yapsy-plugin') and filename2.endswith('.py')):
-        print('AWSume error: Please supply urls to one .py file and one .yapsy-plugin file', file=sys.stderr)
+        safe_print('AWSume error: Please supply urls to one .py file and one .yapsy-plugin file')
         return
-    if filename1 == url1 and filename2 == filename2:
+    if filename1 == url1 and filename2 == url2:
         cache = read_plugin_cache()
         if cache.get(filename1) and cache.get(filename2):
             url1 = cache[filename1]
@@ -1108,11 +1122,11 @@ def download_plugin(url1, url2):
         LOG.debug('Downloading from %s', url2)
         file2 = download_file(url2)
     except Exception as exception:
-        print('AWSume error: Could not download files: ' + str(exception), file=sys.stderr)
+        safe_print('AWSume error: Could not download files: ' + str(exception))
         return
 
-    cache_urls(url1, url2, filename1, filename2)
     write_plugin_files(file1, file2, filename1, filename2)
+    cache_urls(url1, url2, filename1, filename2)
 
 def delete_plugin(plugin_name):
     """Delete the .py and .yapsy-plugin file given by `plugin_name` from the plugins directory.
@@ -1126,23 +1140,23 @@ def delete_plugin(plugin_name):
     plugins = [item for item in directory if item.endswith('.yapsy-plugin')]
     plugins = [name.split('.yapsy-plugin')[0] for name in plugins]
     if plugin_name not in plugins:
-        print('That plugin doesn\'t exist', file=sys.stderr)
+        safe_print('That plugin doesn\'t exist')
         return
 
     plugin_files = [item for item in directory if plugin_name in item]
-    print('All plugin files will be deleted, are you sure you want to delete the plugin: [' + plugin_name + ']', file=sys.stderr)
-    print('\n'.join(plugin_files), file=sys.stderr)
-    print('(y/N)? ', file=sys.stderr, end='')
+    safe_print('All plugin files will be deleted, are you sure you want to delete the plugin: [' + plugin_name + ']')
+    safe_print('\n'.join(plugin_files))
+    safe_print('(y/N)? ', end='')
     choice = get_input()
     if not choice.startswith('y') and not choice.startswith('Y'):
         return
     for item in plugin_files:
         item_path = os.path.join(AWSUME_PLUGIN_DIRECTORY, item)
         if os.path.isfile(item_path):
-            print('Deleting file: ' + item, file=sys.stderr)
+            safe_print('Deleting file: ' + item)
             os.remove(item_path)
         elif os.path.isdir(item_path):
-            print('Deleting directory and contents: ' + item, file=sys.stderr)
+            safe_print('Deleting directory and contents: ' + item)
             shutil.rmtree(item_path)
 
 def read_plugin_cache():
@@ -1182,20 +1196,25 @@ def display_plugin_info(manager):
     - manager - the plugin manager
     """
     cache = read_plugin_cache()
-    print("", file=sys.stderr)
-    print("===== Cached Plugins =====", file=sys.stderr)
-    for filename in cache:
-        print(filename + ' ->', file=sys.stderr)
-        print('  ' + cache[filename], file=sys.stderr)
-    print("===== Cached Plugins =====", file=sys.stderr)
+    if cache:
+        safe_print('')
+        safe_print('===== Cached Plugins =====')
+        for filename in cache:
+            safe_print(filename + ' ->')
+            safe_print('  ' + cache[filename])
+        safe_print('===== Cached Plugins =====')
 
-    for plugin in manager.getAllPlugins():
-        print("", file=sys.stderr)
-        print("Name: " + plugin.name, file=sys.stderr)
-        print("Author: " + plugin.author, file=sys.stderr)
-        print("Version: " + str(plugin.version), file=sys.stderr)
-        print("Website: " + plugin.website, file=sys.stderr)
-        print("Description: " + plugin.description, file=sys.stderr)
+    plugins = manager.getAllPlugins()
+    if plugins:
+        for plugin in manager.getAllPlugins():
+            safe_print('')
+            safe_print('Name: ' + plugin.name)
+            safe_print('Author: ' + plugin.author)
+            safe_print('Version: ' + str(plugin.version))
+            safe_print('Website: ' + plugin.website)
+            safe_print('Description: ' + plugin.description)
+    else:
+        safe_print('AWSume: You do not have any installed plugins.')
 
 
 
@@ -1209,7 +1228,7 @@ def create_plugin_manager(plugin_directory):
     try:
         plugin_manager.collectPlugins()
     except Exception as exception:
-        print("AWSume error: Unable to collect plugins: " + str(exception), file=sys.stderr)
+        safe_print('AWSume error: Unable to collect plugins: ' + str(exception))
         return None
     return plugin_manager
 
@@ -1218,20 +1237,20 @@ def register_plugins(app, manager):
 
     Parameters
     ----------
-    - app - a AwsumeApp object
+    - app - the AWSume app object
     - manager - a yapsy plugin manager
     """
     for plugin in manager.getAllPlugins():
         try:
             if plugin.plugin_object.TARGET_VERSION.split('.')[0] != __version__.split('.')[0]:
-                print('AWSume warning: [{}] targets AWSume version {}'.format(plugin.name, plugin.plugin_object.TARGET_VERSION), file=sys.stderr)
+                safe_print('AWSume warning: [{}] targets AWSume version {}'.format(plugin.name, plugin.plugin_object.TARGET_VERSION))
         except AttributeError:
-            print('AWSume warning: [{}] has no targeted version. AWSume may not work as expected.'.format(plugin.name), file=sys.stderr)
+            safe_print('AWSume warning: [{}] has no targeted version. AWSume may not work as expected.'.format(plugin.name))
 
         for function_type in app.validFunctions:
             if function_type in dir(plugin.plugin_object):
                 if not app.register_function(function_type, getattr(plugin.plugin_object, function_type)):
-                    print('Unable to  register plugin [{}] function of type {}'.format(plugin.name, function_type), file=sys.stderr)
+                    safe_print('Unable to  register plugin [{}] function of type {}'.format(plugin.name, function_type))
 
 class AwsumeApp(object):
     """The app that runs AWSume."""
@@ -1259,7 +1278,18 @@ class AwsumeApp(object):
     }
 
     def __init__(self, plugin_manager): # pragma: no cover
-        """Create plugin function types, add defaults to the lists."""
+        """Create plugin function types, add defaults to the lists.
+
+        Parameters
+        ----------
+        - plugin_manager - the main plugin manager
+        """
+        for directory in [AWS_DIRECTORY, AWSUME_PLUGIN_DIRECTORY]:
+            if not os.path.exists(directory):
+                os.makedirs(directory)
+        for filename in [AWS_CREDENTIALS_FILE, AWS_CONFIG_FILE]:
+            if not os.path.isfile(filename):
+                open(filename, 'a').close()
         self.plugin_manager = plugin_manager
         for function_type in self.validFunctions:
             self.awsumeFunctions[function_type] = []
@@ -1308,7 +1338,7 @@ class AwsumeApp(object):
         arguments = parse_args(argument_parser, system_arguments)
 
         for func in self.awsumeFunctions['pre_awsume']:
-            func(arguments, self)
+            func(self, arguments)
 
         profiles = {}
         for func in self.awsumeFunctions['get_aws_profiles']:
@@ -1322,15 +1352,17 @@ class AwsumeApp(object):
         user_session = None
         try:
             for func in self.awsumeFunctions['get_user_session']:
-                user_session = func(arguments, self, profiles, AWS_CACHE_DIRECTORY, user_session)
+                user_session = func(self, arguments, profiles, AWS_CACHE_DIRECTORY, user_session)
             LOG.debug('User session:\n%s', json.dumps(user_session, default=str, indent=2))
+            if user_session.get('Expiration'):
+                safe_print('AWSume: User profile credentials will expire at: ' + str(user_session['Expiration']))
             for func in self.awsumeFunctions['get_user_session_callback']:
-                func(arguments, self, profiles, user_session)
+                func(self, arguments, profiles, user_session)
         except UserAuthenticationError:
             LOG.debug('UserAuthenticationError raised')
             if self.awsumeFunctions['catch_user_authentication_error']:
                 for func in self.awsumeFunctions['catch_user_authentication_error']:
-                    func(arguments, self, profiles)
+                    func(self, arguments, profiles)
             else:
                 exit(0)
         session_to_use = user_session
@@ -1339,16 +1371,17 @@ class AwsumeApp(object):
         try:
             if is_role(profiles[arguments.target_profile_name]):
                 for func in self.awsumeFunctions['get_role_session']:
-                    role_session = func(arguments, self, profiles, user_session, role_session)
+                    role_session = func(self, arguments, profiles, user_session, role_session)
                 LOG.debug('Role session:\n%s', json.dumps(role_session, default=str, indent=2))
+                safe_print('AWSume: Role profile credentials will expire at: ' + str(role_session['Expiration']))
                 for func in self.awsumeFunctions['get_role_session_callback']:
-                    func(arguments, self, profiles, user_session, role_session)
+                    func(self, arguments, profiles, user_session, role_session)
                 session_to_use = role_session
         except RoleAuthenticationError:
             LOG.debug('RoleAuthenticationError raised')
             if self.awsumeFunctions['catch_role_authentication_error']:
                 for func in self.awsumeFunctions['catch_role_authentication_error']:
-                    func(arguments, self, profiles, user_session)
+                    func(self, arguments, profiles, user_session)
             else:
                 exit(0)
 
@@ -1366,7 +1399,7 @@ class AwsumeApp(object):
         self.set_export_data(data)
 
         for func in self.awsumeFunctions['post_awsume']:
-            func(arguments, self, profiles, user_session, role_session)
+            func(self, arguments, profiles, user_session, role_session)
 
 def main(command_line_arguments=sys.argv[1:]):
     """Create the AWSume app and plugin manager, then execute AWSume"""
