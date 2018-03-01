@@ -25,10 +25,10 @@ class AwsumeConsole(IPlugin.IPlugin):
                                      help='Open the AWS console to the AWSume\'d credentials')
         return argument_parser
 
-    def pre_awsume(self, arguments, app):
+    def pre_awsume(self, app, args):
         """If no profile_name is given to AWSume, check the environment for credentials."""
         #use the environment variables to open
-        if arguments.open_console is True and arguments.profile_name is None:
+        if args.open_console is True and args.profile_name is None:
             credentials, region = self.get_environment_credentials()
             response = self.make_aws_federation_request(credentials)
             signin_token = self.get_signin_token(response)
@@ -37,8 +37,8 @@ class AwsumeConsole(IPlugin.IPlugin):
             exit(0)
 
     def post_awsume(self,
-                    args,
                     app,
+                    args,
                     profiles,
                     user_session,
                     role_session):
