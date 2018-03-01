@@ -133,7 +133,7 @@ def add_arguments(argument_parser):
                                  nargs='?',
                                  metavar='profile_name',
                                  help='The target profile name')
-    argument_parser.add_argument('-s', '--show',
+    argument_parser.add_argument('-s',
                                  action='store_true',
                                  dest='show_commands',
                                  default=False,
