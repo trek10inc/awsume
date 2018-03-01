@@ -20,6 +20,14 @@ The installer places the python and shell scripts into your python directory. If
 
 Once you have AWSume installed, you're ready to set up AWSume!
 
+#### Console Plugin installation
+
+Once you've installed AWSume, you can install the console plugin with:
+
+``` bash
+awsume --install-plugin https://raw.githubusercontent.com/trek10inc/awsume/master/examplePlugin/console.py https://raw.githubusercontent.com/trek10inc/awsume/master/examplePlugin/console.yapsy-plugin
+```
+
 ## Setup
 
 ### Configuring Using The AWS CLI
