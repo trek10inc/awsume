@@ -187,6 +187,8 @@ setup(
     description=PACKAGE['description'],
     license=PACKAGE['license'],
     url=PACKAGE['homepage'],
+    package_data={'awsume': ['package.json']},
+    include_package_data=True,
     install_requires=[
         'python-dateutil',
         'boto3',
