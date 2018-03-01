@@ -8,11 +8,13 @@
   },
   "scripts": {
     "reinstall": "pip uninstall awsume -y && pip install . --user",
-    "test": "pytest --cov --cov-report xml:cov.xml",
+    "test": "pipenv run pytest --cov --cov-report xml:cov.xml",
     "coverage": "coverage report",
     "deploy": "npm run tag && npm run upload",
     "tag": "git tag $npm_package_version && git push --tags",
-    "upload": "python setup.py sdist upload -r pypi"
+    "upload-prod": "python setup.py sdist upload -r pypi",
+    "upload-test": "python setup.py sdist upload -r pypitest",
+    "download-test": "pip install -i https://test.pypi.org/simple/ awsume --no-cache-dir --user"
   },
   "license": "MIT",
   "homepage": "https://github.com/trek10inc/awsume"
