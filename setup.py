@@ -53,12 +53,11 @@ class CustomInstall(install):
         """Install the given aliad to the given file.
         Add a comment above the alias so that users know what it's for."""
         with open(file_path, 'a+') as read_f:
-            lines = read_f.readlines()
-            if alias not in lines:
+            contents = read_f.read()
+            if alias not in contents:
                 out = open(file_path, 'a')
                 out.write('\n')
                 out.write('#AWSume alias to source the AWSume script')
-                out.write('\n')
                 out.write(alias)
                 out.write('\n')
                 out.close()
@@ -66,12 +65,14 @@ class CustomInstall(install):
     def install_bash_script(self, file_path, script):
         """Install AWSume's auto-complete to bash rc file."""
         with open(file_path, 'a+') as read_f:
-            content = read_f.read()
-            if not script in content:
+            contents = read_f.read()
+            print(contents)
+            print("NOW THE SCRIPT")
+            print(script)
+            if script not in contents:
                 out = open(file_path, 'a')
                 out.write('\n')
                 out.write('#Auto-Complete function for AWSume')
-                out.write('\n')
                 out.write(script)
                 out.write('\n')
                 out.close()
