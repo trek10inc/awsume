@@ -45,7 +45,7 @@ class AwsumeConsole(IPlugin.IPlugin):
         """Open the console using the currently AWSume'd credentials."""
         if args.open_console is True:
             if not role_session:
-                print("Cannot use these credentials to open the AWS Console.", file=sys.stderr)
+                awsumepy.safe_print('Cannot use these credentials to open the AWS Console.')
                 return
             credentials, region = self.get_session_temp_credentials(role_session)
             response = self.make_aws_federation_request(credentials)
@@ -70,12 +70,12 @@ class AwsumeConsole(IPlugin.IPlugin):
             temp_credentials = {
                 'sessionId': os.environ['AWS_ACCESS_KEY_ID'],
                 'sessionKey': os.environ['AWS_SECRET_ACCESS_KEY'],
-                'sessionToken': os.environ["AWS_SESSION_TOKEN"]
+                'sessionToken': os.environ['AWS_SESSION_TOKEN']
             }
             if os.environ.get('AWS_REGION'):
                 aws_region = os.environ['AWS_REGION']
         else:
-            print('Cannot use these credentials to open the AWS Console.', file=sys.stderr)
+            awsumepy.safe_print('Cannot use these credentials to open the AWS Console.')
             exit(0)
         json_temp_credentials = json.dumps(temp_credentials)
         return json_temp_credentials, aws_region
@@ -96,7 +96,7 @@ class AwsumeConsole(IPlugin.IPlugin):
             #format the credentials into a json formatted string
             json_temp_credentials = json.dumps(temp_credentials)
             return json_temp_credentials, aws_region
-        print('Cannot use these credentials to open the AWS Console.', file=sys.stderr)
+        awsumepy.safe_print('Cannot use these credentials to open the AWS Console.')
         exit(0)
 
     def make_aws_federation_request(self, temp_credentials):
@@ -130,5 +130,5 @@ class AwsumeConsole(IPlugin.IPlugin):
         try:
             webbrowser.open(url)
         except Exception:
-            print('Cannot open browser, here is the link:', file=sys.stderr)
-            print(url, file=sys.stderr)
+            awsumepy.safe_print('Cannot open browser, here is the link:')
+            awsumepy.safe_print(url)
