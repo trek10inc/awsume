@@ -7,9 +7,9 @@
     "email" : "package-management@trek10.com"
   },
   "scripts": {
-    "reinstall": "pip uninstall awsume -y && pip install . --user",
     "test": "pipenv run pytest --cov --cov-report xml:cov.xml",
-    "coverage": "coverage report",
+    "coverage": "pipenv run coverage report",
+    "reinstall": "pip uninstall awsume -y && pip install . --user",
     "deploy": "npm run tag && npm run upload",
     "tag": "git tag $npm_package_version && git push --tags",
     "upload-prod": "python setup.py sdist upload -r pypi",
