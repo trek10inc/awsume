@@ -1,6 +1,6 @@
 [Core]
 Name = awsumeConsolePlugin
-Module = awsumeConsole
+Module = console
 
 [Documentation]
 Author = Trek10, Inc.
