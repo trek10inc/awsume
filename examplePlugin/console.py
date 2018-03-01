@@ -56,7 +56,6 @@ class AwsumeConsole(IPlugin.IPlugin):
     def get_environment_credentials(self):
         """Get session credentials from the environment."""
         aws_region = 'us-east-1'
-        print(os.environ['AWS_PROFILE'], file=sys.stderr)
         if 'AWS_PROFILE' in os.environ:
             credentials_profiles = awsumepy.read_ini_file(awsumepy.AWS_CREDENTIALS_FILE)
             auto_profile = credentials_profiles[os.environ['AWS_PROFILE']]
