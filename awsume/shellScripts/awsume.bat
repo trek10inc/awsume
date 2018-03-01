@@ -60,7 +60,7 @@ for /f "tokens=1,2,3,4,5,6 delims= " %%a in ("%AWSUME_TEXT%") do (
         set AWS_ACCESS_KEY_ID=%%b
         set AWS_SECRET_ACCESS_KEY=%%c
 
-        if "%%c" NEQ "None" (
+        if "%%d" NEQ "None" (
             set AWS_SESSION_TOKEN=%%d
             set AWS_SECURITY_TOKEN=%%d)
 

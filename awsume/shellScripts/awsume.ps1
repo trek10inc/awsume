@@ -77,7 +77,7 @@ elseif ( $AWSUME_FLAG -eq "Awsume") {
     $env:AWS_ACCESS_KEY_ID = $AWSUME_1
     $env:AWS_SECRET_ACCESS_KEY = $AWSUME_2
 
-    if ( $AWSUME_2 -ne "None" ) {
+    if ( $AWSUME_3 -ne "None" ) {
         $env:AWS_SESSION_TOKEN = $AWSUME_3
         $env:AWS_SECURITY_TOKEN = $AWSUME_3
     }
