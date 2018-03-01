@@ -307,7 +307,7 @@ class TestListingProfiles(unittest.TestCase):
             'get_profile_names':[plugin_func1, plugin_func2]
         }
         AWSUMEPY.list_profile_names(fake_args, fake_app)
-        mock_print.assert_called_once_with('profile1-dev profile1-prod profile1-internal profile2-dev profile2-prod profile2-internal')
+        mock_print.assert_called_once_with('profile1-dev\nprofile1-prod\nprofile1-internal\nprofile2-dev\nprofile2-prod\nprofile2-internal')
 
 
 
@@ -489,14 +489,23 @@ class TestCachingSessions(unittest.TestCase):
         session = AWSUMEPY.read_aws_cache('/cache/path/', 'cache-file')
         self.assertEqual(session, {})
 
+    @mock.patch('os.makedirs')
+    @mock.patch('os.path.exists')
     @mock.patch('six.moves.builtins.open')
     @mock.patch('json.dump')
     def test_write_aws_cache(self,
                              mock_json_dump,
-                             mock_open):
+                             mock_open,
+                             mock_path_exists,
+                             mock_makedirs):
         """test write_aws_cache awsumepy function"""
+        mock_path_exists.return_value = True
         AWSUMEPY.write_aws_cache('/cache/path/', 'cache-file', {'session':'credentials'})
         mock_json_dump.assert_called()
+
+        mock_path_exists.return_value = False
+        AWSUMEPY.write_aws_cache('/cache/path/', 'cache-file', {'session':'credentials'})
+        mock_makedirs.assert_called()
 
 
 
@@ -505,6 +514,7 @@ class TestCachingSessions(unittest.TestCase):
 #
 class TestAwsumeWorkflow(unittest.TestCase):
     """Test suite for AwsumeWorkflow"""
+    @mock.patch('awsumepy.display_plugin_info')
     @mock.patch('awsumepy.delete_plugin')
     @mock.patch('awsumepy.download_plugin')
     @mock.patch('awsumepy.list_profile_names')
@@ -513,55 +523,65 @@ class TestAwsumeWorkflow(unittest.TestCase):
                         mock_kill,
                         mock_list_profile_names,
                         mock_download_plugin,
-                        mock_delete_plugin):
+                        mock_delete_plugin,
+                        mock_display_plugin_info):
         """test pre_awsume awsumepy function"""
         fake_args = mock.Mock()
         fake_app = mock.Mock()
-        fake_args.info = False
-        fake_args.debug = False
         fake_args.version = False
         fake_args.profile_name = None
         fake_args.target_profile_name = None
-        fake_args.plugin_name = None
-
         fake_args.kill = False
-        fake_args.plugin_urls = None
         fake_args.list_profile_names = False
-        AWSUMEPY.pre_awsume(fake_args, fake_app)
+        fake_args.plugin_urls = None
+        fake_args.delete_plugin_name = None
+        fake_args.display_plugin_info = False
+        fake_args.info = False
+        fake_args.debug = False
+
+        AWSUMEPY.pre_awsume(fake_app, fake_args)
         self.assertEqual(fake_args.target_profile_name, 'default')
 
         fake_args.profile_name = 'superCoolClient'
-        AWSUMEPY.pre_awsume(fake_args, fake_app)
+        AWSUMEPY.pre_awsume(fake_app, fake_args)
+
         self.assertEqual(fake_args.target_profile_name, 'superCoolClient')
+        fake_args.profile_name = None
 
         fake_args.kill = True
-        fake_args.list_profile_names = False
-        fake_args.plugin_urls = None
         with self.assertRaises(SystemExit):
-            AWSUMEPY.pre_awsume(fake_args, fake_app)
+            AWSUMEPY.pre_awsume(fake_app, fake_args)
+
         mock_kill.assert_called_once()
-
         fake_args.kill = False
+
         fake_args.list_profile_names = True
-        fake_args.plugin_urls = None
         with self.assertRaises(SystemExit):
-            AWSUMEPY.pre_awsume(fake_args, fake_app)
-        mock_list_profile_names.assert_called_once()
+            AWSUMEPY.pre_awsume(fake_app, fake_args)
 
-        fake_args.kill = False
+        mock_list_profile_names.assert_called_once()
         fake_args.list_profile_names = False
+
         fake_args.plugin_urls = ['url1', 'url2']
         with self.assertRaises(SystemExit):
-            AWSUMEPY.pre_awsume(fake_args, fake_app)
-        mock_download_plugin.assert_called_once()
+            AWSUMEPY.pre_awsume(fake_app, fake_args)
 
-        fake_args.kill = False
-        fake_args.list_profile_names = False
+        mock_download_plugin.assert_called_once()
         fake_args.plugin_urls = None
-        fake_args.plugin_name = 'somePlugin'
+
+        fake_args.delete_plugin_name = 'somePlugin'
         with self.assertRaises(SystemExit):
-            AWSUMEPY.pre_awsume(fake_args, fake_app)
+            AWSUMEPY.pre_awsume(fake_app, fake_args)
+
         mock_delete_plugin.assert_called_once()
+        fake_args.delete_plugin_name = None
+
+        fake_args.display_plugin_info = True
+        with self.assertRaises(SystemExit):
+            AWSUMEPY.pre_awsume(fake_app, fake_args)
+
+        mock_display_plugin_info.assert_called_once()
+        fake_args.display_plugin_info = False
 
     @mock.patch('boto3.client')
     def test_create_sts_client(self, mock_client):
@@ -617,7 +637,7 @@ class TestAwsumeWorkflow(unittest.TestCase):
         mock_requires_mfa.return_value = False
         mock_is_role.return_value = False
         fake_args.force_refresh = False
-        fake_session = AWSUMEPY.get_user_session(fake_args, fake_app, fake_profiles, '/cache/path', None)
+        fake_session = AWSUMEPY.get_user_session(fake_app, fake_args, fake_profiles, '/cache/path', None)
         self.assertEqual(fake_session, {
             'AccessKeyId' : 'EXAMPLE',
             'SecretAccessKey' : 'EXAMPLE',
@@ -630,7 +650,7 @@ class TestAwsumeWorkflow(unittest.TestCase):
         fake_args.force_refresh = False
         mock_valid_cache_session.return_value = True
         mock_read_aws_cache.return_value = 'fake_session'
-        fake_session = AWSUMEPY.get_user_session(fake_args, fake_app, fake_profiles, '/cache/path', None)
+        fake_session = AWSUMEPY.get_user_session(fake_app, fake_args, fake_profiles, '/cache/path', None)
         self.assertEqual(fake_session, 'fake_session')
 
         fake_args.target_profile_name = 'fake-mfa-profile'
@@ -638,7 +658,7 @@ class TestAwsumeWorkflow(unittest.TestCase):
         mock_is_role.return_value = False
         fake_args.force_refresh = True
         mock_valid_cache_session.return_value = False
-        fake_session = AWSUMEPY.get_user_session(fake_args, fake_app, fake_profiles, '/cache/path', None)
+        fake_session = AWSUMEPY.get_user_session(fake_app, fake_args, fake_profiles, '/cache/path', None)
         self.assertEqual(fake_session, {
             'SessionToken':'EXAMPLE'
         })
@@ -648,7 +668,7 @@ class TestAwsumeWorkflow(unittest.TestCase):
         mock_is_role.return_value = True
         fake_args.force_refresh = True
         mock_valid_cache_session.return_value = False
-        fake_session = AWSUMEPY.get_user_session(fake_args, fake_app, fake_profiles, '/cache/path', None)
+        fake_session = AWSUMEPY.get_user_session(fake_app, fake_args, fake_profiles, '/cache/path', None)
         self.assertEqual(fake_session, {
             'SessionToken':'EXAMPLE'
         })
@@ -697,12 +717,12 @@ class TestAwsumeWorkflow(unittest.TestCase):
                 'SessionToken':'EXAMPLE'
             }
         }
-        session = AWSUMEPY.get_role_session(fake_args, fake_app, fake_profiles, fake_user_session, None)
+        session = AWSUMEPY.get_role_session(fake_app, fake_args, fake_profiles, fake_user_session, None)
         self.assertEqual(session, {'SessionToken':'EXAMPLE'})
         mock_assume_role.assert_called_with(RoleArn='EXAMPLE', RoleSessionName='awsume-session-fake-role-profile')
 
         fake_args.session_name = 'cool-session'
-        session = AWSUMEPY.get_role_session(fake_args, fake_app, fake_profiles, fake_user_session, None)
+        session = AWSUMEPY.get_role_session(fake_app, fake_args, fake_profiles, fake_user_session, None)
         self.assertEqual(session, {'SessionToken':'EXAMPLE'})
         mock_assume_role.assert_called_with(RoleArn='EXAMPLE', RoleSessionName='cool-session')
 
