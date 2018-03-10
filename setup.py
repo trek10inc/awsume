@@ -52,27 +52,26 @@ class CustomInstall(install):
     def install_alias(self, file_path, alias):
         """Install the given aliad to the given file.
         Add a comment above the alias so that users know what it's for."""
-        with open(file_path, 'a+') as read_f:
+        with open(file_path, 'r') as read_f:
             contents = read_f.read()
             if alias not in contents:
                 out = open(file_path, 'a')
                 out.write('\n')
                 out.write('#AWSume alias to source the AWSume script')
+                out.write('\n')
                 out.write(alias)
                 out.write('\n')
                 out.close()
 
     def install_bash_script(self, file_path, script):
         """Install AWSume's auto-complete to bash rc file."""
-        with open(file_path, 'a+') as read_f:
+        with open(file_path, 'r') as read_f:
             contents = read_f.read()
-            print(contents)
-            print("NOW THE SCRIPT")
-            print(script)
             if script not in contents:
                 out = open(file_path, 'a')
                 out.write('\n')
                 out.write('#Auto-Complete function for AWSume')
+                out.write('\n')
                 out.write(script)
                 out.write('\n')
                 out.close()
@@ -168,17 +167,6 @@ class CustomInstall(install):
         atexit.register(_post_install)
         install.run(self)
 
-class CustomInstallScripts(install_scripts):
-    """Ensure AWSume is executable"""
-    def run(self):
-        def _post_install_scripts():
-            """Ensure AWSume is executable"""
-            execpath = '/usr/local/bin/awsume'
-            if os.path.exists(execpath):
-                os.chmod(execpath, int('755', 8))
-        atexit.register(_post_install_scripts)
-        install_scripts.run(self)
-
 setup(
     name=PACKAGE['name'],
     packages=['awsume'],
@@ -210,6 +198,5 @@ setup(
     },
     cmdclass={
         'install': CustomInstall,
-        'install_scripts': CustomInstallScripts,
     },
 )
