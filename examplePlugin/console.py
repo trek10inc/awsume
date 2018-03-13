@@ -64,8 +64,8 @@ class AwsumeConsole(IPlugin.IPlugin):
                 'sessionKey': auto_profile['aws_secret_access_key'],
                 'sessionToken': auto_profile['aws_session_token']
             }
-            if auto_profile.get('region'):
-                aws_region = auto_profile.get('region')
+            if auto_profile.get('aws_region'):
+                aws_region = auto_profile.get('aws_region')
         elif os.environ.get('AWS_ACCESS_KEY_ID') and os.environ.get('AWS_SECRET_ACCESS_KEY') and os.environ.get('AWS_SESSION_TOKEN'):
             temp_credentials = {
                 'sessionId': os.environ['AWS_ACCESS_KEY_ID'],
