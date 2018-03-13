@@ -250,6 +250,7 @@ def merge_role_and_source_profile(role_profile, source_profile):
     - role_profile - a role profile
     - source_profile - the role_profile's source_profile
     """
+    LOG.info('merging config and credentials profile for [%s]', role_profile['__name__'])
     if valid_profile(source_profile):
         role_profile['aws_access_key_id'] = source_profile['aws_access_key_id']
         role_profile['aws_secret_access_key'] = source_profile['aws_secret_access_key']
@@ -278,7 +279,7 @@ def mix_role_and_source_profiles(profiles):
             if profiles.get(source_profile_name):
                 merge_role_and_source_profile(profiles[profile], profiles[source_profile_name])
             else:
-                safe_print('AWSume profile configuration error: Source Profile [{}] doesn\'t exist'.format(source_profile_name))
+                safe_print('AWSume profile configuration error: Source Profile [{}] for profile [{}] doesn\'t exist'.format(source_profile_name, profile))
                 exit(0)
 
 def get_aws_profiles(app, args, config_file_path, credentials_file_path):
@@ -566,7 +567,8 @@ def valid_cache_session(session):
     """
     LOG.debug(session)
     try:
-        if session['Expiration'] > datetime.now():
+        session_expiration = datetime.strptime(session['Expiration'], '%Y-%m-%d %H:%M:%S')
+        if session_expiration > datetime.now():
             return True
         LOG.debug('Session is expired')
     except Exception:
@@ -655,7 +657,6 @@ def read_aws_cache(cache_path, cache_name):
         if os.path.isfile(cache_path + cache_name):
             LOG.debug('cache file exists, loading it')
             session = json.load(open(cache_path + cache_name))
-            session['Expiration'] = datetime.strptime(session['Expiration'], '%Y-%m-%d %H:%M:%S')
             return session
         LOG.debug('cache file does not exist')
         return {}
@@ -700,16 +701,16 @@ def pre_awsume(app, args):
         LOG.setLevel(logging.DEBUG)
         LOG.debug('Debug logs are visible')
 
-    if args.version: # pragma: no cover
-        safe_print(__version__)
-        exit(0)
-
     if args.profile_name is None:
         LOG.debug('Profilename not given, using default')
         args.target_profile_name = 'default'
     else:
         LOG.debug('Using profilename: %s', args.profile_name)
         args.target_profile_name = args.profile_name
+
+    if args.version: # pragma: no cover
+        safe_print(__version__)
+        exit(0)
 
     if args.kill:
         kill(args, app)
@@ -796,12 +797,14 @@ def get_user_session(app, args, profiles, cache_path, user_session):
             response = sts_client.get_session_token(SerialNumber=profile['mfa_serial'],
                                                     TokenCode=mfa_token)
             fix_session_credentials(response['Credentials'], profiles, args)
+            LOG.debug(response['Credentials'])
             write_aws_cache(cache_path, cache_file_name, response['Credentials'])
             return response['Credentials']
         except botocore.exceptions.ClientError as exception:
             safe_print('AWSume error: ' + exception.response['Error']['Message'])
             raise UserAuthenticationError
     else:
+        LOG.debug('profile does not require mfa')
         try:
             response = sts_client.get_session_token()
             return response['Credentials']
@@ -949,11 +952,10 @@ def write_auto_awsume_session(profile_name, auto_profile, credentials_file_path)
     - auto_profile - the profile to be written
     - credentials_file_path - the path to the credentials file
     """
+    LOG.info('Writing auto-awsume session')
     auto_profile_name = 'auto-refresh-' + profile_name
     auto_awsume_parser = ConfigParser.ConfigParser()
     auto_awsume_parser.read(credentials_file_path)
-    for section in auto_awsume_parser.sections():
-        auto_awsume_parser.set(section, '__name__', section)
     if auto_awsume_parser.has_section(auto_profile_name):
         auto_awsume_parser.remove_section(auto_profile_name)
     auto_awsume_parser.add_section(auto_profile_name)
