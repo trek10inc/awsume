@@ -90,7 +90,7 @@ aws_secret_access_key = wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY
 
 ### Plugins
 
-AWSume is now extensible. It now comes with a built-in plugin manager! To get started developing plugins, check out our [plugin documentation](https://github.com/trek10inc/awsume/blob/master/Plugins.md).
+AWSume is now extensible. It now comes with a built-in plugin manager! To get started developing plugins, check out our [plugin documentation](https://github.com/trek10inc/awsume/wiki/Plugins).
 
 #### AWSume Console Plugin
 
