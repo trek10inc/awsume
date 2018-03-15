@@ -179,7 +179,6 @@ setup(
     package_data={'awsume': ['package.json']},
     include_package_data=True,
     install_requires=[
-        'python-dateutil',
         'boto3',
         'psutil',
         'yapsy',
