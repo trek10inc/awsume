@@ -36,8 +36,8 @@ elseif ( $AWSUME_FLAG -eq "Auto" ) {
     $env:AWS_DEFAULT_PROFILE = $AWSUME_1
     $env:AWSUME_PROFILE = $AWSUME_2
 
-    #run the background autoAwsume process
-    Start-Process powershell -ArgumentList "autoAwsume" -WindowStyle hidden
+    #run the background autoawsume process
+    Start-Process powershell -ArgumentList "autoawsume" -WindowStyle hidden
 }
 
 #if user sent kill flag

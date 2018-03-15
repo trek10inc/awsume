@@ -32,8 +32,8 @@ elif [ "$AWSUME_FLAG" = "Auto" ]; then
     export AWS_PROFILE=$AWSUME_1
     export AWS_DEFAULT_PROFILE=$AWSUME_1
     export AWSUME_PROFILE=$AWSUME_2
-    #run the background autoAwsume process
-    autoAwsume & disown
+    #run the background autoawsume process
+    autoawsume & disown
 
 #user sent the kill flag, so do no more
 elif [ "$AWSUME_FLAG" = "Kill" ]; then
