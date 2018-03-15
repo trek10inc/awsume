@@ -20,7 +20,7 @@ for /f "tokens=1,2,3,4,5,6 delims= " %%a in ("%AWSUME_TEXT%") do (
         set AWS_PROFILE=%%b
         set AWS_DEFAULT_PROFILE=%%b
         set AWSUME_PROFILE=%%c
-        start /min "autoAwsume" autoAwsume
+        start /min "autoawsume" autoawsume
     )
     if "%%a" == "Version" (
         awsumepy -v
@@ -38,7 +38,7 @@ for /f "tokens=1,2,3,4,5,6 delims= " %%a in ("%AWSUME_TEXT%") do (
         set AWS_PROFILE=
         set AWS_DEFAULT_PROFILE=
         set AWSUME_PROFILE=
-        taskkill /FI "WindowTitle eq autoAwsume" > null 2>&1
+        taskkill /FI "WindowTitle eq autoawsume" > null 2>&1
     )
     if "%%a" == "Stop" (
         if "auto-refresh-%%b" == "%AWS_PROFILE%" (
