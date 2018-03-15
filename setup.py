@@ -192,7 +192,7 @@ setup(
     entry_points={
         "console_scripts": [
             'awsumepy=awsume.awsumepy:main',
-            'autoAwsume=awsume.autoawsume:main',
+            'autoawsume=awsume.autoawsume:main',
         ]
     },
     cmdclass={
