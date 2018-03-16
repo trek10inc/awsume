@@ -34,7 +34,13 @@ elseif ( $AWSUME_FLAG -eq "Auto" ) {
     #set the profile that will contain the session credentials
     $env:AWS_PROFILE = $AWSUME_1
     $env:AWS_DEFAULT_PROFILE = $AWSUME_1
-    $env:AWSUME_PROFILE = $AWSUME_2
+
+    if ( $AWSUME_2 -ne "None" ) {
+        $env:AWS_REGION = $AWSUME_2
+        $env:AWS_DEFAULT_REGION = $AWSUME_2
+    }
+
+    $env:AWSUME_PROFILE = $AWSUME_3
 
     #run the background autoawsume process
     Start-Process powershell -ArgumentList "autoawsume" -WindowStyle hidden

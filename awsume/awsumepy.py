@@ -893,6 +893,7 @@ def start_auto_awsume(args, app, profiles, credentials_file_path, user_session, 
     kill_all_auto_processes()
     data_list = [
         str('auto-refresh-' + args.target_profile_name),
+        str(role_session['region']),
         str(args.target_profile_name)
     ]
     data = {
@@ -953,6 +954,8 @@ def write_auto_awsume_session(profile_name, auto_profile, credentials_file_path)
     - credentials_file_path - the path to the credentials file
     """
     LOG.info('Writing auto-awsume session')
+    LOG.debug('Profile name: %s', profile_name)
+    LOG.debug('AutoAwsume profile: %s', json.dumps(auto_profile, indent=2))
     auto_profile_name = 'auto-refresh-' + profile_name
     auto_awsume_parser = ConfigParser.ConfigParser()
     auto_awsume_parser.read(credentials_file_path)
@@ -960,7 +963,7 @@ def write_auto_awsume_session(profile_name, auto_profile, credentials_file_path)
         auto_awsume_parser.remove_section(auto_profile_name)
     auto_awsume_parser.add_section(auto_profile_name)
     for key in auto_profile:
-        auto_awsume_parser.set(auto_profile_name, key, auto_profile[key])
+        auto_awsume_parser.set(auto_profile_name, key, str(auto_profile.get(key)))
     auto_awsume_parser.write(open(credentials_file_path, 'w'))
 
 def create_auto_profile(role_session, user_session, session_name, source_profile_name, role_arn):
