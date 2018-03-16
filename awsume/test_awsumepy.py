@@ -752,11 +752,13 @@ class TestAutoAwsume(unittest.TestCase):
         fake_app = mock.Mock()
         fake_app.set_export_data = mock.Mock()
         fake_user_session = {}
-        fake_role_session = {}
+        fake_role_session = {
+            'region': 'us-east-1'
+        }
         fake_profiles = {
             'fake-nomfa-user': {
                 'aws_access_key_id': 'EXAMPLE',
-                'aws_secret_access_key': 'EXAMPLE'
+                'aws_secret_access_key': 'EXAMPLE',
             },
             'fake-mfa-profile': {
                 'aws_access_key_id': 'EXAMPLE',
@@ -777,13 +779,14 @@ class TestAutoAwsume(unittest.TestCase):
         AWSUMEPY.start_auto_awsume(fake_args, fake_app, fake_profiles, '/creds/path', fake_user_session, fake_role_session)
         fake_app.set_export_data.assert_called_with({'AWSUME_FLAG':'Auto', 'AWSUME_LIST':[
             'auto-refresh-fake-role-profile',
+            'us-east-1',
             'fake-role-profile'
         ]})
 
         fake_args.target_profile_name = 'fake-role-profile'
         fake_args.session_name = 'custom-session-name'
         AWSUMEPY.start_auto_awsume(fake_args, fake_app, fake_profiles, '/creds/path', fake_user_session, fake_role_session)
-        self.assertTrue(mock.call({}, {}, 'custom-session-name', 'fake-mfa-profile', 'EXAMPLE') in mock_create_auto_profile.call_args_list)
+        self.assertTrue(mock.call({'region':'us-east-1'}, {}, 'custom-session-name', 'fake-mfa-profile', 'EXAMPLE') in mock_create_auto_profile.call_args_list)
 
     @mock.patch('six.moves.configparser.ConfigParser')
     def test_is_auto_profiles(self,

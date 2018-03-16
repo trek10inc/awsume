@@ -19,7 +19,13 @@ for /f "tokens=1,2,3,4,5,6 delims= " %%a in ("%AWSUME_TEXT%") do (
 
         set AWS_PROFILE=%%b
         set AWS_DEFAULT_PROFILE=%%b
-        set AWSUME_PROFILE=%%c
+
+        if "%%c" NEQ "None" (
+            set AWS_REGION=%%c
+            set AWS_DEFAULT_REGION=%%c)
+
+        set AWSUME_PROFILE=%%d
+
         start /min "autoawsume" autoawsume
     )
     if "%%a" == "Version" (

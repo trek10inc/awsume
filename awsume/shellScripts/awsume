@@ -31,7 +31,13 @@ elif [ "$AWSUME_FLAG" = "Auto" ]; then
     #set the profile that will contain the session credentials
     export AWS_PROFILE=$AWSUME_1
     export AWS_DEFAULT_PROFILE=$AWSUME_1
-    export AWSUME_PROFILE=$AWSUME_2
+
+    if [ ! "$AWSUME_2" = "None" ]; then
+        export AWS_REGION=$AWSUME_2
+        export AWS_DEFAULT_REGION=$AWSUME_2
+    fi
+
+    export AWSUME_PROFILE=$AWSUME_3
     #run the background autoawsume process
     autoawsume & disown
 
