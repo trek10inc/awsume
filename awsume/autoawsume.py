@@ -1,4 +1,4 @@
-"""autoAwsume - A daemon to auto refresh 'auto-refresh' profiles in the credentials file"""
+"""autoawsume - A daemon to auto refresh 'auto-refresh' profiles in the credentials file"""
 from __future__ import print_function
 import sys
 import datetime
@@ -67,7 +67,7 @@ def get_earliest_expiration(autoProfiles):
 
     Parameters
     ----------
-    - autoProfiles - the autoAwsume profiles from the credentials profile
+    - autoProfiles - the autoawsume profiles from the credentials profile
 
     Returns
     -------
@@ -91,7 +91,7 @@ def refresh_expired_profiles(autoProfiles):
 
     Parameters
     ----------
-    - autoProfiles - the autoAwsume profiles from the credentials profile
+    - autoProfiles - the autoawsume profiles from the credentials profile
     """
     for profile in autoProfiles:
         userExpiration = datetime.datetime.strptime(autoProfiles[profile]['awsume_user_expiration'], '%Y-%m-%d %H:%M:%S')
@@ -110,9 +110,9 @@ def main():
         timeUntilEarliestExpiration = (earliestExpiration - get_now().replace(tzinfo=earliestExpiration.tzinfo)).total_seconds()
         if timeUntilEarliestExpiration <= 0:
             break
-        # awsumepy.safe_print("autoAwsume: Sleeping for " + str(timeUntilEarliestExpiration) + " seconds", file=sys.stderr)
+        # awsumepy.safe_print("autoawsume: Sleeping for " + str(timeUntilEarliestExpiration) + " seconds", file=sys.stderr)
         time.sleep(timeUntilEarliestExpiration)
-    # awsumepy.safe_print("autoAwsume: No more credentials left to refresh, shutting down", file=sys.stderr)
+    # awsumepy.safe_print("autoawsume: No more credentials left to refresh, shutting down", file=sys.stderr)
 
 if __name__ == '__main__': # pragma: no cover
     main()

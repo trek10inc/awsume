@@ -81,10 +81,12 @@ class TestReadAWSFiles(unittest.TestCase):
     def test_merge_profile(self):
         """test merge_role_and_source_profile awsumepy function"""
         user_profile = {
+            '__name__': 'user_profile',
             'aws_access_key_id':'EXAMPLE',
             'aws_secret_access_key':'EXAMPLE'
         }
         role_profile = {
+            '__name__': 'role_profile',
             'source_profile':'EXAMPLE',
             'role_arn':'EXAMPLE'
         }
@@ -93,12 +95,14 @@ class TestReadAWSFiles(unittest.TestCase):
         self.assertIsNotNone(role_profile.get('aws_secret_access_key'))
 
         user_profile = {
+            '__name__': 'user_profile',
             'aws_access_key_id':'EXAMPLE',
             'aws_secret_access_key':'EXAMPLE',
             'mfa_serial':'EXAMPLE',
             'region':'EXAMPLE',
         }
         role_profile = {
+            '__name__': 'role_profile',
             'source_profile':'EXAMPLE',
             'role_arn':'EXAMPLE',
         }
@@ -113,14 +117,17 @@ class TestReadAWSFiles(unittest.TestCase):
         """test mix_role_and_source_profiles awsumepy function"""
         fake_profiles = {
             'client-dev-role': {
+                '__name__': 'client-dev-role',
                 'role_arn': 'EXAMPLE',
                 'source_profile': 'client'
             },
             'client': {
+                '__name__': 'client',
                 'aws_access_key_id': 'EXAMPLE',
                 'aws_secret_access_key': 'EXAMPLE'
             },
             'client-prod-role': {
+                '__name__': 'client-prod-role',
                 'role_arn': 'EXAMPLE',
                 'source_profile': 'client'
             },
@@ -391,7 +398,7 @@ class TestInspectionAndValidation(unittest.TestCase):
     def test_valid_cache_session(self):
         """test valid_cache_session awsumepy function"""
         valid_session = {
-            'Expiration': datetime.datetime.max,
+            'Expiration': '9999-12-31 11:59:59',
         }
         invalid_session = {
 
@@ -478,7 +485,7 @@ class TestCachingSessions(unittest.TestCase):
         mock_json_load.return_value = {'Expiration': '1999-12-31 11:59:59'}
         session = AWSUMEPY.read_aws_cache('/cache/path/', 'cache-file')
         self.assertEqual(session, {
-            'Expiration': datetime.datetime.strptime('1999-12-31 11:59:59', '%Y-%m-%d %H:%M:%S')
+            'Expiration': '1999-12-31 11:59:59'
         })
         mock_os_path_isfile.return_value = False
         session = AWSUMEPY.read_aws_cache('/cache/path/', 'cache-file')
@@ -732,7 +739,7 @@ class TestAwsumeWorkflow(unittest.TestCase):
 #   TestAutoAwsume
 #
 class TestAutoAwsume(unittest.TestCase):
-    """Test suite for AutoAwsume"""
+    """Test suite for autoawsume"""
     @mock.patch('awsumepy.kill_all_auto_processes')
     @mock.patch('awsumepy.write_auto_awsume_session')
     @mock.patch('awsumepy.create_auto_profile')
@@ -891,7 +898,7 @@ class TestAutoAwsume(unittest.TestCase):
         proc2 = mock.Mock()
         proc2.kill = mock.Mock()
         proc2.cmdline = mock.Mock()
-        proc2.cmdline.return_value = ['autoAwsume']
+        proc2.cmdline.return_value = ['autoawsume']
         proc3 = mock.Mock()
         proc3.kill = mock.Mock()
         proc3.cmdline = mock.Mock()

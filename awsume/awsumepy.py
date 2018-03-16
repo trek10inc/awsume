@@ -184,7 +184,7 @@ def add_arguments(argument_parser):
                                  action='store_true',
                                  default=False,
                                  dest='kill',
-                                 help='Kill autoAwsume')
+                                 help='Kill autoawsume')
     argument_parser.add_argument('--info',
                                  action='store_true',
                                  dest='info',
@@ -352,7 +352,7 @@ def get_aws_profiles_callback(app, args, profiles): # pragma: no cover
             exit(0)
 
 def trim_auto_profiles(profiles):
-    """Remove any profiles in the given `profiles` dict that are autoAwsume profiles.
+    """Remove any profiles in the given `profiles` dict that are autoawsume profiles.
 
     Parameters
     ----------
@@ -410,7 +410,7 @@ def format_aws_profiles(profiles):
     profile_list[0].extend(list_headers)
     #now fill the tables with the appropriate data
     for name in sorted_profiles:
-        #don't add any autoAwsume profiles
+        #don't add any autoawsume profiles
         if 'auto-refresh-' not in name:
             profile = sorted_profiles[name]
             is_role_profile = is_role(profile)
@@ -867,7 +867,7 @@ def get_role_session_callback(app, args, profiles, user_session, role_session): 
 #   AutoAwsume
 #
 def start_auto_awsume(args, app, profiles, credentials_file_path, user_session, role_session):
-    """Start autoAwsume.
+    """Start autoawsume.
 
     Parameters
     ----------
@@ -922,7 +922,7 @@ def is_auto_profiles(credentials_file_path=AWS_CREDENTIALS_FILE):
 
 def remove_auto_profile(profile_name=None):
     """Remove the given profile from the credentials file.
-    Prefix `profile_name` with 'auto-refresh-' so that we wont delete non-autoAwsume profiles.
+    Prefix `profile_name` with 'auto-refresh-' so that we wont delete non-autoawsume profiles.
     If `profile_name` is none, remove all auto profiles.
 
     Parameters
@@ -964,7 +964,7 @@ def write_auto_awsume_session(profile_name, auto_profile, credentials_file_path)
     auto_awsume_parser.write(open(credentials_file_path, 'w'))
 
 def create_auto_profile(role_session, user_session, session_name, source_profile_name, role_arn):
-    """Create the profile that'll be stored in the credentials file for autoAwsume.
+    """Create the profile that'll be stored in the credentials file for autoawsume.
 
     Parameters
     ----------
@@ -975,7 +975,7 @@ def create_auto_profile(role_session, user_session, session_name, source_profile
 
     Returns
     -------
-    The autoAwsume profile
+    The autoawsume profile
     """
     return {
         'aws_access_key_id' : role_session['AccessKeyId'],
@@ -990,14 +990,14 @@ def create_auto_profile(role_session, user_session, session_name, source_profile
     }
 
 def kill_all_auto_processes():
-    """Kill all running autoAwsume processes."""
-    LOG.info('Killing all autoAwsume processes')
+    """Kill all running autoawsume processes."""
+    LOG.info('Killing all autoawsume processes')
 
     for proc in psutil.process_iter():
         try:
             for command_string in proc.cmdline():
-                if 'autoAwsume' in command_string:
-                    LOG.debug('Found an autoAwsume process, killing it')
+                if 'autoawsume' in command_string:
+                    LOG.debug('Found an autoawsume process, killing it')
                     proc.kill()
         except Exception:
             pass

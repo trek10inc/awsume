@@ -1,4 +1,4 @@
-"""Test autoAwsume"""
+"""Test autoawsume"""
 import unittest
 import sys
 import os
@@ -9,7 +9,7 @@ import botocore
 
 sys.path.append(os.path.dirname(sys.path[0]))
 
-AUTOAWSUME = imp.load_source('autoAwsume', 'awsume/autoAwsume.py')
+AUTOAWSUME = imp.load_source('autoawsume', 'awsume/autoawsume.py')
 
 class TestCommandLineArgumentHandling(unittest.TestCase):
 
@@ -20,7 +20,7 @@ class TestCommandLineArgumentHandling(unittest.TestCase):
                              mock_read_cache,
                              mock_create_client,
                              mock_write_auto_session):
-        """Test the refresh_session autoAwsume function"""
+        """Test the refresh_session autoawsume function"""
         mock_client = mock.Mock()
         mock_client.assume_role = mock.Mock()
         fake_response = {
@@ -58,7 +58,7 @@ class TestCommandLineArgumentHandling(unittest.TestCase):
         AUTOAWSUME.refresh_session(fake_auto_profile)
 
     def test_extract_auto_refresh_profiles(self):
-        """Test the extract_auto_refresh_profiles autoAwsume function"""
+        """Test the extract_auto_refresh_profiles autoawsume function"""
         fake_profiles = {
             'some-profile': {},
             'some-other-profile': {},
@@ -71,9 +71,9 @@ class TestCommandLineArgumentHandling(unittest.TestCase):
             'auto-refresh-some-other-profile': {},
         })
 
-    @mock.patch('autoAwsume.get_now')
+    @mock.patch('autoawsume.get_now')
     def test_get_earliest_expiration(self, mock_now):
-        """Test the get_earliest_expiration autoAwsume function"""
+        """Test the get_earliest_expiration autoawsume function"""
         mock_now.return_value = 'current time'
         fake_auto_profiles = {}
         earliest_expiration = AUTOAWSUME.get_earliest_expiration(fake_auto_profiles)
@@ -99,13 +99,13 @@ class TestCommandLineArgumentHandling(unittest.TestCase):
             earliest_expiration)
 
     @mock.patch('awsume.awsumepy.remove_auto_profile')
-    @mock.patch('autoAwsume.refresh_session')
-    @mock.patch('autoAwsume.get_now')
+    @mock.patch('autoawsume.refresh_session')
+    @mock.patch('autoawsume.get_now')
     def test_refresh_expired_profiles(self,
                                       mock_now,
                                       mock_refresh,
                                       mock_remove):
-        """Test the refresh_expired_profiles autoAwsume function"""
+        """Test the refresh_expired_profiles autoawsume function"""
         mock_now.return_value = datetime.datetime.strptime(
             '2018-06-15 12:24:30',
             '%Y-%m-%d %H:%M:%S'
@@ -132,10 +132,10 @@ class TestCommandLineArgumentHandling(unittest.TestCase):
         mock_remove.assert_called_once()
 
     @mock.patch('time.sleep')
-    @mock.patch('autoAwsume.get_now')
-    @mock.patch('autoAwsume.get_earliest_expiration')
-    @mock.patch('autoAwsume.refresh_expired_profiles')
-    @mock.patch('autoAwsume.extract_auto_refresh_profiles')
+    @mock.patch('autoawsume.get_now')
+    @mock.patch('autoawsume.get_earliest_expiration')
+    @mock.patch('autoawsume.refresh_expired_profiles')
+    @mock.patch('autoawsume.extract_auto_refresh_profiles')
     @mock.patch('awsume.awsumepy.read_ini_file')
     def test_main(self,
                   mock_read_ini_file,
@@ -144,7 +144,7 @@ class TestCommandLineArgumentHandling(unittest.TestCase):
                   mock_get_earliest_expiration,
                   mock_now,
                   mock_sleep):
-        """Test the main autoAwsume function"""
+        """Test the main autoawsume function"""
         mock_read_ini_file.return_value = {}
         mock_extract_auto_profiles.return_value = {}
         mock_get_earliest_expiration.return_value = datetime.datetime(2018, 6, 15, 12, 24, 30)
