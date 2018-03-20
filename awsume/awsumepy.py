@@ -251,6 +251,8 @@ def merge_role_and_source_profile(role_profile, source_profile):
     - source_profile - the role_profile's source_profile
     """
     LOG.info('merging config and credentials profile for [%s]', role_profile['__name__'])
+    LOG.debug('Role profile: %s', json.dumps(role_profile, indent=2))
+    LOG.debug('Source profile: %s', json.dumps(source_profile, indent=2))
     if valid_profile(source_profile):
         role_profile['aws_access_key_id'] = source_profile['aws_access_key_id']
         role_profile['aws_secret_access_key'] = source_profile['aws_secret_access_key']
@@ -297,6 +299,8 @@ def get_aws_profiles(app, args, config_file_path, credentials_file_path):
     A dict of the aws files.
     """
     LOG.info('Getting AWS profiles')
+    LOG.debug('Config path: %s', config_file_path)
+    LOG.debug('Credentials path: %s', credentials_file_path)
 
     config_profiles = read_ini_file(config_file_path)
     credentials_profiles = read_ini_file(credentials_file_path)
@@ -358,6 +362,7 @@ def trim_auto_profiles(profiles):
     ----------
     - profiles - the collected aws profiles
     """
+    LOG.debug('Removing auto-refresh- profiles')
     for profile in list(profiles):
         if 'auto-refresh-' in profile:
             profiles.pop(profile)
@@ -379,6 +384,7 @@ def get_account_id(profile):
     A string containing the aws account ID of the given profile
     if it is available, else return 'Unavailable'.
     """
+    LOG.info('Getting account ID from profile: %s', json.dumps(profile, indent=2))
     if profile.get('role_arn'):
         return profile['role_arn'].replace('arn:aws:iam::', '').split(':')[0]
     if profile.get('mfa_serial'):
@@ -462,6 +468,7 @@ def get_profile_names(args, app):
     -------
     A list of profile names
     """
+    LOG.info('Getting profile names')
     profiles = {}
     profiles = get_aws_profiles(app, args, AWS_CONFIG_FILE, AWS_CREDENTIALS_FILE)
     mix_role_and_source_profiles(profiles)
@@ -478,6 +485,7 @@ def list_profile_names(args, app):
     - args - the commandline arguments
     - app - the AWSume app object
     """
+    LOG.info('Listing profile names')
     profile_names = []
     for func in app.awsumeFunctions['get_profile_names']:
         profile_names.extend(func(args, app))
@@ -500,6 +508,7 @@ def valid_profile(profile):
     -------
     True if the profile is valid, False if it isn't.
     """
+    LOG.debug('Checking profile validity: %s', json.dumps(profile, indent=2))
     if all(key in profile for key in ['aws_access_key_id', 'aws_secret_access_key']):
         return True
     if is_role(profile):
@@ -547,6 +556,7 @@ def valid_mfa_token(token):
     -------
     True if the given token is a valid mfa token, False if it isn't.
     """
+    LOG.debug('Validating MFA token: %s', token)
     token_pattern = re.compile('^[0-9]{6}$')
     if not token_pattern.match(token):
         LOG.debug('%s is not a valid mfa token', token)
@@ -565,6 +575,7 @@ def valid_cache_session(session):
     -------
     True if the session is valid, false if it isn't.
     """
+    LOG.info('Validating cache session')
     LOG.debug(session)
     try:
         session_expiration = datetime.strptime(session['Expiration'], '%Y-%m-%d %H:%M:%S')
@@ -660,7 +671,8 @@ def read_aws_cache(cache_path, cache_name):
             return session
         LOG.debug('cache file does not exist')
         return {}
-    except Exception:
+    except Exception as exception:
+        LOG.debug('Exception when reading cache: %s', exception)
         return {}
 
 def write_aws_cache(cache_path, cache_name, session):
@@ -673,7 +685,9 @@ def write_aws_cache(cache_path, cache_name, session):
     - session - the session to write
     """
     LOG.info('writing aws cache session')
+    LOG.debug('session to cache: %s', json.dumps(session, indent=2))
     if not os.path.exists(cache_path):
+        LOG.debug('cache directory does not exist, making it')
         os.makedirs(cache_path)
     json.dump(session, open(cache_path + cache_name, 'w'), indent=2, default=str)
 
@@ -709,10 +723,12 @@ def pre_awsume(app, args):
         args.target_profile_name = args.profile_name
 
     if args.version: # pragma: no cover
+        LOG.debug('version flag triggered')
         safe_print(__version__)
         exit(0)
 
     if args.kill:
+        LOG.debug('kill flag triggered')
         kill(args, app)
         exit(0)
 
@@ -727,11 +743,12 @@ def pre_awsume(app, args):
         exit(0)
 
     if args.delete_plugin_name:
-        delete_plugin(args.delete_plugin_name[0])
         LOG.debug('Attempting to delete plugin: %s', args.delete_plugin_name[0])
+        delete_plugin(args.delete_plugin_name[0])
         exit(0)
 
     if args.display_plugin_info:
+        LOG.debug('displaying plugin info')
         display_plugin_info(app.plugin_manager)
         exit(0)
 
@@ -787,6 +804,7 @@ def get_user_session(app, args, profiles, cache_path, user_session):
     cache_file_name += args.target_profile_name if not is_role(profile) else profile['source_profile']
     cache_session = read_aws_cache(cache_path, cache_file_name)
     if args.force_refresh is False and valid_cache_session(cache_session):
+        LOG.debug('returning cache session: %s', json.dumps(cache_session, indent=2))
         return cache_session
 
     sts_client = create_sts_client(profile['aws_access_key_id'], profile['aws_secret_access_key'])
@@ -807,6 +825,8 @@ def get_user_session(app, args, profiles, cache_path, user_session):
         LOG.debug('profile does not require mfa')
         try:
             response = sts_client.get_session_token()
+            fix_session_credentials(response['Credentials'], profiles, args)
+            LOG.debug(response['Credentials'])
             return response['Credentials']
         except botocore.exceptions.ClientError as exception:
             safe_print('AWSume error: ' + exception.response['Error']['Message'])
@@ -842,6 +862,7 @@ def get_role_session(app, args, profiles, user_session, role_session):
         response = sts_client.assume_role(RoleArn=profile['role_arn'],
                                           RoleSessionName=role_session_name)
         fix_session_credentials(response['Credentials'], profiles, args)
+        LOG.debug(response['Credentials'])
         return response['Credentials']
     except botocore.exceptions.ClientError as exception:
         safe_print('AWSume error: ' + exception.response['Error']['Message'])
@@ -859,6 +880,7 @@ def get_role_session_callback(app, args, profiles, user_session, role_session): 
     - role_session - the state of the previously called get_role_session
     """
     if args.auto_refresh:
+        LOG.debug('starting auto refresher')
         start_auto_awsume(args, app, profiles, AWS_CREDENTIALS_FILE, user_session, role_session)
 
 
@@ -882,8 +904,10 @@ def start_auto_awsume(args, app, profiles, credentials_file_path, user_session, 
     profile = profiles[args.target_profile_name]
     if args.session_name:
         role_session_name = args.session_name
+        LOG.debug('custom session name: %s', role_session_name)
     else:
         role_session_name = 'awsume-session-' + args.target_profile_name
+        LOG.debug('default session name: %s', role_session_name)
     auto_profile = create_auto_profile(role_session,
                                        user_session,
                                        role_session_name,
