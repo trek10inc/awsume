@@ -28,3 +28,17 @@ There are two ways to use this plugin.
   - `awsume -c` Will open the AWS console using the current environment variables
 - Use a profile_name
   - `awsume <profile_name> -c` Will run AWSume on `<profile_name>` as it normally would, but will open the console using the credentials from running AWSume on `<profile_name>`.
+
+### Get Console Link
+
+- If you want to get the url itself instead of trying to open the console, use:
+
+``` bash
+awsume <profile_name> -cl
+```
+
+or
+
+``` bash
+awsume <profile_name> --console-link
+```

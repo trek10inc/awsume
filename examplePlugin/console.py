@@ -23,17 +23,24 @@ class AwsumeConsole(IPlugin.IPlugin):
                                      default=False,
                                      dest='open_console',
                                      help='Open the AWS console to the AWSume\'d credentials')
+        argument_parser.add_argument('-cl', '--console-link',
+                                     action='store_true',
+                                     default=False,
+                                     dest='open_console_link',
+                                     help='Show the link to open the console with the credentials')
         return argument_parser
 
     def pre_awsume(self, app, args):
         """If no profile_name is given to AWSume, check the environment for credentials."""
         #use the environment variables to open
+        if args.open_console_link:
+            args.open_console = True
         if args.open_console is True and args.profile_name is None:
             credentials, region = self.get_environment_credentials()
             response = self.make_aws_federation_request(credentials)
             signin_token = self.get_signin_token(response)
             console_url = self.get_console_url(signin_token, region)
-            self.open_browser_to_url(console_url)
+            self.open_browser_to_url(console_url, args)
             exit(0)
 
     def post_awsume(self,
@@ -51,7 +58,7 @@ class AwsumeConsole(IPlugin.IPlugin):
             response = self.make_aws_federation_request(credentials)
             signin_token = self.get_signin_token(response)
             console_url = self.get_console_url(signin_token, region)
-            self.open_browser_to_url(console_url)
+            self.open_browser_to_url(console_url, args)
 
     def get_environment_credentials(self):
         """Get session credentials from the environment."""
@@ -125,10 +132,13 @@ class AwsumeConsole(IPlugin.IPlugin):
         url += URLENCODE(params)
         return url
 
-    def open_browser_to_url(self, url):
+    def open_browser_to_url(self, url, args):
         """Open the default browser to the given url. If that fails, display the url."""
-        try:
-            webbrowser.open(url)
-        except Exception:
-            awsumepy.safe_print('Cannot open browser, here is the link:')
+        if args.open_console_link:
             awsumepy.safe_print(url)
+        else:
+            try:
+                webbrowser.open(url)
+            except Exception:
+                awsumepy.safe_print('Cannot open browser, here is the link:')
+                awsumepy.safe_print(url)
