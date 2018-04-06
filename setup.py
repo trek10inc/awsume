@@ -182,7 +182,8 @@ setup(
         'boto3',
         'psutil',
         'yapsy',
-        'future'
+        'future',
+        'colorama',
     ],
     scripts=[
         'awsume/shellScripts/awsume',
