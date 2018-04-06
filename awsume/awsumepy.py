@@ -432,9 +432,9 @@ def print_formatted_data(profile_data): # pragma: no cover
     print('Listing...\n')
 
     widths = [max(map(len, col)) for col in zip(*profile_data)]
-    print(Fore.BLUE + 'AWS Profiles'.center(sum(widths) + 10, '=') + Style.RESET_ALL)
+    print('AWS Profiles'.center(sum(widths) + 10, '='))
     for row in profile_data:
-        print(Fore.GREEN + '  '.join((val.ljust(width) for val, width in zip(row, widths))) + Style.RESET_ALL)
+        print('  '.join((val.ljust(width) for val, width in zip(row, widths))))
 
 def list_profile_data(profiles):
     """List useful information about the collected aws profiles.
