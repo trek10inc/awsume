@@ -521,6 +521,7 @@ class TestCachingSessions(unittest.TestCase):
 #
 class TestAwsumeWorkflow(unittest.TestCase):
     """Test suite for AwsumeWorkflow"""
+    @mock.patch('awsumepy.config_help')
     @mock.patch('awsumepy.display_plugin_info')
     @mock.patch('awsumepy.delete_plugin')
     @mock.patch('awsumepy.download_plugin')
@@ -531,10 +532,12 @@ class TestAwsumeWorkflow(unittest.TestCase):
                         mock_list_profile_names,
                         mock_download_plugin,
                         mock_delete_plugin,
-                        mock_display_plugin_info):
+                        mock_display_plugin_info,
+                        mock_config_help):
         """test pre_awsume awsumepy function"""
         fake_args = mock.Mock()
         fake_app = mock.Mock()
+        fake_app.set_option = mock.Mock()
         fake_args.version = False
         fake_args.profile_name = None
         fake_args.target_profile_name = None
@@ -545,50 +548,58 @@ class TestAwsumeWorkflow(unittest.TestCase):
         fake_args.display_plugin_info = False
         fake_args.info = False
         fake_args.debug = False
+        fake_args.config = None
+        fake_args.config_help = False
 
         AWSUMEPY.pre_awsume(fake_app, fake_args)
         self.assertEqual(fake_args.target_profile_name, 'default')
 
         fake_args.profile_name = 'superCoolClient'
         AWSUMEPY.pre_awsume(fake_app, fake_args)
-
         self.assertEqual(fake_args.target_profile_name, 'superCoolClient')
         fake_args.profile_name = None
 
         fake_args.kill = True
         with self.assertRaises(SystemExit):
             AWSUMEPY.pre_awsume(fake_app, fake_args)
-
         mock_kill.assert_called_once()
         fake_args.kill = False
 
         fake_args.list_profile_names = True
         with self.assertRaises(SystemExit):
             AWSUMEPY.pre_awsume(fake_app, fake_args)
-
         mock_list_profile_names.assert_called_once()
         fake_args.list_profile_names = False
 
         fake_args.plugin_urls = ['url1', 'url2']
         with self.assertRaises(SystemExit):
             AWSUMEPY.pre_awsume(fake_app, fake_args)
-
         mock_download_plugin.assert_called_once()
         fake_args.plugin_urls = None
 
         fake_args.delete_plugin_name = 'somePlugin'
         with self.assertRaises(SystemExit):
             AWSUMEPY.pre_awsume(fake_app, fake_args)
-
         mock_delete_plugin.assert_called_once()
         fake_args.delete_plugin_name = None
 
         fake_args.display_plugin_info = True
         with self.assertRaises(SystemExit):
             AWSUMEPY.pre_awsume(fake_app, fake_args)
-
         mock_display_plugin_info.assert_called_once()
         fake_args.display_plugin_info = False
+
+        fake_args.config_help = True
+        with self.assertRaises(SystemExit):
+            AWSUMEPY.pre_awsume(fake_app, fake_args)
+        mock_config_help.assert_called_once()
+        fake_args.config_help = False
+
+        fake_args.config = ['option', 'value']
+        with self.assertRaises(SystemExit):
+            AWSUMEPY.pre_awsume(fake_app, fake_args)
+        fake_app.set_option.assert_called_once()
+        fake_args.config_help = None
 
     @mock.patch('boto3.client')
     def test_create_sts_client(self, mock_client):

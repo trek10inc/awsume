@@ -17,8 +17,12 @@ import psutil
 import dateutil
 import pkg_resources
 import six
+from colorama import init, Fore, Style
 from six.moves import configparser as ConfigParser
 from yapsy import PluginManager
+
+# colorama init
+init()
 
 try: # pragma: no cover
     __version__ = pkg_resources.get_distribution('awsume').version
@@ -51,7 +55,11 @@ AWS_CREDENTIALS_FILE = os.path.join(AWS_DIRECTORY, 'credentials')
 AWS_CACHE_DIRECTORY = os.path.join(AWS_DIRECTORY, 'cli/cache/')
 AWSUME_PLUGIN_DIRECTORY = os.path.join(AWS_DIRECTORY, 'awsumePlugins/')
 AWSUME_PLUGIN_CACHE_FILE = os.path.join(AWSUME_PLUGIN_DIRECTORY, '_plugins.json')
+AWSUME_OPTIONS_FILE = os.path.join(AWS_DIRECTORY, 'awsume.json')
 # AWSUME_PLUGIN_DIRECTORY = './examplePlugin/'
+
+# AWSume options
+AWSUME_OPTIONS = {}
 
 
 
@@ -80,34 +88,7 @@ def generate_argument_parser():
     -------
     An `argparse` ArgumentParser
     """
-    epilog = """
-Usage Examples:
-    Awsume the profile 'client-dev'
-    $ awsume client-dev
-
-    Awsume the profile 'client-dev', but force-refresh credentials
-    $ awsume client-dev -r
-
-    Start an auto-refresher for the 'client-dev' profile
-    $ awsume client-dev -a
-
-    Stop auto-refreshing the 'client-dev' profile
-    $ awsume client-dev -k
-
-    Awsume the profile 'client-dev' with custom RoleSessionName
-    $ awsume client-dev --session-name dev-testing
-
-    Get a list of useful profile information
-    $ awsume -l
-
-    Install a plugin
-    $ awsume --install-plugin https://url/file.py https://url/file.yapsy-plugin
-
-    Delete a plugin
-    $ awsume --delete-plugin my-cool-plugin
-
-Thank you for using AWSume! Check us out at https://trek10.com
-"""
+    epilog = """Thank you for using AWSume! Check us out at https://trek10.com"""
     return argparse.ArgumentParser(description=__doc__,
                                    epilog=epilog,
                                    formatter_class=lambda prog: (argparse.RawDescriptionHelpFormatter(prog, max_help_position=50)))
@@ -185,6 +166,17 @@ def add_arguments(argument_parser):
                                  default=False,
                                  dest='kill',
                                  help='Kill autoawsume')
+    argument_parser.add_argument('--config',
+                                 nargs=2,
+                                 dest='config',
+                                 metavar=('option-name', 'option-value'),
+                                 default=None,
+                                 help='Configure AWSume\'s settings')
+    argument_parser.add_argument('--config-help',
+                                 action='store_true',
+                                 default=False,
+                                 dest='config_help',
+                                 help='Display info on AWSume\'s settings')
     argument_parser.add_argument('--info',
                                  action='store_true',
                                  dest='info',
@@ -440,9 +432,9 @@ def print_formatted_data(profile_data): # pragma: no cover
     print('Listing...\n')
 
     widths = [max(map(len, col)) for col in zip(*profile_data)]
-    print('AWS Profiles'.center(sum(widths) + 10, '='))
+    print(Fore.BLUE + 'AWS Profiles'.center(sum(widths) + 10, '=') + Style.RESET_ALL)
     for row in profile_data:
-        print('  '.join((val.ljust(width) for val, width in zip(row, widths))))
+        print(Fore.GREEN + '  '.join((val.ljust(width) for val, width in zip(row, widths))) + Style.RESET_ALL)
 
 def list_profile_data(profiles):
     """List useful information about the collected aws profiles.
@@ -490,6 +482,8 @@ def list_profile_names(args, app):
     for func in app.awsumeFunctions['get_profile_names']:
         profile_names.extend(func(args, app))
     print('\n'.join(profile_names))
+
+
 
 #
 #   InspectionAndValidation
@@ -620,15 +614,21 @@ def get_input(): # pragma: no cover
     """
     return read_input()
 
-def safe_print(text, end=None): # pragma: no cover
+def safe_print(text, end=None, color=Fore.RESET, style=Style.RESET_ALL): # pragma: no cover
     """A simple wrapper around the builting `print` function.
     It should always print to stderr to not interfere with the shell wrappers.
 
     Parameters
     ----------
     - text - the text to print
+    - end - the character to use in the end
+    - color - the colorama color to use when printing
+    - style - the style to use when printing
     """
-    print(text, file=sys.stderr, end=end)
+    if not AWSUME_OPTIONS.get('colors'):
+        color = Fore.RESET
+        style = Style.RESET_ALL
+    print(style + color + text + Style.RESET_ALL, file=sys.stderr, end=end)
 
 def read_mfa():
     """Read mfa from the command line.
@@ -638,13 +638,28 @@ def read_mfa():
     -------
     The read mfa token.
     """
-    safe_print('Enter MFA token: ', end='')
+    safe_print('Enter MFA token: ', '', Fore.BLUE)
     while True:
         mfa_token = get_input()
         if valid_mfa_token(mfa_token):
             return mfa_token
         else:
-            safe_print('Please enter a valid MFA token: ', end='')
+            safe_print('Please enter a valid MFA token: ', '', Fore.YELLOW)
+
+def config_help(app):
+    """Display the config help dialog.
+    
+    Parameters
+    ----------
+    - app - the AWSume app object
+    """
+    biggest_option = max([len(option) for option in app.valid_options])
+    biggest_description = max([len(option[0]) for option in app.valid_options.values()])
+    safe_print('OPTION'.ljust(biggest_option) + '  ' + 'DESCRIPTION'.ljust(biggest_description) + '  ' + 'VALUES', None, Fore.BLUE)
+    for option in app.valid_options:
+        safe_print(option.ljust(biggest_option), '  ', Fore.GREEN)
+        safe_print(app.valid_options[option][0].ljust(biggest_description), '  ', Fore.GREEN)
+        safe_print(app.valid_options[option][1], None, Fore.GREEN)
 
 
 
@@ -725,6 +740,14 @@ def pre_awsume(app, args):
     if args.version: # pragma: no cover
         LOG.debug('version flag triggered')
         safe_print(__version__)
+        exit(0)
+
+    if args.config_help:
+        config_help(app)
+        exit(0)
+
+    if args.config:
+        app.set_option(AWSUME_OPTIONS_FILE, args.config[0], args.config[1])
         exit(0)
 
     if args.kill:
@@ -819,7 +842,7 @@ def get_user_session(app, args, profiles, cache_path, user_session):
             write_aws_cache(cache_path, cache_file_name, response['Credentials'])
             return response['Credentials']
         except botocore.exceptions.ClientError as exception:
-            safe_print('AWSume error: ' + exception.response['Error']['Message'])
+            safe_print('AWSume error: ' + exception.response['Error']['Message'], None, Fore.RED)
             raise UserAuthenticationError
     else:
         LOG.debug('profile does not require mfa')
@@ -829,7 +852,7 @@ def get_user_session(app, args, profiles, cache_path, user_session):
             LOG.debug(response['Credentials'])
             return response['Credentials']
         except botocore.exceptions.ClientError as exception:
-            safe_print('AWSume error: ' + exception.response['Error']['Message'])
+            safe_print('AWSume error: ' + exception.response['Error']['Message'], None, Fore.RED)
             raise UserAuthenticationError
 
 def get_role_session(app, args, profiles, user_session, role_session):
@@ -865,7 +888,7 @@ def get_role_session(app, args, profiles, user_session, role_session):
         LOG.debug(response['Credentials'])
         return response['Credentials']
     except botocore.exceptions.ClientError as exception:
-        safe_print('AWSume error: ' + exception.response['Error']['Message'])
+        safe_print('AWSume error: ' + exception.response['Error']['Message'], None, Fore.RED)
         raise RoleAuthenticationError
 
 def get_role_session_callback(app, args, profiles, user_session, role_session): # pragma: no cover
@@ -1089,7 +1112,7 @@ def download_file(url):
     response = six.moves.urllib.request.urlopen(url)
     content_type = get_main_content_type(response.info())
     if content_type != 'text' and content_type != 'binary':
-        safe_print('AWSume error: The file needs to be a plain text file, received [' + str(content_type) + ']')
+        safe_print('AWSume error: The file needs to be a plain text file, received [' + str(content_type) + ']', None, Fore.RED)
         raise Exception
     download = response.read()
     return download.decode('utf-8')
@@ -1108,11 +1131,11 @@ def write_plugin_files(file1, file2, filename1, filename2):
     filepath2 = os.path.join(AWSUME_PLUGIN_DIRECTORY, filename2)
 
     if os.path.isfile(filepath1) or os.path.isfile(filepath2):
-        safe_print('It looks like that plugin is already installed, would you like to overwrite it? (y/N) : ', end='')
+        safe_print('It looks like that plugin is already installed, would you like to overwrite it? (y/N) : ', '', Fore.YELLOW)
         choice = get_input()
         if not choice.startswith('y') and not choice.startswith('Y'):
             return
-    safe_print('Saving ' + filename1 + ' and ' + filename2 + ' to ' + AWSUME_PLUGIN_DIRECTORY)
+    safe_print('Saving ' + filename1 + ' and ' + filename2 + ' to ' + AWSUME_PLUGIN_DIRECTORY, None, Fore.GREEN)
     with open(filepath1, 'w') as writefile:
         writefile.write(file1)
     with open(filepath2, 'w') as writefile:
@@ -1133,12 +1156,12 @@ def download_plugin(url1, url2):
     filename2 = url2.split('?')[0].split('/')[-1]
 
     if not filename1 or not filename2:
-        safe_print('AWSume error: Please provide a url to a valid file.')
+        safe_print('AWSume error: Please provide a url to a valid file.', None, Fore.RED)
         return
 
     if not (filename1.endswith('.py') and filename2.endswith('.yapsy-plugin') or
             filename1.endswith('.yapsy-plugin') and filename2.endswith('.py')):
-        safe_print('AWSume error: Please supply urls to one .py file and one .yapsy-plugin file')
+        safe_print('AWSume error: Please supply urls to one .py file and one .yapsy-plugin file', None, Fore.RED)
         return
     if filename1 == url1 and filename2 == url2:
         cache = read_plugin_cache()
@@ -1151,7 +1174,7 @@ def download_plugin(url1, url2):
         LOG.debug('Downloading from %s', url2)
         file2 = download_file(url2)
     except Exception as exception:
-        safe_print('AWSume error: Could not download files: ' + str(exception))
+        safe_print('AWSume error: Could not download files: ' + str(exception), None, Fore.RED)
         return
 
     write_plugin_files(file1, file2, filename1, filename2)
@@ -1169,23 +1192,23 @@ def delete_plugin(plugin_name):
     plugins = [item for item in directory if item.endswith('.yapsy-plugin')]
     plugins = [name.split('.yapsy-plugin')[0] for name in plugins]
     if plugin_name not in plugins:
-        safe_print('That plugin doesn\'t exist')
+        safe_print('That plugin doesn\'t exist', None, Fore.YELLOW)
         return
 
     plugin_files = [item for item in directory if plugin_name in item]
-    safe_print('All plugin files will be deleted, are you sure you want to delete the plugin: [' + plugin_name + ']')
-    safe_print('\n'.join(plugin_files))
-    safe_print('(y/N)? ', end='')
+    safe_print('All plugin files will be deleted, are you sure you want to delete the plugin: [' + plugin_name + ']', None, Fore.YELLOW)
+    safe_print('\n'.join(plugin_files), None, Fore.YELLOW)
+    safe_print('(y/N)? ', '', Fore.RED)
     choice = get_input()
     if not choice.startswith('y') and not choice.startswith('Y'):
         return
     for item in plugin_files:
         item_path = os.path.join(AWSUME_PLUGIN_DIRECTORY, item)
         if os.path.isfile(item_path):
-            safe_print('Deleting file: ' + item)
+            safe_print('Deleting file: ' + item, None, Fore.YELLOW)
             os.remove(item_path)
         elif os.path.isdir(item_path):
-            safe_print('Deleting directory and contents: ' + item)
+            safe_print('Deleting directory and contents: ' + item, None, Fore.YELLOW)
             shutil.rmtree(item_path)
 
 def read_plugin_cache():
@@ -1227,23 +1250,23 @@ def display_plugin_info(manager):
     cache = read_plugin_cache()
     if cache:
         safe_print('')
-        safe_print('===== Cached Plugins =====')
+        safe_print('===== Cached Plugins =====', None, Fore.BLUE)
         for filename in cache:
-            safe_print(filename + ' ->')
-            safe_print('  ' + cache[filename])
-        safe_print('===== Cached Plugins =====')
+            safe_print(filename + ' ->', None, Fore.GREEN)
+            safe_print('  ' + cache[filename], None, Fore.YELLOW)
+        safe_print('===== Cached Plugins =====', None, Fore.BLUE)
 
     plugins = manager.getAllPlugins()
     if plugins:
         for plugin in manager.getAllPlugins():
             safe_print('')
-            safe_print('Name: ' + plugin.name)
-            safe_print('Author: ' + plugin.author)
-            safe_print('Version: ' + str(plugin.version))
-            safe_print('Website: ' + plugin.website)
-            safe_print('Description: ' + plugin.description)
+            safe_print('Name: ' + plugin.name, None, Fore.BLUE)
+            safe_print('Author: ' + plugin.author, None, Fore.GREEN)
+            safe_print('Version: ' + str(plugin.version), None, Fore.GREEN)
+            safe_print('Website: ' + plugin.website, None, Fore.GREEN)
+            safe_print('Description: ' + plugin.description, None, Fore.GREEN)
     else:
-        safe_print('AWSume: You do not have any installed plugins.')
+        safe_print('AWSume: You do not have any installed plugins.', None, Fore.YELLOW)
 
 
 
@@ -1257,7 +1280,7 @@ def create_plugin_manager(plugin_directory):
     try:
         plugin_manager.collectPlugins()
     except Exception as exception:
-        safe_print('AWSume error: Unable to collect plugins: ' + str(exception))
+        safe_print('AWSume error: Unable to collect plugins: ' + str(exception), None, Fore.RED)
         return None
     return plugin_manager
 
@@ -1272,14 +1295,14 @@ def register_plugins(app, manager):
     for plugin in manager.getAllPlugins():
         try:
             if plugin.plugin_object.TARGET_VERSION.split('.')[0] != __version__.split('.')[0]:
-                safe_print('AWSume warning: [{}] targets AWSume version {}'.format(plugin.name, plugin.plugin_object.TARGET_VERSION))
+                safe_print('AWSume warning: [{}] targets AWSume version {}'.format(plugin.name, plugin.plugin_object.TARGET_VERSION), None, Fore.YELLOW)
         except AttributeError:
-            safe_print('AWSume warning: [{}] has no targeted version. AWSume may not work as expected.'.format(plugin.name))
+            safe_print('AWSume warning: [{}] has no targeted version. AWSume may not work as expected.'.format(plugin.name), None, Fore.YELLOW)
 
         for function_type in app.validFunctions:
             if function_type in dir(plugin.plugin_object):
                 if not app.register_function(function_type, getattr(plugin.plugin_object, function_type)):
-                    safe_print('Unable to  register plugin [{}] function of type {}'.format(plugin.name, function_type))
+                    safe_print('Unable to  register plugin [{}] function of type {}'.format(plugin.name, function_type), None, Fore.YELLOW)
 
 class AwsumeApp(object):
     """The app that runs AWSume."""
@@ -1305,14 +1328,21 @@ class AwsumeApp(object):
         'AWSUME_LIST':[],
         'exported':False,
     }
+    options = {}
+    valid_options = {
+        'colors': ['enable colored output', 'True or False'],
+        # 'role-duration': ['assume-role duration-seconds', 'integer between 1 and 43200)'],
+    }
 
     def __init__(self, plugin_manager): # pragma: no cover
         """Create plugin function types, add defaults to the lists.
+        Load the awsume options.
 
         Parameters
         ----------
         - plugin_manager - the main plugin manager
         """
+        self.load_options(AWSUME_OPTIONS_FILE)
         for directory in [AWS_DIRECTORY, AWSUME_PLUGIN_DIRECTORY]:
             if not os.path.exists(directory):
                 os.makedirs(directory)
@@ -1324,6 +1354,47 @@ class AwsumeApp(object):
             self.awsumeFunctions[function_type] = []
             if globals().get(function_type):
                 self.register_function(function_type, globals()[function_type])
+
+    def load_options(self, options_path):
+        """Load awsume's options into the app.options object.
+
+        Parameters
+        ----------
+        - options_path - the path to the awsume options file
+        """
+        try:
+            self.options = json.load(open(options_path, 'r'))
+        except Exception:
+            json.dump({
+                'colors': True,
+                # 'role-duration': 3600,
+            }, open(options_path, 'w'), indent=2)
+            self.options = {}
+        global AWSUME_OPTIONS
+        AWSUME_OPTIONS = self.options
+
+    def set_option(self, options_path, option_name, option_value):
+        """Set the value of an option to the given value.
+        Make sure the given option is valid.
+        Save the options to the options file.
+
+        Parameters
+        ----------
+        - options_path - the path to the awsume options file
+        - option_name - the name of the option to set
+        - option_value - the value to set that option to
+        """
+        if option_name == 'colors':
+            if option_value in ['yes', 'no', 'true', 'false', 't', 'f', '1', '0']:
+                self.options[option_name] = option_value.lower() in ('yes', 'true', 't', '1')
+            else:
+                safe_print('Colors option must be true or false!', None, Fore.RED)
+        # elif option_name == 'role-duration':
+        #     if option_value.isdigit() and 1 <= int(option_value) and int(option_value) <= 43200:
+        #         self.options[option_name] = int(option_value)
+        #     else:
+        #         safe_print('Role duration option must be an integer between 1 and 43200!', None, Fore.RED)
+        json.dump(self.options, open(options_path, 'w'), indent=2)
 
     def register_function(self, function_type, new_function):
         """Register functions to the AWSume App.
@@ -1384,7 +1455,7 @@ class AwsumeApp(object):
                 user_session = func(self, arguments, profiles, AWS_CACHE_DIRECTORY, user_session)
             LOG.debug('User session:\n%s', json.dumps(user_session, default=str, indent=2))
             if user_session.get('Expiration'):
-                safe_print('AWSume: User profile credentials will expire at: ' + str(user_session['Expiration']))
+                safe_print('AWSume: User profile credentials will expire at: ' + str(user_session['Expiration']), None, Fore.GREEN)
             for func in self.awsumeFunctions['get_user_session_callback']:
                 func(self, arguments, profiles, user_session)
         except UserAuthenticationError:
@@ -1402,7 +1473,7 @@ class AwsumeApp(object):
                 for func in self.awsumeFunctions['get_role_session']:
                     role_session = func(self, arguments, profiles, user_session, role_session)
                 LOG.debug('Role session:\n%s', json.dumps(role_session, default=str, indent=2))
-                safe_print('AWSume: Role profile credentials will expire at: ' + str(role_session['Expiration']))
+                safe_print('AWSume: Role profile credentials will expire at: ' + str(role_session['Expiration']), None, Fore.GREEN)
                 for func in self.awsumeFunctions['get_role_session_callback']:
                     func(self, arguments, profiles, user_session, role_session)
                 session_to_use = role_session
