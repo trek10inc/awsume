@@ -81,6 +81,13 @@ class RoleAuthenticationError(Exception):
 #
 #   CommandLineArgumentHandling
 #
+def custom_duration(string):
+    """"""
+    number = int(string)
+    if number <= 0 and number <= 43200:
+        return number
+    raise argparse.ArgumentTypeError('Custom Duration must be between 1 and 43200')
+
 def generate_argument_parser():
     """Create the argparse argument parser.
 
@@ -177,6 +184,10 @@ def add_arguments(argument_parser):
                                  default=False,
                                  dest='config_help',
                                  help='Display info on AWSume\'s settings')
+    argument_parser.add_argument('--duration',
+                                 type=custom_duration,
+                                 dest='duration',
+                                 help='The duration to use when calling assume-role')
     argument_parser.add_argument('--info',
                                  action='store_true',
                                  dest='info',
@@ -600,6 +611,23 @@ def fix_session_credentials(session, profiles, args):
         region = profiles['default'].get('region')
     session['region'] = region
 
+def get_duration(args, profile):
+    """Return the targeted duration.
+    If there is no targeted duration, return None.
+
+    Parameters
+    ----------
+    - args - the commandline args
+    - profile - the target aws profile
+    """
+    if args.duration:
+        return int(args.duration)
+    if profile.get('role_duration'):
+        return int(profile.get('role_duration'))
+    if AWSUME_OPTIONS.get('role-duration'):
+        return int(AWSUME_OPTIONS.get('role-duration'))
+    return None
+
 
 
 #
@@ -648,18 +676,20 @@ def read_mfa():
 
 def config_help(app):
     """Display the config help dialog.
-    
+
     Parameters
     ----------
     - app - the AWSume app object
     """
     biggest_option = max([len(option) for option in app.valid_options])
     biggest_description = max([len(option[0]) for option in app.valid_options.values()])
-    safe_print('OPTION'.ljust(biggest_option) + '  ' + 'DESCRIPTION'.ljust(biggest_description) + '  ' + 'VALUES', None, Fore.BLUE)
+    biggest_values = max([len(option[1]) for option in app.valid_options.values()])
+    safe_print('OPTION'.ljust(biggest_option) + '  ' + 'DESCRIPTION'.ljust(biggest_description) + '  ' + 'VALUES'.ljust(biggest_values) + '  ' + 'CURRENT', None, Fore.BLUE)
     for option in app.valid_options:
         safe_print(option.ljust(biggest_option), '  ', Fore.GREEN)
         safe_print(app.valid_options[option][0].ljust(biggest_description), '  ', Fore.GREEN)
-        safe_print(app.valid_options[option][1], None, Fore.GREEN)
+        safe_print(app.valid_options[option][1].ljust(biggest_values), '  ', Fore.GREEN)
+        safe_print(str(AWSUME_OPTIONS[option]), None, Fore.GREEN)
 
 
 
@@ -822,6 +852,14 @@ def get_user_session(app, args, profiles, cache_path, user_session):
             'region' : profile.get('region')
         }
         return credentials
+    if is_role(profile) and get_duration(args, profile):
+        LOG.debug('Using a custom duration on a long-duration profile')
+        credentials = {
+            'AccessKeyId' : profile.get('aws_access_key_id'),
+            'SecretAccessKey' : profile.get('aws_secret_access_key'),
+            'region' : profile.get('region')
+        }
+        return credentials
 
     cache_file_name = 'awsume-credentials-'
     cache_file_name += args.target_profile_name if not is_role(profile) else profile['source_profile']
@@ -879,11 +917,23 @@ def get_role_session(app, args, profiles, user_session, role_session):
         role_session_name = 'awsume-session-' + args.target_profile_name
     sts_client = create_sts_client(user_session['AccessKeyId'],
                                    user_session['SecretAccessKey'],
-                                   user_session['SessionToken'])
+                                   user_session.get('SessionToken'))
 
     try:
-        response = sts_client.assume_role(RoleArn=profile['role_arn'],
-                                          RoleSessionName=role_session_name)
+        if get_duration(args, profile):
+            if requires_mfa(profile):
+                response = sts_client.assume_role(RoleArn=profile['role_arn'],
+                                                  RoleSessionName=role_session_name,
+                                                  DurationSeconds=get_duration(args, profile),
+                                                  SerialNumber=profile.get('mfa_serial'),
+                                                  TokenCode=read_mfa())
+            else:
+                response = sts_client.assume_role(RoleArn=profile['role_arn'],
+                                                  RoleSessionName=role_session_name,
+                                                  DurationSeconds=get_duration(args, profile))
+        else:
+            response = sts_client.assume_role(RoleArn=profile['role_arn'],
+                                              RoleSessionName=role_session_name)
         fix_session_credentials(response['Credentials'], profiles, args)
         LOG.debug(response['Credentials'])
         return response['Credentials']
@@ -1331,7 +1381,7 @@ class AwsumeApp(object):
     options = {}
     valid_options = {
         'colors': ['enable colored output', 'True or False'],
-        # 'role-duration': ['assume-role duration-seconds', 'integer between 1 and 43200)'],
+        'role-duration': ['assume-role duration-seconds', 'integer between 1 and 43200 (0 to turn off)'],
     }
 
     def __init__(self, plugin_manager): # pragma: no cover
@@ -1366,8 +1416,7 @@ class AwsumeApp(object):
             self.options = json.load(open(options_path, 'r'))
         except Exception:
             json.dump({
-                'colors': True,
-                # 'role-duration': 3600,
+                'colors': True
             }, open(options_path, 'w'), indent=2)
             self.options = {}
         global AWSUME_OPTIONS
@@ -1387,13 +1436,22 @@ class AwsumeApp(object):
         if option_name == 'colors':
             if option_value in ['yes', 'no', 'true', 'false', 't', 'f', '1', '0']:
                 self.options[option_name] = option_value.lower() in ('yes', 'true', 't', '1')
+                if self.options[option_name]:
+                    safe_print('Colored output enabled!', None, Fore.GREEN)
+                else:
+                    safe_print('Colored output disabled!', None, Fore.GREEN)
             else:
                 safe_print('Colors option must be true or false!', None, Fore.RED)
-        # elif option_name == 'role-duration':
-        #     if option_value.isdigit() and 1 <= int(option_value) and int(option_value) <= 43200:
-        #         self.options[option_name] = int(option_value)
-        #     else:
-        #         safe_print('Role duration option must be an integer between 1 and 43200!', None, Fore.RED)
+        elif option_name == 'role-duration':
+            if option_value.isdigit() and 0 <= int(option_value) and int(option_value) <= 43200:
+                self.options[option_name] = int(option_value)
+                if self.options[option_name]:
+                    safe_print('Role duration set to: ' + str(self.options[option_name]), None, Fore.GREEN)
+                else:
+                    safe_print('Role duration disabled', None, Fore.GREEN)
+
+            else:
+                safe_print('Role duration option must be an integer between 1 and 43200!', None, Fore.RED)
         json.dump(self.options, open(options_path, 'w'), indent=2)
 
     def register_function(self, function_type, new_function):
