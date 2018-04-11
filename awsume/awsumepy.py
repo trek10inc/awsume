@@ -17,12 +17,9 @@ import psutil
 import dateutil
 import pkg_resources
 import six
-from colorama import init, Fore, Style
+from colorama import Fore, Style
 from six.moves import configparser as ConfigParser
 from yapsy import PluginManager
-
-# colorama init
-init()
 
 try: # pragma: no cover
     __version__ = pkg_resources.get_distribution('awsume').version
@@ -648,6 +645,7 @@ def get_input(): # pragma: no cover
 def safe_print(text, end=None, color=Fore.RESET, style=Style.RESET_ALL): # pragma: no cover
     """A simple wrapper around the builting `print` function.
     It should always print to stderr to not interfere with the shell wrappers.
+    It should not use any colors or styles when running on Windows.
 
     Parameters
     ----------
@@ -656,10 +654,10 @@ def safe_print(text, end=None, color=Fore.RESET, style=Style.RESET_ALL): # pragm
     - color - the colorama color to use when printing
     - style - the style to use when printing
     """
-    if not AWSUME_OPTIONS.get('colors'):
-        color = Fore.RESET
-        style = Style.RESET_ALL
-    print(style + color + text + Style.RESET_ALL, file=sys.stderr, end=end)
+    if not AWSUME_OPTIONS.get('colors') or os.name == 'nt':
+        print(text, file=sys.stderr, end=end)
+    else:
+        print(style + color + text + Style.RESET_ALL, file=sys.stderr, end=end)
 
 def read_mfa():
     """Read mfa from the command line.
@@ -1447,7 +1445,7 @@ def awsume_role_duration(app, args, profiles):
             func(app, args, profiles, user_session, role_session)
         role_session = role_session
     except RoleAuthenticationError:
-        safe_print('Calling awsume with custom role duration failed, calling awsume without custom duration.', None, Fore.YELLOW)
+        safe_print('Calling awsume with custom role duration failed, calling awsume without custom duration...', None, Fore.YELLOW)
         args.target_role_duration = 0
         user_session, role_session = awsume(app, args, profiles)
     return user_session, role_session
@@ -1478,8 +1476,8 @@ class AwsumeApp(object):
     }
     options = {}
     valid_options = {
-        'colors': ['enable colored output', '(true, t, 1, y) or (false, f, 0, n)'],
-        'role-duration': ['assume-role duration-seconds', 'integer between 1 and 43200 (0 to turn off)'],
+        'colors': ['enable colored output', 'true or false'],
+        'role-duration': ['custom role duration', '0 (off) to 43200 (12 hours)'],
     }
 
     def __init__(self, plugin_manager): # pragma: no cover
@@ -1534,7 +1532,10 @@ class AwsumeApp(object):
         - option_value - the value to set that option to
         """
         if option_name == 'colors':
-            if option_value in ['yes', 'no', 'true', 'false', 't', 'f', '1', '0']:
+            if os.name == 'nt':
+                self.options[option_name] = False
+                safe_print('AWSume does not support colored output on Windows.')
+            elif option_value in ['yes', 'no', 'true', 'false', 't', 'f', '1', '0']:
                 self.options[option_name] = option_value.lower() in ('yes', 'true', 't', '1')
                 if self.options[option_name]:
                     safe_print('Colored output enabled!', None, Fore.GREEN)
@@ -1549,7 +1550,6 @@ class AwsumeApp(object):
                     safe_print('Role duration set to: ' + str(self.options[option_name]), None, Fore.GREEN)
                 else:
                     safe_print('Role duration disabled', None, Fore.GREEN)
-
             else:
                 safe_print('Role duration option must be an integer between 0 and 43200!', None, Fore.RED)
         json.dump(self.options, open(options_path, 'w'), indent=2)
