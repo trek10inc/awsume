@@ -84,9 +84,9 @@ class RoleAuthenticationError(Exception):
 def custom_duration(string):
     """"""
     number = int(string)
-    if number <= 0 and number <= 43200:
+    if number >= 0 and number <= 43201:
         return number
-    raise argparse.ArgumentTypeError('Custom Duration must be between 1 and 43200')
+    raise argparse.ArgumentTypeError('Custom Duration must be between 0 and 43200')
 
 def generate_argument_parser():
     """Create the argparse argument parser.
@@ -184,9 +184,10 @@ def add_arguments(argument_parser):
                                  default=False,
                                  dest='config_help',
                                  help='Display info on AWSume\'s settings')
-    argument_parser.add_argument('--duration',
+    argument_parser.add_argument('--role-duration',
                                  type=custom_duration,
-                                 dest='duration',
+                                 dest='role_duration',
+                                 metavar=('duration_seconds'),
                                  help='The duration to use when calling assume-role')
     argument_parser.add_argument('--info',
                                  action='store_true',
@@ -620,8 +621,10 @@ def get_duration(args, profile):
     - args - the commandline args
     - profile - the target aws profile
     """
-    if args.duration:
-        return int(args.duration)
+    if args.role_duration == 0:
+        return None
+    if args.role_duration:
+        return int(args.role_duration)
     if profile.get('role_duration'):
         return int(profile.get('role_duration'))
     if AWSUME_OPTIONS.get('role-duration'):
@@ -666,7 +669,7 @@ def read_mfa():
     -------
     The read mfa token.
     """
-    safe_print('Enter MFA token: ', '', Fore.BLUE)
+    safe_print('Enter MFA token: ', '', Fore.LIGHTCYAN_EX)
     while True:
         mfa_token = get_input()
         if valid_mfa_token(mfa_token):
@@ -852,14 +855,6 @@ def get_user_session(app, args, profiles, cache_path, user_session):
             'region' : profile.get('region')
         }
         return credentials
-    if is_role(profile) and get_duration(args, profile):
-        LOG.debug('Using a custom duration on a long-duration profile')
-        credentials = {
-            'AccessKeyId' : profile.get('aws_access_key_id'),
-            'SecretAccessKey' : profile.get('aws_secret_access_key'),
-            'region' : profile.get('region')
-        }
-        return credentials
 
     cache_file_name = 'awsume-credentials-'
     cache_file_name += args.target_profile_name if not is_role(profile) else profile['source_profile']
@@ -869,29 +864,30 @@ def get_user_session(app, args, profiles, cache_path, user_session):
         return cache_session
 
     sts_client = create_sts_client(profile['aws_access_key_id'], profile['aws_secret_access_key'])
-    if requires_mfa(profile):
-        LOG.debug('profile requires mfa')
-        mfa_token = read_mfa()
-        try:
+    try:
+        if requires_mfa(profile):
+            LOG.debug('profile requires mfa')
+            mfa_token = read_mfa()
             response = sts_client.get_session_token(SerialNumber=profile['mfa_serial'],
                                                     TokenCode=mfa_token)
             fix_session_credentials(response['Credentials'], profiles, args)
             LOG.debug(response['Credentials'])
             write_aws_cache(cache_path, cache_file_name, response['Credentials'])
             return response['Credentials']
-        except botocore.exceptions.ClientError as exception:
-            safe_print('AWSume error: ' + exception.response['Error']['Message'], None, Fore.RED)
-            raise UserAuthenticationError
-    else:
-        LOG.debug('profile does not require mfa')
-        try:
+        else:
+            LOG.debug('profile does not require mfa')
             response = sts_client.get_session_token()
             fix_session_credentials(response['Credentials'], profiles, args)
             LOG.debug(response['Credentials'])
             return response['Credentials']
-        except botocore.exceptions.ClientError as exception:
-            safe_print('AWSume error: ' + exception.response['Error']['Message'], None, Fore.RED)
-            raise UserAuthenticationError
+    except botocore.exceptions.ClientError as exception:
+        safe_print('AWSume error: ' + exception.response['Error']['Message'], None, Fore.RED)
+        raise UserAuthenticationError
+    except botocore.exceptions.ParamValidationError as exception:
+        safe_print('AWSume error: ' + str(exception), None, Fore.RED)
+        raise UserAuthenticationError
+
+
 
 def get_role_session(app, args, profiles, user_session, role_session):
     """Call assume-role to get the role session credentials.
@@ -909,6 +905,14 @@ def get_role_session(app, args, profiles, user_session, role_session):
     The session credentials from the assume-role api call
     """
     LOG.info('Getting role session credentials')
+
+    cache_file_name = 'awsume-role-credentials-'
+    cache_file_name += args.target_profile_name
+    cache_session = read_aws_cache(AWS_CACHE_DIRECTORY, cache_file_name)
+    if args.force_refresh is False and valid_cache_session(cache_session):
+        LOG.debug('returning cache session: %s', json.dumps(cache_session, indent=2))
+        return cache_session
+
     profile = profiles[args.target_profile_name]
     if args.session_name:
         LOG.debug('using custom session name: %s', args.session_name)
@@ -920,25 +924,30 @@ def get_role_session(app, args, profiles, user_session, role_session):
                                    user_session.get('SessionToken'))
 
     try:
-        if get_duration(args, profile):
+        if args.target_role_duration:
             if requires_mfa(profile):
                 response = sts_client.assume_role(RoleArn=profile['role_arn'],
                                                   RoleSessionName=role_session_name,
-                                                  DurationSeconds=get_duration(args, profile),
+                                                  DurationSeconds=args.target_role_duration,
                                                   SerialNumber=profile.get('mfa_serial'),
                                                   TokenCode=read_mfa())
             else:
                 response = sts_client.assume_role(RoleArn=profile['role_arn'],
                                                   RoleSessionName=role_session_name,
-                                                  DurationSeconds=get_duration(args, profile))
+                                                  DurationSeconds=args.target_role_duration)
+            fix_session_credentials(response['Credentials'], profiles, args)
+            write_aws_cache(AWS_CACHE_DIRECTORY, cache_file_name, response['Credentials'])
         else:
             response = sts_client.assume_role(RoleArn=profile['role_arn'],
                                               RoleSessionName=role_session_name)
-        fix_session_credentials(response['Credentials'], profiles, args)
+            fix_session_credentials(response['Credentials'], profiles, args)
         LOG.debug(response['Credentials'])
         return response['Credentials']
     except botocore.exceptions.ClientError as exception:
         safe_print('AWSume error: ' + exception.response['Error']['Message'], None, Fore.RED)
+        raise RoleAuthenticationError
+    except botocore.exceptions.ParamValidationError as exception:
+        safe_print('AWSume error: ' + str(exception), None, Fore.RED)
         raise RoleAuthenticationError
 
 def get_role_session_callback(app, args, profiles, user_session, role_session): # pragma: no cover
@@ -1354,6 +1363,95 @@ def register_plugins(app, manager):
                 if not app.register_function(function_type, getattr(plugin.plugin_object, function_type)):
                     safe_print('Unable to  register plugin [{}] function of type {}'.format(plugin.name, function_type), None, Fore.YELLOW)
 
+def awsume(app, args, profiles):
+    """The normal workflow for awsume.
+    Call get-session-token and assume-role.
+
+    Parameters
+    ----------
+    - app - the AWSume app object
+    - args - the command-line args
+    - profiles - the collected aws profiles
+    - user_session - the user session credentials
+    - role_session - the state of the previously called get_role_session
+
+    Returns
+    -------
+    Session credentials
+    """
+    user_session = None
+    try:
+        for func in app.awsumeFunctions['get_user_session']:
+            user_session = func(app, args, profiles, AWS_CACHE_DIRECTORY, user_session)
+        LOG.debug('User session:\n%s', json.dumps(user_session, default=str, indent=2))
+        if user_session.get('Expiration'):
+            safe_print('AWSume: User profile credentials will expire at: ' + str(user_session['Expiration']), None, Fore.GREEN)
+        for func in app.awsumeFunctions['get_user_session_callback']:
+            func(app, args, profiles, user_session)
+    except UserAuthenticationError:
+        LOG.debug('UserAuthenticationError raised')
+        if app.awsumeFunctions['catch_user_authentication_error']:
+            for func in app.awsumeFunctions['catch_user_authentication_error']:
+                func(app, args, profiles)
+        else:
+            exit(0)
+
+    role_session = None
+    try:
+        if is_role(profiles[args.target_profile_name]):
+            for func in app.awsumeFunctions['get_role_session']:
+                role_session = func(app, args, profiles, user_session, role_session)
+            LOG.debug('Role session:\n%s', json.dumps(role_session, default=str, indent=2))
+            safe_print('AWSume: Role profile credentials will expire at: ' + str(role_session['Expiration']), None, Fore.GREEN)
+            for func in app.awsumeFunctions['get_role_session_callback']:
+                func(app, args, profiles, user_session, role_session)
+    except RoleAuthenticationError:
+        LOG.debug('RoleAuthenticationError raised')
+        if app.awsumeFunctions['catch_role_authentication_error']:
+            for func in app.awsumeFunctions['catch_role_authentication_error']:
+                func(app, args, profiles, user_session)
+        else:
+            exit(0)
+    return user_session, role_session
+
+def awsume_role_duration(app, args, profiles):
+    """The normal workflow for awsume.
+    Call get-session-token and assume-role.
+
+    Parameters
+    ----------
+    - app - the AWSume app object
+    - args - the command-line args
+    - profiles - the collected aws profiles
+    - user_session - the user session credentials
+    - role_session - the state of the previously called get_role_session
+
+    Returns
+    -------
+    Session credentials
+    """
+    LOG.debug('Using a custom duration')
+    profile = profiles[args.target_profile_name]
+    user_session = {
+        'AccessKeyId' : profile.get('aws_access_key_id'),
+        'SecretAccessKey' : profile.get('aws_secret_access_key'),
+        'region' : profile.get('region')
+    }
+    role_session = None
+    try:
+        for func in app.awsumeFunctions['get_role_session']:
+            role_session = func(app, args, profiles, user_session, role_session)
+        LOG.debug('Role session:\n%s', json.dumps(role_session, default=str, indent=2))
+        safe_print('AWSume: Role profile credentials will expire at: ' + str(role_session['Expiration']), None, Fore.GREEN)
+        for func in app.awsumeFunctions['get_role_session_callback']:
+            func(app, args, profiles, user_session, role_session)
+        role_session = role_session
+    except RoleAuthenticationError:
+        safe_print('Calling awsume with custom role duration failed, calling awsume without custom duration.', None, Fore.YELLOW)
+        args.target_role_duration = 0
+        user_session, role_session = awsume(app, args, profiles)
+    return user_session, role_session
+
 class AwsumeApp(object):
     """The app that runs AWSume."""
     awsumeFunctions = {}
@@ -1380,7 +1478,7 @@ class AwsumeApp(object):
     }
     options = {}
     valid_options = {
-        'colors': ['enable colored output', 'True or False'],
+        'colors': ['enable colored output', '(true, t, 1, y) or (false, f, 0, n)'],
         'role-duration': ['assume-role duration-seconds', 'integer between 1 and 43200 (0 to turn off)'],
     }
 
@@ -1415,10 +1513,12 @@ class AwsumeApp(object):
         try:
             self.options = json.load(open(options_path, 'r'))
         except Exception:
-            json.dump({
-                'colors': True
-            }, open(options_path, 'w'), indent=2)
-            self.options = {}
+            default_options = {
+                'colors': True,
+                'role-duration': 0,
+            }
+            json.dump(default_options, open(options_path, 'w'), indent=2)
+            self.options = default_options
         global AWSUME_OPTIONS
         AWSUME_OPTIONS = self.options
 
@@ -1451,7 +1551,7 @@ class AwsumeApp(object):
                     safe_print('Role duration disabled', None, Fore.GREEN)
 
             else:
-                safe_print('Role duration option must be an integer between 1 and 43200!', None, Fore.RED)
+                safe_print('Role duration option must be an integer between 0 and 43200!', None, Fore.RED)
         json.dump(self.options, open(options_path, 'w'), indent=2)
 
     def register_function(self, function_type, new_function):
@@ -1498,6 +1598,7 @@ class AwsumeApp(object):
         for func in self.awsumeFunctions['pre_awsume']:
             func(self, arguments)
 
+        # collect the aws profiles
         profiles = {}
         for func in self.awsumeFunctions['get_aws_profiles']:
             new_profiles = func(self, arguments, AWS_CONFIG_FILE, AWS_CREDENTIALS_FILE)
@@ -1507,42 +1608,15 @@ class AwsumeApp(object):
         for func in self.awsumeFunctions['get_aws_profiles_callback']:
             func(self, arguments, profiles)
 
-        user_session = None
-        try:
-            for func in self.awsumeFunctions['get_user_session']:
-                user_session = func(self, arguments, profiles, AWS_CACHE_DIRECTORY, user_session)
-            LOG.debug('User session:\n%s', json.dumps(user_session, default=str, indent=2))
-            if user_session.get('Expiration'):
-                safe_print('AWSume: User profile credentials will expire at: ' + str(user_session['Expiration']), None, Fore.GREEN)
-            for func in self.awsumeFunctions['get_user_session_callback']:
-                func(self, arguments, profiles, user_session)
-        except UserAuthenticationError:
-            LOG.debug('UserAuthenticationError raised')
-            if self.awsumeFunctions['catch_user_authentication_error']:
-                for func in self.awsumeFunctions['catch_user_authentication_error']:
-                    func(self, arguments, profiles)
-            else:
-                exit(0)
-        session_to_use = user_session
+        # decide which awsume workflow to take
+        arguments.target_role_duration = get_duration(arguments, profiles[arguments.target_profile_name])
+        if arguments.target_role_duration and is_role(profiles[arguments.target_profile_name]):
+            user_session, role_session = awsume_role_duration(self, arguments, profiles)
+        else:
+            user_session, role_session = awsume(self, arguments, profiles)
+        session_to_use = role_session if role_session else user_session
 
-        role_session = None
-        try:
-            if is_role(profiles[arguments.target_profile_name]):
-                for func in self.awsumeFunctions['get_role_session']:
-                    role_session = func(self, arguments, profiles, user_session, role_session)
-                LOG.debug('Role session:\n%s', json.dumps(role_session, default=str, indent=2))
-                safe_print('AWSume: Role profile credentials will expire at: ' + str(role_session['Expiration']), None, Fore.GREEN)
-                for func in self.awsumeFunctions['get_role_session_callback']:
-                    func(self, arguments, profiles, user_session, role_session)
-                session_to_use = role_session
-        except RoleAuthenticationError:
-            LOG.debug('RoleAuthenticationError raised')
-            if self.awsumeFunctions['catch_role_authentication_error']:
-                for func in self.awsumeFunctions['catch_role_authentication_error']:
-                    func(self, arguments, profiles, user_session)
-            else:
-                exit(0)
-
+        # export the credentials
         data_list = [
             str(session_to_use.get('AccessKeyId')),
             str(session_to_use.get('SecretAccessKey')),
