@@ -22,8 +22,7 @@ _awsume() {
 }
 complete -F _awsume awsume
 """
-ZSH_AUTOCOMPLETE_SCRIPT = """
-#compdef awsume
+ZSH_AUTOCOMPLETE_SCRIPT = """#compdef awsume
 _arguments "*: :($(awsumepy --rolesusers))"
 """
 POWERSHELL_AUTOCOMPLETE_SCRIPT = """
@@ -80,11 +79,16 @@ class CustomInstall(install):
         """Install AWSume's auto-complete to zsh rc file."""
         if not os.path.exists(function_path):
             os.makedirs(function_path)
-            #add the directory to fpath
-            with open(rc_file, 'r') as original:
-                data = original.read()
-            with open(rc_file, 'w') as modified:
-                modified.write('fpath=$(' + function_path + ' $fpath)\n' + data)
+
+        #add the directory to fpath
+        with open(rc_file, 'r') as original:
+            data = original.read()
+            original.close()
+        fpath_line = 'fpath=(' + function_path + ' $fpath)'
+        if fpath_line not in data:
+            with open(rc_file, 'a') as modified:
+                modified.write(fpath_line)
+                modified.close()
 
         func_file = function_path + '/_awsume'
         with open(func_file, 'w+') as read_f:
