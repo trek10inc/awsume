@@ -94,7 +94,7 @@ AWSume is now extensible. It now comes with a built-in plugin manager! To get st
 
 #### AWSume Console Plugin
 
-To demonstrate the plugin manager, we've extended the functionality of AWSume through the AWSume Console plugin. This plugin will open the AWS console to the assumed role. Read about it [here](https://github.com/trek10inc/awsume/blob/master/examplePlugin/awsumeConsole.md)
+To demonstrate the plugin manager, we've extended the functionality of AWSume through the AWSume Console plugin. This plugin will open the AWS console to the assumed role. Read about it [here](https://github.com/trek10inc/awsume/blob/master/examplePlugin/console.md)
 
 ### Example Usages
 
