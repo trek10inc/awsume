@@ -93,12 +93,12 @@ elif [ "$AWSUME_FLAG" = "Awsume" ]; then
     do
         #show commands
         if [[ "$AWSUME_var" == "-s"* ]]; then
-            echo export AWS_SECRET_ACCESS_KEY=$AWSUME_1
-            echo export AWS_ACCESS_KEY_ID=$AWSUME_3
+            echo export AWS_ACCESS_KEY_ID=$AWSUME_1
+            echo export AWS_SECRET_ACCESS_KEY=$AWSUME_2
 
             if [ ! "$AWSUME_2" = "None" ]; then
-                echo export AWS_SESSION_TOKEN=$AWSUME_2
-                echo export AWS_SECURITY_TOKEN=$AWSUME_2
+                echo export AWS_SESSION_TOKEN=$AWSUME_3
+                echo export AWS_SECURITY_TOKEN=$AWSUME_3
             fi
 
             if [ ! "$AWSUME_4" = "None" ]; then

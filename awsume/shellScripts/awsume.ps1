@@ -97,8 +97,8 @@ elseif ( $AWSUME_FLAG -eq "Awsume") {
 
     #if enabled, show the exact commands to use in order to assume the role we just assumed
     if ($args -like "-s") {
-        Write-Host "`$env:AWS_SECRET_ACCESS_KEY =" $env:AWS_SECRET_ACCESS_KEY
         Write-Host "`$env:AWS_ACCESS_KEY_ID =" $env:AWS_ACCESS_KEY_ID
+        Write-Host "`$env:AWS_SECRET_ACCESS_KEY =" $env:AWS_SECRET_ACCESS_KEY
         
         if ( $AWSUME_2 -ne "None" ) {
             Write-Host "`$env:AWS_SESSION_TOKEN =" $env:AWS_SESSION_TOKEN
