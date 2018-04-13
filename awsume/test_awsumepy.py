@@ -607,7 +607,6 @@ class TestAwsumeWorkflow(unittest.TestCase):
         AWSUMEPY.create_sts_client()
         self.assertTrue('sts' in args for args in mock_client.call_args_list)
 
-    @mock.patch('awsumepy.get_duration')
     @mock.patch('awsumepy.fix_session_credentials')
     @mock.patch('awsumepy.read_mfa')
     @mock.patch('awsumepy.requires_mfa')
@@ -624,8 +623,7 @@ class TestAwsumeWorkflow(unittest.TestCase):
                               mock_create_sts_client,
                               mock_requires_mfa,
                               mock_read_mfa,
-                              mock_fix_session_credentials,
-                              mock_get_duration):
+                              mock_fix_session_credentials):
         """test get_user_session awsumepy function"""
         mock_get_session_token = mock.Mock()
         mock_get_session_token.return_value = {'Credentials': {'SessionToken':'EXAMPLE'}}
@@ -656,7 +654,6 @@ class TestAwsumeWorkflow(unittest.TestCase):
         fake_args.target_profile_name = 'fake-nomfa-user'
         mock_requires_mfa.return_value = False
         mock_is_role.return_value = False
-        mock_get_duration.return_value = 0
         fake_args.force_refresh = False
         fake_session = AWSUMEPY.get_user_session(fake_app, fake_args, fake_profiles, '/cache/path', None)
         self.assertEqual(fake_session, {
@@ -664,17 +661,6 @@ class TestAwsumeWorkflow(unittest.TestCase):
             'SecretAccessKey' : 'EXAMPLE',
             'region' : None,
         })
-
-        mock_is_role.return_value = True
-        mock_get_duration.return_value = True
-        fake_session = AWSUMEPY.get_user_session(fake_app, fake_args, fake_profiles, '/cache/path', None)
-        self.assertEqual(fake_session, {
-            'AccessKeyId' : 'EXAMPLE',
-            'SecretAccessKey' : 'EXAMPLE',
-            'region' : None,
-        })
-        mock_is_role.return_value = False
-        mock_get_duration.return_value = False
 
         fake_args.target_profile_name = 'fake-mfa-profile'
         mock_requires_mfa.return_value = True
@@ -707,13 +693,11 @@ class TestAwsumeWorkflow(unittest.TestCase):
 
     @mock.patch('awsumepy.read_mfa')
     @mock.patch('awsumepy.requires_mfa')
-    @mock.patch('awsumepy.get_duration')
     @mock.patch('awsumepy.fix_session_credentials')
     @mock.patch('awsumepy.create_sts_client')
     def test_get_role_session(self,
                               mock_create_sts_client,
                               mock_fix_session_credentials,
-                              mock_get_duration,
                               mock_requires_mfa,
                               mock_read_mfa):
         """test get_role_session awsumepy function"""
@@ -721,11 +705,11 @@ class TestAwsumeWorkflow(unittest.TestCase):
         fake_args = mock.Mock()
         fake_args.session_name = None
         fake_args.target_profile_name = 'default'
+        fake_args.target_role_duration = 0
         mock_assume_role = mock.Mock()
         mock_client = mock.Mock()
         mock_client.assume_role = mock_assume_role
         mock_create_sts_client.return_value = mock_client
-        mock_get_duration.return_value = 0
         mock_requires_mfa.return_value = False
         mock_read_mfa.return_value = '123456'
         fake_profiles = {
@@ -767,7 +751,7 @@ class TestAwsumeWorkflow(unittest.TestCase):
         self.assertEqual(session, {'SessionToken':'EXAMPLE'})
         mock_assume_role.assert_called_with(RoleArn='EXAMPLE', RoleSessionName='cool-session')
 
-        mock_get_duration.return_value = 43200
+        fake_args.target_role_duration = 43200
         mock_requires_mfa.return_value = True
         session = AWSUMEPY.get_role_session(fake_app, fake_args, fake_profiles, fake_user_session, None)
         expected_call = mock.call(RoleArn='EXAMPLE',
@@ -777,15 +761,15 @@ class TestAwsumeWorkflow(unittest.TestCase):
                                   TokenCode='123456')
         self.assertTrue(expected_call in mock_assume_role.call_args_list)
         mock_requires_mfa.return_value = False
-        mock_get_duration.return_value = 0
+        fake_args.target_role_duration = 0
 
-        mock_get_duration.return_value = 43200
+        fake_args.target_role_duration = 43200
         session = AWSUMEPY.get_role_session(fake_app, fake_args, fake_profiles, fake_user_session, None)
         expected_call = mock.call(RoleArn='EXAMPLE',
                                   RoleSessionName='cool-session',
                                   DurationSeconds=43200)
         self.assertTrue(expected_call in mock_assume_role.call_args_list)
-        mock_get_duration.return_value = 0
+        fake_args.target_role_duration = 0
 
 
 
