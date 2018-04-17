@@ -85,7 +85,7 @@ IF defined SHOW (
         echo set AWS_ACCESS_KEY_ID=%%b
         echo set AWS_SECRET_ACCESS_KEY=%%c
 
-        if "%%c" NEQ "None" (
+        if "%%d" NEQ "None" (
             echo set AWS_SESSION_TOKEN=%%d
             echo set AWS_SECURITY_TOKEN=%%d)
 
