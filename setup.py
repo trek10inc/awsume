@@ -188,6 +188,7 @@ setup(
         'yapsy',
         'future',
         'colorama',
+        'requests'
     ],
     scripts=[
         'awsume/shellScripts/awsume',
