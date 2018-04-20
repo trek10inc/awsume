@@ -1188,18 +1188,26 @@ class TestAwsumeApp(unittest.TestCase):
         """test create_plugin_manager awsumepy function"""
         mock_manager = mock.Mock()
         mock_manager.setPluginPlaces = mock.Mock()
-        mock_manager.collectPlugins = mock.Mock()
+        mock_manager.locatePlugins = mock.Mock()
+        mock_manager.loadPlugins = mock.Mock()
         mock_plugin_manager.PluginManager = mock.Mock()
         mock_plugin_manager.PluginManager.return_value = mock_manager
 
+        plugin1_err1 = 'we dont care'
+        plugin1_err2 = ModuleNotFoundError()
+        plugin1_err2.name = 'some_module'
+        plugin1_err3 = 'we dont care'
+        plugin1_err = (plugin1_err1, plugin1_err2, plugin1_err3)
+        mock_plugin_info1 = mock.Mock()
+        mock_plugin_info1.name = 'My plugin'
+        mock_plugin_info1.error = plugin1_err
+        mock_processed_plugins = [mock_plugin_info1]
+        mock_manager.loadPlugins.return_value = mock_processed_plugins
+
         manager = AWSUMEPY.create_plugin_manager('/dir')
         mock_manager.setPluginPlaces.assert_called_once_with(['/dir'])
-        mock_manager.collectPlugins.assert_called_once()
+        mock_manager.loadPlugins.assert_called_once()
         self.assertEqual(manager, mock_manager)
-
-        mock_manager.collectPlugins.side_effect = [Exception]
-        manager = AWSUMEPY.create_plugin_manager('/dir')
-        self.assertEqual(manager, None)
 
     def test_register_plugins(self):
         """test register_plugins awsumepy function"""
