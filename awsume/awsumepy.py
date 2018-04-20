@@ -1340,11 +1340,16 @@ def create_plugin_manager(plugin_directory):
     # check for any errors while loading the plugins
     for plugin_info in processed_plugins:
         if plugin_info.error:
-            __, err2, __ = plugin_info.error
-            message = str(err2)
-            if type(err2) == ModuleNotFoundError:
-                message = 'Module "' + err2.name + '" not found\n  try running "pip install ' + err2.name + '"'
-            safe_print('Unable to load plugin [' + plugin_info.name + ']: ' + message)
+            try: # raise the error so we can properly catch specific errors for custom feedback
+                __, err2, __ = plugin_info.error
+                safe_print('Unable to load plugin [' + plugin_info.name + ']: ' + str(err2))
+                raise err2
+            except ImportError as error:
+                if 'No module named ' in str(error):
+                    module_name = str(error).replace('No module named ', '').replace("'",'')
+                    safe_print('  try running "pip install ' + module_name + '"')
+            except Exception:
+                pass
 
     return plugin_manager
 
