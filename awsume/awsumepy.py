@@ -35,14 +35,11 @@ def __exit_awsume(arg1, arg2): # pragma: no cover
 signal.signal(signal.SIGINT, __exit_awsume)
 
 #initialize logging
-logging.getLogger('yapsy').addHandler(logging.StreamHandler())
+# logging.getLogger('yapsy').addHandler(logging.StreamHandler())
 LOG = logging.getLogger(__name__)
 LOG_HANDLER = logging.StreamHandler()
 LOG_HANDLER.setFormatter(logging.Formatter('%(name)s.%(funcName)s : %(message)s'))
 LOG.addHandler(LOG_HANDLER)
-def __log_dt_converter(dt_object): # pragma: no cover
-    """Used to convert datetime objects to strings automatically for the logger."""
-    return dt_object.__str__() if isinstance(dt_object, datetime) else dt_object
 
 #get cross-platform directories
 HOME_PATH = os.path.expanduser('~')
@@ -53,7 +50,6 @@ AWS_CACHE_DIRECTORY = os.path.join(AWS_DIRECTORY, 'cli/cache/')
 AWSUME_PLUGIN_DIRECTORY = os.path.join(AWS_DIRECTORY, 'awsumePlugins/')
 AWSUME_PLUGIN_CACHE_FILE = os.path.join(AWSUME_PLUGIN_DIRECTORY, '_plugins.json')
 AWSUME_OPTIONS_FILE = os.path.join(AWS_DIRECTORY, 'awsume.json')
-# AWSUME_PLUGIN_DIRECTORY = './examplePlugin/'
 
 # AWSume options
 AWSUME_OPTIONS = {}
@@ -1255,7 +1251,7 @@ def delete_plugin(plugin_name):
     plugin_files = [item for item in directory if plugin_name in item]
     safe_print('All plugin files will be deleted, are you sure you want to delete the plugin: [' + plugin_name + ']', None, Fore.YELLOW)
     safe_print('\n'.join(plugin_files), None, Fore.YELLOW)
-    safe_print('(y/N)? ', '', Fore.RED)
+    safe_print('(y/N)? ', '', Fore.YELLOW)
     choice = get_input()
     if not choice.startswith('y') and not choice.startswith('Y'):
         return
@@ -1334,11 +1330,22 @@ def create_plugin_manager(plugin_directory):
     """Create the plugin manager, set the location to look for the plugins, and collect them."""
     plugin_manager = PluginManager.PluginManager()
     plugin_manager.setPluginPlaces([plugin_directory])
-    try:
-        plugin_manager.collectPlugins()
-    except Exception as exception:
-        safe_print('AWSume error: Unable to collect plugins: ' + str(exception), None, Fore.RED)
-        return None
+
+    # hide any output from stderr while loading the plugins
+    sys.stderr = open(os.devnull, 'w')
+    plugin_manager.locatePlugins()
+    processed_plugins = plugin_manager.loadPlugins()
+    sys.stderr = sys.__stderr__
+
+    # check for any errors while loading the plugins
+    for plugin_info in processed_plugins:
+        if plugin_info.error:
+            __, err2, __ = plugin_info.error
+            message = str(err2)
+            if type(err2) == ModuleNotFoundError:
+                message = 'Module "' + err2.name + '" not found\n  try running "pip install ' + err2.name + '"'
+            safe_print('Unable to load plugin [' + plugin_info.name + ']: ' + message)
+
     return plugin_manager
 
 def register_plugins(app, manager):
