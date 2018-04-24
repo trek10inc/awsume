@@ -1500,13 +1500,13 @@ class AwsumeApp(object):
         ----------
         - plugin_manager - the main plugin manager
         """
-        self.load_options(AWSUME_OPTIONS_FILE)
         for directory in [AWS_DIRECTORY, AWSUME_PLUGIN_DIRECTORY]:
             if not os.path.exists(directory):
                 os.makedirs(directory)
         for filename in [AWS_CREDENTIALS_FILE, AWS_CONFIG_FILE]:
             if not os.path.isfile(filename):
                 open(filename, 'a').close()
+        self.load_options(AWSUME_OPTIONS_FILE)
         self.plugin_manager = plugin_manager
         for function_type in self.validFunctions:
             self.awsumeFunctions[function_type] = []
