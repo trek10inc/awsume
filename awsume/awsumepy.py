@@ -650,10 +650,13 @@ def safe_print(text, end=None, color=Fore.RESET, style=Style.RESET_ALL): # pragm
     - color - the colorama color to use when printing
     - style - the style to use when printing
     """
+    old_stderr = sys.stderr
+    sys.stderr = sys.__stderr__
     if not AWSUME_OPTIONS.get('colors') or os.name == 'nt':
         print(text, file=sys.stderr, end=end)
     else:
         print(style + color + text + Style.RESET_ALL, file=sys.stderr, end=end)
+    sys.stderr = old_stderr
 
 def read_mfa():
     """Read mfa from the command line.
