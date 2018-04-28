@@ -44,8 +44,7 @@ class CustomInstall(install):
         If pyenv is being used, return an alias to the current python installation's awsume."""
         awsume_alias = 'alias awsume=". awsume"'
         if find_executable('pyenv'):
-            pyenv_version = os.popen('pyenv version').read().split('(')[0].strip()
-            awsume_alias = 'alias awsume=". ' + os.popen('pyenv root').read().replace('\n', '') + '/versions/' + pyenv_version + '/bin/awsume"'
+            awsume_alias = 'alias awsume=". \$(pyenv which awsume)"'
         return awsume_alias
 
     def install_alias(self, file_path, alias):
