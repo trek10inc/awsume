@@ -1,6 +1,6 @@
 {
   "name": "awsume",
-  "version": "3.2.7",
+  "version": "3.2.8",
   "description": "Awsume - A cli that makes using AWS IAM credentials easy",
   "author": {
     "name":"Trek10, Inc",
