@@ -41,6 +41,36 @@ elif [ "$AWSUME_FLAG" = "Auto" ]; then
     #run the background autoawsume process
     autoawsume & disown
 
+#user sent the unset variables flag
+elif [ "$AWSUME_FLAG" = "Unset" ]; then
+    unset AWS_PROFILE
+    unset AWS_DEFAULT_PROFILE
+    unset AWS_SECRET_ACCESS_KEY
+    unset AWS_SESSION_TOKEN
+    unset AWS_SECURITY_TOKEN
+    unset AWS_ACCESS_KEY_ID
+    unset AWS_REGION
+    unset AWS_DEFAULT_REGION
+    unset AWSUME_PROFILE
+
+    #show the commands to unset these environment variables
+    for AWSUME_var in "$@"
+    do
+        #show commands
+        if [[ "$AWSUME_var" == "-s"* ]]; then
+            echo unset AWS_PROFILE
+            echo unset AWS_DEFAULT_PROFILE
+            echo unset AWS_SECRET_ACCESS_KEY
+            echo unset AWS_SESSION_TOKEN
+            echo unset AWS_SECURITY_TOKEN
+            echo unset AWS_ACCESS_KEY_ID
+            echo unset AWS_REGION
+            echo unset AWS_DEFAULT_REGION
+            echo unset AWSUME_PROFILE
+        fi
+    done
+    return
+
 #user sent the kill flag, so do no more
 elif [ "$AWSUME_FLAG" = "Kill" ]; then
     unset AWS_PROFILE

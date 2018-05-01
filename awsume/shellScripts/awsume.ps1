@@ -47,6 +47,32 @@ elseif ( $AWSUME_FLAG -eq "Auto" ) {
 }
 
 #if user sent kill flag
+elseif ( $AWSUME_FLAG -eq "Unset" ) {
+    $env:AWS_SECRET_ACCESS_KEY = ""
+    $env:AWS_SESSION_TOKEN = ""
+    $env:AWS_SECURITY_TOKEN = ""
+    $env:AWS_ACCESS_KEY_ID = ""
+    $env:AWS_REGION = ""
+    $env:AWS_DEFAULT_REGION = ""
+    $env:AWS_PROFILE = ""
+    $env:AWS_DEFAULT_PROFILE = ""
+    $env:AWSUME_PROFILE = ""
+
+    #show the commands to unset these environment variables
+    if ($args -like "-s") {
+        Write-Host "`$env:AWS_SECRET_ACCESS_KEY = `"`""
+        Write-Host "`$env:AWS_SESSION_TOKEN = `"`""
+        Write-Host "`$env:AWS_SECURITY_TOKEN = `"`""
+        Write-Host "`$env:AWS_ACCESS_KEY_ID = `"`""
+        Write-Host "`$env:AWS_REGION = `"`""
+        Write-Host "`$env:AWS_DEFAULT_REGION = `"`""
+        Write-Host "`$env:AWS_PROFILE = `"`""
+        Write-Host "`$env:AWS_DEFAULT_PROFILE = `"`""
+        Write-Host "`$env:AWSUME_PROFILE = `"`""
+    }
+    exit
+}
+#if user sent kill flag
 elseif ( $AWSUME_FLAG -eq "Kill" ) {
     $env:AWS_SECRET_ACCESS_KEY = ""
     $env:AWS_SESSION_TOKEN = ""
