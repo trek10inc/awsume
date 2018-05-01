@@ -124,6 +124,11 @@ def add_arguments(argument_parser):
                                  dest='force_refresh',
                                  default=False,
                                  help='Force refresh credentials')
+    argument_parser.add_argument('-u', '--unset',
+                                 action='store_true',
+                                 dest='unset_variables',
+                                 default=False,
+                                 help='Unset awsume\'s environment variables')
     argument_parser.add_argument('-l', '--list',
                                  action='store_true',
                                  default=False,
@@ -778,6 +783,12 @@ def pre_awsume(app, args):
 
     if args.config:
         app.set_option(AWSUME_OPTIONS_FILE, args.config[0], args.config[1])
+        exit(0)
+
+    if args.unset_variables:
+        LOG.debug('unsetting environment variables')
+        app.set_export_data({'AWSUME_FLAG' : 'Unset', 'AWSUME_LIST' : []})
+        app.export_data()
         exit(0)
 
     if args.kill:
