@@ -117,6 +117,7 @@ elif [ "$AWSUME_FLAG" = "Awsume" ]; then
     fi
 
     export AWSUME_PROFILE=$AWSUME_5
+    export AWS_PROFILE=$AWSUME_5
 
     #if enabled, show the exact commands to use in order to assume the role we just assumed
     for AWSUME_var in "$@"
