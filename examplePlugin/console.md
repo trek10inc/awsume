@@ -17,7 +17,7 @@ Note: the [security] specifier is not required if you have the latest version of
 To install this plugin, using AWSume's latest `--install-plugin` feature, run:
 
 ``` bash
-awsume --install-plugin https://raw.githubusercontent.com/trek10inc/awsume/master/examplePlugin/awsumeConsole.py https://raw.githubusercontent.com/trek10inc/awsume/master/examplePlugin/awsumeConsole.yapsy-plugin
+awsume --install-plugin https://raw.githubusercontent.com/trek10inc/awsume/master/examplePlugin/console.py https://raw.githubusercontent.com/trek10inc/awsume/master/examplePlugin/console.yapsy-plugin
 ```
 
 ## Use
