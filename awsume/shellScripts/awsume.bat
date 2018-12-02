@@ -2,8 +2,8 @@
 
 set SHOW=
 
-awsumepy %* > ./temp.txt
-set /p AWSUME_TEXT=<./temp.txt
+awsumepy %* > %HOME%/.aws/awsume-temp.txt
+set /p AWSUME_TEXT=<%HOME%/.aws/awsume-temp.txt
 
 FOR %%A IN (%*) DO (
     IF "%%A"=="-s" (set "SHOW=y")
@@ -69,7 +69,7 @@ for /f "tokens=1,2,3,4,5,6 delims= " %%a in ("%AWSUME_TEXT%") do (
         set AWS_PROFILE=
         set AWS_DEFAULT_PROFILE=
         set AWSUME_PROFILE=
-        taskkill /FI "WindowTitle eq autoawsume" > null 2>&1
+        taskkill /FI "WindowTitle eq autoawsume" > %HOME%/.aws/awsume-null 2>&1
     )
     if "%%a" == "Stop" (
         if "auto-refresh-%%b" == "%AWS_PROFILE%" (
@@ -120,4 +120,3 @@ for /f "tokens=1,2,3,4,5,6 delims= " %%a in ("%AWSUME_TEXT%") do (
         )
     )
 )
-
