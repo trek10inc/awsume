@@ -1,10 +1,10 @@
 {
-  "name": "awsume",
+  "name": "awsume-cygwin",
   "version": "3.2.8",
-  "description": "Awsume - A cli that makes using AWS IAM credentials easy",
+  "description": "Awsume-Cygwin - same as Awsume, minus psutil dependency, which means it can run on Cygwin",
   "author": {
-    "name":"Trek10, Inc",
-    "email" : "package-management@trek10.com"
+    "name":"Henrique Rodrigues",
+    "email": "henrique.rodrigues@ist.utl.pt"
   },
   "scripts": {
     "test": "pipenv run pytest --cov --cov-report xml:cov.xml",
@@ -12,8 +12,8 @@
     "tag": "git tag $npm_package_version && git push --tags",
     "upload-prod": "python setup.py sdist upload -r pypi",
     "upload-test": "python setup.py sdist upload -r pypitest",
-    "download-test": "pip install -i https://test.pypi.org/simple/ awsume"
+    "download-test": "pip install -i https://test.pypi.org/simple/ awsume-cygwin"
   },
   "license": "MIT",
-  "homepage": "https://github.com/trek10inc/awsume"
+  "homepage": "https://github.com/Sodki/awsume-cygwin"
 }

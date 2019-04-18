@@ -13,7 +13,6 @@ from datetime import datetime
 from builtins import input as read_input
 import boto3
 import botocore
-import psutil
 import dateutil
 import pkg_resources
 import six
@@ -1110,14 +1109,12 @@ def kill_all_auto_processes():
     """Kill all running autoawsume processes."""
     LOG.info('Killing all autoawsume processes')
 
-    for proc in psutil.process_iter():
-        try:
-            for command_string in proc.cmdline():
-                if 'autoawsume' in command_string:
-                    LOG.debug('Found an autoawsume process, killing it')
-                    proc.kill()
-        except Exception:
-            pass
+    try:
+        for proc in os.popen('pgrep -f autoawsume').read().splitlines():
+            LOG.debug('Found an autoawsume process, killing it')
+            os.kill(int(proc), signal.SIGKILL)
+    except Exception:
+        pass
 
 def kill(args, app):
     """Handle the kill flag.
