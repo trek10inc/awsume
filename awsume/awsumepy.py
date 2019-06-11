@@ -258,6 +258,8 @@ def merge_role_and_source_profile(role_profile, source_profile):
     if valid_profile(source_profile):
         role_profile['aws_access_key_id'] = source_profile['aws_access_key_id']
         role_profile['aws_secret_access_key'] = source_profile['aws_secret_access_key']
+        if 'aws_session_token' in source_profile:
+            role_profile['aws_session_token'] = source_profile['aws_session_token']
         if 'mfa_serial' not in role_profile and 'mfa_serial' in source_profile:
             role_profile['mfa_serial'] = source_profile['mfa_serial']
         if 'region' not in role_profile and 'region' in source_profile:
@@ -860,6 +862,16 @@ def get_user_session(app, args, profiles, cache_path, user_session):
         credentials = {
             'AccessKeyId' : profile.get('aws_access_key_id'),
             'SecretAccessKey' : profile.get('aws_secret_access_key'),
+            'region' : profile.get('region')
+        }
+        return credentials
+
+    if profile.get('aws_session_token'):
+        LOG.debug('Profile already has session token, using it')
+        credentials = {
+            'AccessKeyId' : profile.get('aws_access_key_id'),
+            'SecretAccessKey' : profile.get('aws_secret_access_key'),
+            'SessionToken' : profile.get('aws_session_token'),
             'region' : profile.get('region')
         }
         return credentials
