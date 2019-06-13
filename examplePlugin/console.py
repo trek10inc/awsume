@@ -4,13 +4,14 @@ import os
 import json
 import webbrowser
 import urllib
-import requests
 
 from yapsy import IPlugin
 from awsume import awsumepy
 
 # Python 3 compatibility (python 3 has urlencode in parse sub-module)
 URLENCODE = getattr(urllib, 'parse', urllib).urlencode
+# Python 3 compatibility (python 3 has urlopen in parse sub-module)
+URLOPEN = getattr(urllib, 'request', urllib).urlopen
 
 class AwsumeConsole(IPlugin.IPlugin):
     """The AWS Management Console plugin. Opens an assumed-role to the AWS management console."""
@@ -112,13 +113,18 @@ class AwsumeConsole(IPlugin.IPlugin):
             'Action': 'getSigninToken',
             'Session': temp_credentials,
         }
-        request_url = 'https://signin.aws.amazon.com/federation'
-        response = requests.get(request_url, params=params)
+        request_url = 'https://signin.aws.amazon.com/federation?'
+        response = URLOPEN(request_url + URLENCODE(params))
         return response
 
     def get_signin_token(self, aws_response):
         """Get the signin token from the aws federation response."""
-        return json.loads(aws_response.text)['SigninToken']
+        raw = aws_response.read()
+        try:
+            return json.loads(raw)['SigninToken']
+        except getattr(json.decoder, 'JSONDecoderError', ValueError):
+            # catches python3-related byte encoding
+            return json.loads(raw.decode())['SigninToken']
 
     def get_console_url(self, aws_signin_token, aws_region):
         """Get the url to open the browser to."""
