@@ -945,7 +945,8 @@ def get_role_session(app, args, profiles, user_session, role_session):
                                    user_session['SecretAccessKey'],
                                    user_session.get('SessionToken'))
 
-    optional_args = {k: v for k, v in {"ExternalId": profile.get('external_id')}.items() if v != None}
+    optional_args = {"ExternalId": profile.get('external_id')}
+    other_available_args = {k: v for k, v in optional_args.items() if v != None}  # remove any args that aren't set
 
     try:
         if args.target_role_duration:
@@ -955,18 +956,18 @@ def get_role_session(app, args, profiles, user_session, role_session):
                                                   DurationSeconds=args.target_role_duration,
                                                   SerialNumber=profile.get('mfa_serial'),
                                                   TokenCode=read_mfa(),
-                                                  **optional_args)
+                                                  **other_available_args)
             else:
                 response = sts_client.assume_role(RoleArn=profile['role_arn'],
                                                   RoleSessionName=role_session_name,
                                                   DurationSeconds=args.target_role_duration,
-                                                  **optional_args)
+                                                  **other_available_args)
             fix_session_credentials(response['Credentials'], profiles, args)
             write_aws_cache(AWS_CACHE_DIRECTORY, cache_file_name, response['Credentials'])
         else:
             response = sts_client.assume_role(RoleArn=profile['role_arn'],
                                               RoleSessionName=role_session_name,
-                                              **optional_args)
+                                              **other_available_args)
             fix_session_credentials(response['Credentials'], profiles, args)
         LOG.debug(response['Credentials'])
         return response['Credentials']
