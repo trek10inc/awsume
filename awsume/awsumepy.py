@@ -260,6 +260,8 @@ def merge_role_and_source_profile(role_profile, source_profile):
         role_profile['aws_secret_access_key'] = source_profile['aws_secret_access_key']
         if 'aws_session_token' in source_profile:
             role_profile['aws_session_token'] = source_profile['aws_session_token']
+        if 'external_id' in source_profile:
+            role_profile['external_id'] = source_profile['external_id']
         if 'mfa_serial' not in role_profile and 'mfa_serial' in source_profile:
             role_profile['mfa_serial'] = source_profile['mfa_serial']
         if 'region' not in role_profile and 'region' in source_profile:
@@ -943,6 +945,8 @@ def get_role_session(app, args, profiles, user_session, role_session):
                                    user_session['SecretAccessKey'],
                                    user_session.get('SessionToken'))
 
+    optional_args = {k: v for k, v in {"ExternalId": profile.get('external_id')}.items() if v != None}
+
     try:
         if args.target_role_duration:
             if requires_mfa(profile):
@@ -950,16 +954,19 @@ def get_role_session(app, args, profiles, user_session, role_session):
                                                   RoleSessionName=role_session_name,
                                                   DurationSeconds=args.target_role_duration,
                                                   SerialNumber=profile.get('mfa_serial'),
-                                                  TokenCode=read_mfa())
+                                                  TokenCode=read_mfa(),
+                                                  **optional_args)
             else:
                 response = sts_client.assume_role(RoleArn=profile['role_arn'],
                                                   RoleSessionName=role_session_name,
-                                                  DurationSeconds=args.target_role_duration)
+                                                  DurationSeconds=args.target_role_duration,
+                                                  **optional_args)
             fix_session_credentials(response['Credentials'], profiles, args)
             write_aws_cache(AWS_CACHE_DIRECTORY, cache_file_name, response['Credentials'])
         else:
             response = sts_client.assume_role(RoleArn=profile['role_arn'],
-                                              RoleSessionName=role_session_name)
+                                              RoleSessionName=role_session_name,
+                                              **optional_args)
             fix_session_credentials(response['Credentials'], profiles, args)
         LOG.debug(response['Credentials'])
         return response['Credentials']
