@@ -16,3 +16,4 @@ yapsy = "*"
 future = "*"
 pylint = "*"
 colorama = "*"
+awsume = {editable = true,path = "."}
