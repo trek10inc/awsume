@@ -859,14 +859,7 @@ def get_user_session(app, args, profiles, cache_path, user_session):
     """
     LOG.info('Getting user session credentials')
     profile = profiles[args.target_profile_name]
-    if not is_role(profile) and not requires_mfa(profile):
-        LOG.debug('Profile is a user that does not require MFA')
-        credentials = {
-            'AccessKeyId' : profile.get('aws_access_key_id'),
-            'SecretAccessKey' : profile.get('aws_secret_access_key'),
-            'region' : profile.get('region')
-        }
-        return credentials
+
 
     if profile.get('aws_session_token'):
         LOG.debug('Profile already has session token, using it')
@@ -874,6 +867,15 @@ def get_user_session(app, args, profiles, cache_path, user_session):
             'AccessKeyId' : profile.get('aws_access_key_id'),
             'SecretAccessKey' : profile.get('aws_secret_access_key'),
             'SessionToken' : profile.get('aws_session_token'),
+            'region' : profile.get('region')
+        }
+        return credentials
+
+    if not is_role(profile) and not requires_mfa(profile):
+        LOG.debug('Profile is a user that does not require MFA')
+        credentials = {
+            'AccessKeyId' : profile.get('aws_access_key_id'),
+            'SecretAccessKey' : profile.get('aws_secret_access_key'),
             'region' : profile.get('region')
         }
         return credentials
