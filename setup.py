@@ -192,6 +192,7 @@ setup(
         'awsume/shellScripts/awsume',
         'awsume/shellScripts/awsume.ps1',
         'awsume/shellScripts/awsume.bat',
+        'awsume/shellScripts/awsume.fish',
     ],
     entry_points={
         "console_scripts": [
