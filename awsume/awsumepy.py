@@ -187,6 +187,9 @@ def add_arguments(argument_parser):
                                  dest='role_duration',
                                  metavar=('duration_seconds'),
                                  help='The duration to use when calling assume-role')
+    argument_parser.add_argument('--mfa-token',
+                                 dest='mfa_token',
+                                 help='MFA token to use. Will prompt if not given.')
     argument_parser.add_argument('--info',
                                  action='store_true',
                                  dest='info',
@@ -667,16 +670,25 @@ def safe_print(text, end=None, color=Fore.RESET, style=Style.RESET_ALL): # pragm
         print(style + color + text + Style.RESET_ALL, file=sys.stderr, end=end)
     sys.stderr = old_stderr
 
-def read_mfa():
-    """Read mfa from the command line.
-    If token is invalid, retry.
+def get_mfa(mfa_token_cli=None):
+    """Get the MFA token.
+
+    This is either read from the CLI args or prompted interactively.
+    If the token is invalid, retry.
 
     Returns
     -------
-    The read mfa token.
+    The mfa token.
     """
-    safe_print('Enter MFA token: ', '', Fore.LIGHTCYAN_EX)
+    if mfa_token_cli is not None:
+        safe_print('Using MFA token from cli args.', color=Fore.GREEN)
+        if valid_mfa_token(mfa_token_cli):
+            return mfa_token_cli
+        else:
+            safe_print('Given MFA code "{}" is invalid'.format(mfa_token_cli), color=Fore.RED)
+
     while True:
+        safe_print('Enter MFA token: ', '', Fore.LIGHTCYAN_EX)
         mfa_token = get_input()
         if valid_mfa_token(mfa_token):
             return mfa_token
@@ -891,7 +903,7 @@ def get_user_session(app, args, profiles, cache_path, user_session):
     try:
         if requires_mfa(profile):
             LOG.debug('profile requires mfa')
-            mfa_token = read_mfa()
+            mfa_token = get_mfa(args.mfa_token)
             response = sts_client.get_session_token(SerialNumber=profile['mfa_serial'],
                                                     TokenCode=mfa_token)
             fix_session_credentials(response['Credentials'], profiles, args)
@@ -957,7 +969,7 @@ def get_role_session(app, args, profiles, user_session, role_session):
                                                   RoleSessionName=role_session_name,
                                                   DurationSeconds=args.target_role_duration,
                                                   SerialNumber=profile.get('mfa_serial'),
-                                                  TokenCode=read_mfa(),
+                                                  TokenCode=get_mfa(args.mfa_token),
                                                   **other_available_args)
             else:
                 response = sts_client.assume_role(RoleArn=profile['role_arn'],
