@@ -258,6 +258,10 @@ def merge_role_and_source_profile(role_profile, source_profile):
     if valid_profile(source_profile):
         role_profile['aws_access_key_id'] = source_profile['aws_access_key_id']
         role_profile['aws_secret_access_key'] = source_profile['aws_secret_access_key']
+        if 'aws_session_token' in source_profile:
+            role_profile['aws_session_token'] = source_profile['aws_session_token']
+        if 'external_id' in source_profile:
+            role_profile['external_id'] = source_profile['external_id']
         if 'mfa_serial' not in role_profile and 'mfa_serial' in source_profile:
             role_profile['mfa_serial'] = source_profile['mfa_serial']
         if 'region' not in role_profile and 'region' in source_profile:
@@ -864,6 +868,16 @@ def get_user_session(app, args, profiles, cache_path, user_session):
         }
         return credentials
 
+    if profile.get('aws_session_token'):
+        LOG.debug('Profile already has session token, using it')
+        credentials = {
+            'AccessKeyId' : profile.get('aws_access_key_id'),
+            'SecretAccessKey' : profile.get('aws_secret_access_key'),
+            'SessionToken' : profile.get('aws_session_token'),
+            'region' : profile.get('region')
+        }
+        return credentials
+
     cache_file_name = 'awsume-credentials-'
     cache_file_name += args.target_profile_name if not is_role(profile) else profile['source_profile']
     cache_session = read_aws_cache(cache_path, cache_file_name)
@@ -931,6 +945,9 @@ def get_role_session(app, args, profiles, user_session, role_session):
                                    user_session['SecretAccessKey'],
                                    user_session.get('SessionToken'))
 
+    optional_args = {"ExternalId": profile.get('external_id')}
+    other_available_args = {k: v for k, v in optional_args.items() if v != None}  # remove any args that aren't set
+
     try:
         if args.target_role_duration:
             if requires_mfa(profile):
@@ -938,16 +955,19 @@ def get_role_session(app, args, profiles, user_session, role_session):
                                                   RoleSessionName=role_session_name,
                                                   DurationSeconds=args.target_role_duration,
                                                   SerialNumber=profile.get('mfa_serial'),
-                                                  TokenCode=read_mfa())
+                                                  TokenCode=read_mfa(),
+                                                  **other_available_args)
             else:
                 response = sts_client.assume_role(RoleArn=profile['role_arn'],
                                                   RoleSessionName=role_session_name,
-                                                  DurationSeconds=args.target_role_duration)
+                                                  DurationSeconds=args.target_role_duration,
+                                                  **other_available_args)
             fix_session_credentials(response['Credentials'], profiles, args)
             write_aws_cache(AWS_CACHE_DIRECTORY, cache_file_name, response['Credentials'])
         else:
             response = sts_client.assume_role(RoleArn=profile['role_arn'],
-                                              RoleSessionName=role_session_name)
+                                              RoleSessionName=role_session_name,
+                                              **other_available_args)
             fix_session_credentials(response['Credentials'], profiles, args)
         LOG.debug(response['Credentials'])
         return response['Credentials']
