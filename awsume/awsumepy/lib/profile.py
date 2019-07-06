@@ -97,13 +97,13 @@ def get_mfa_serial(profiles: dict, target_profile_name: str) -> dict:
 
 def get_mfa_token() -> str:
     token_pattern = re.compile('^[0-9]{6}$')
-    safe_print(colorama.Fore.CYAN + 'Enter MFA token: ', end='')
+    safe_print('Enter MFA token: ', colorama.Fore.CYAN, end='')
     while True:
         mfa_token = input()
         if token_pattern.match(mfa_token):
             return mfa_token
         else:
-            safe_print(colorama.Fore.CYAN + 'Please enter a valid MFA token: ', end='')
+            safe_print('Please enter a valid MFA token: ', colorama.Fore.CYAN, end='')
 
 
 def aggregate_profiles(result: list) -> dict:

@@ -178,7 +178,7 @@ def add_arguments(config: dict, parser: argparse.ArgumentParser):
 @hookimpl(tryfirst=True)
 def post_add_arguments(config: dict, arguments: argparse.Namespace, parser: argparse.ArgumentParser):
     if arguments.role_arn and arguments.auto_refresh:
-        safe_print(colorama.Fore.RED + 'Cannot use autoawsume with given role_arn')
+        safe_print('Cannot use autoawsume with given role_arn', colorama.Fore.RED)
         exit(1)
     if arguments.version:
         logger.debug('Logging version')

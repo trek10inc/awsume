@@ -34,7 +34,7 @@ def write_config(config: dict):
     try:
         json.dump(config, open(str(constants.AWSUME_CONFIG), 'w'), indent=2)
     except Exception as e:
-        safe_print(colorama.Fore.RED + 'Unable to write cache: {}'.format(e))
+        safe_print('Unable to write cache: {}'.format(e), colorama.Fore.RED)
         pass
 
 
@@ -47,8 +47,8 @@ def update_config(operations: list):
     if operations[0].lower() in ['reset', 'clear']:
         if operations[1] in defaults:
             config[operations[1]] = defaults[operations[1]]
-            safe_print(colorama.Fore.YELLOW + 'Reset {} to {}'.format(operations[1], defaults[operations[1]]))
+            safe_print('Reset {} to {}'.format(operations[1], defaults[operations[1]]), colorama.Fore.YELLOW)
         else:
             pass
-            safe_print(colorama.Fore.YELLOW + 'Key not a valid default: {}'.format(operations[1]))
+            safe_print('Key not a valid default: {}'.format(operations[1]), colorama.Fore.YELLOW)
     write_config(config)
