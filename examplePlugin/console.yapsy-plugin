@@ -1,9 +1,0 @@
-[Core]
-Name = awsumeConsolePlugin
-Module = console
-
-[Documentation]
-Author = Trek10, Inc.
-Version = 1.0
-Website = https://www.trek10.com/
-Description = Open the AWS console in a browser after assuming the role

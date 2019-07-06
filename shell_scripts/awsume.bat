@@ -2,8 +2,8 @@
 
 set SHOW=
 
-awsumepy %* > %HOME%/.aws/awsume-temp.txt
-set /p AWSUME_TEXT=<%HOME%/.aws/awsume-temp.txt
+awsumepy %* > ./temp.txt
+set /p AWSUME_TEXT=<./temp.txt
 
 FOR %%A IN (%*) DO (
     IF "%%A"=="-s" (set "SHOW=y")
@@ -28,15 +28,17 @@ for /f "tokens=1,2,3,4,5,6 delims= " %%a in ("%AWSUME_TEXT%") do (
             set AWS_REGION=%%c
             set AWS_DEFAULT_REGION=%%c)
 
-        set AWSUME_PROFILE=%%d
+        if "%%d" NEQ "None" (
+            set AWSUME_PROFILE=%%d)
+
 
         start /min "autoawsume" autoawsume
     )
     if "%%a" == "Version" (
-        awsumepy -v
+        awsumepy %*
     )
     if "%%a" == "Listing..." (
-        awsumepy -l
+        awsumepy %*
     )
     if "%%a" == "Unset" (
         set AWS_SECRET_ACCESS_KEY=
@@ -69,7 +71,7 @@ for /f "tokens=1,2,3,4,5,6 delims= " %%a in ("%AWSUME_TEXT%") do (
         set AWS_PROFILE=
         set AWS_DEFAULT_PROFILE=
         set AWSUME_PROFILE=
-        taskkill /FI "WindowTitle eq autoawsume" > %HOME%/.aws/awsume-null 2>&1
+        taskkill /FI "WindowTitle eq autoawsume" > null 2>&1
     )
     if "%%a" == "Stop" (
         if "auto-refresh-%%b" == "%AWS_PROFILE%" (
@@ -100,7 +102,8 @@ for /f "tokens=1,2,3,4,5,6 delims= " %%a in ("%AWSUME_TEXT%") do (
             set AWS_REGION=%%e
             set AWS_DEFAULT_REGION=%%e)
 
-        set AWSUME_PROFILE=%%f
+        if "%%f" NEQ "None" (
+            set AWSUME_PROFILE=%%f)
 
         IF defined SHOW (
             for /f "tokens=1,2,3,4,5 delims= " %%a in ("%AWSUME_TEXT%") do (
@@ -115,8 +118,10 @@ for /f "tokens=1,2,3,4,5,6 delims= " %%a in ("%AWSUME_TEXT%") do (
                     echo set AWS_REGION=%%e
                     echo set AWS_DEFAULT_REGION=%%e)
 
-                echo set AWSUME_PROFILE=%%f
+                if "%%f" NEQ "None" (
+                    echo set AWSUME_PROFILE=%%f)
             )
         )
     )
 )
+
