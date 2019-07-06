@@ -42,7 +42,7 @@ def main(shell: str, autocomplete_file: str):
     autocomplete_script = SCRIPTS[shell]
 
     basedir = os.path.dirname(autocomplete_file)
-    if not os.path.exists(basedir):
+    if basedir and not os.path.exists(basedir):
         os.makedirs(basedir)
     open(autocomplete_file, 'w').close()
 
