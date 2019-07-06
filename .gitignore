@@ -1,3 +1,6 @@
+# misc
+*.local
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
@@ -109,7 +112,7 @@ Pipfile.lock
 # mypy
 .mypy_cache/
 
-# vscode 
+# vscode
 .vscode
 
 # sandbox files

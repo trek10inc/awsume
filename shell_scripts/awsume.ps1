@@ -7,15 +7,15 @@ $(awsumepy $args) -split '\s+'
 
 #if incorrect flag/help
 if ( $AWSUME_FLAG -eq "usage:" ) {
-    $(awsumepy -h)
+    $(awsumepy $args)
 }
 #if version flag
 elseif ( $AWSUME_FLAG -eq "Version" ) {
-    $(awsumepy -v)
+    $(awsumepy $args)
 }
 #if -l flag passed
 elseif ( $AWSUME_FLAG -eq "Listing..." ) {
-    $(awsumepy -l)
+    $(awsumepy $args)
 }
 #set up auto-refreshing role
 elseif ( $AWSUME_FLAG -eq "Auto" ) {
@@ -40,7 +40,9 @@ elseif ( $AWSUME_FLAG -eq "Auto" ) {
         $env:AWS_DEFAULT_REGION = $AWSUME_2
     }
 
-    $env:AWSUME_PROFILE = $AWSUME_3
+    if ( $AWSUME_3 -ne "None" ) {
+        $env:AWSUME_PROFILE = $AWSUME_3
+    }
 
     #run the background autoawsume process
     Start-Process powershell -ArgumentList "autoawsume" -WindowStyle hidden
@@ -119,23 +121,27 @@ elseif ( $AWSUME_FLAG -eq "Awsume") {
         $env:AWS_DEFAULT_REGION = $AWSUME_4
     }
 
-    $env:AWSUME_PROFILE = $AWSUME_5
+    if ( $AWSUME_5 -ne "None" ) {
+        $env:AWSUME_PROFILE = $AWSUME_5
+    }
 
     #if enabled, show the exact commands to use in order to assume the role we just assumed
     if ($args -like "-s") {
         Write-Host "`$env:AWS_ACCESS_KEY_ID =" $env:AWS_ACCESS_KEY_ID
         Write-Host "`$env:AWS_SECRET_ACCESS_KEY =" $env:AWS_SECRET_ACCESS_KEY
-        
+
         if ( $AWSUME_3 -ne "None" ) {
             Write-Host "`$env:AWS_SESSION_TOKEN =" $env:AWS_SESSION_TOKEN
             Write-Host "`$env:AWS_SECURITY_TOKEN =" $env:AWS_SECURITY_TOKEN
         }
-            
+
         if ( $AWSUME_4 -ne "None" ) {
             Write-Host "`$env:AWS_REGION =" $env:AWS_REGION
             Write-Host "`$env:AWS_DEFAULT_REGION =" $env:AWS_DEFAULT_REGION
         }
 
-        Write-Host "`$env:AWSUME_PROFILE =" $env:AWSUME_PROFILE
+        if ( $AWSUME_5 -ne "None" ) {
+            Write-Host "`$env:AWSUME_PROFILE =" $env:AWSUME_PROFILE
+        }
     }
 }

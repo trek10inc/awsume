@@ -1,6 +1,0 @@
-[run]
-include = 
-  awsume/autoawsume.py
-  awsume/awsumepy.py
-[report]
-show_missing = True

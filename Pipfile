@@ -1,20 +1,22 @@
 [[source]]
-url = "https://pypi.python.org/simple"
-verify_ssl = true
 name = "pypi"
+url = "https://pypi.org/simple"
+verify_ssl = true
 
 [dev-packages]
 twine = "*"
+pylint = "*"
+botostubs = "*"
 
 [packages]
-pytest = "*"
-pytest-cov = "*"
-mock = "*"
-python-dateutil = "*"
-"boto3" = "*"
-psutil = "*"
-yapsy = "*"
-future = "*"
-pylint = "*"
-colorama = "*"
+pluggy = "*"
+boto3 = "*"
 awsume = {editable = true,path = "."}
+psutil = "*"
+colorama = "*"
+
+[scripts]
+test = "pytest"
+build = "python setup.py sdist"
+deploy-test = "twine upload -r test dist/*"
+deploy-pypi = "twine upload -r pypi dist/*"

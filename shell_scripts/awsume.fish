@@ -1,7 +1,7 @@
 #!/bin/fish
 #AWSume - a bash script shell wrapper to awsumepy, a cli that makes using AWS IAM credentials easy
 
-#AWSUME_FLAG - what awsumepy told the shell to 
+#AWSUME_FLAG - what awsumepy told the shell to
 #AWSUME_n - the data from awsumepy
 set -x AWSUME_OUTPUT (awsumepy $argv | tr ' ' '\n')
 
@@ -43,8 +43,9 @@ else if [ "$AWSUME_FLAG" = "Auto" ]
         export AWS_REGION=$AWSUME_2
         export AWS_DEFAULT_REGION=$AWSUME_2
     end
-
-    export AWSUME_PROFILE=$AWSUME_3
+    if [ ! "$AWSUME_3" = "None" ]
+        export AWSUME_PROFILE=$AWSUME_3
+    end
     #run the background autoawsume process
     autoawsume & disown
 
@@ -122,11 +123,14 @@ else if [ "$AWSUME_FLAG" = "Awsume" ]
         export AWS_DEFAULT_REGION=$AWSUME_4
     end
 
-    export AWSUME_PROFILE=$AWSUME_5
+    if [ ! "$AWSUME_5" = "None" ]
+        export AWSUME_PROFILE=$AWSUME_5
+    end
+
 
     #if enabled, show the exact commands to use in order to assume the role we just assumed
     for AWSUME_var in $argv
-    
+
         #show commands
         if [ "$AWSUME_var" = "-s" ]
             echo export AWS_ACCESS_KEY_ID=$AWSUME_1
@@ -142,8 +146,9 @@ else if [ "$AWSUME_FLAG" = "Awsume" ]
                 echo export AWS_DEFAULT_REGION=$AWSUME_4
             end
 
-            echo export AWSUME_PROFILE=$AWSUME_5
-
+            if [ ! "$AWSUME_5" = "None" ]
+                echo export AWSUME_PROFILE=$AWSUME_5
+            end
         end
     end
 end
