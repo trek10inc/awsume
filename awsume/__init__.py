@@ -1,4 +1,4 @@
-from . import __data__
+from awsume import __data__
 
 __VERSION__ = __data__.version
 __NAME__ = __data__.name
