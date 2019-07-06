@@ -1,6 +1,4 @@
-from . import *
 from . import __data__
-from . awsumepy import safe_print
 
 __VERSION__ = __data__.version
 __NAME__ = __data__.name

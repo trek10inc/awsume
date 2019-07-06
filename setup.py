@@ -15,7 +15,12 @@ setup(
     long_description_content_type='text/markdown',
     license=awsume.__LICENSE__,
     url=awsume.__HOMEPAGE__,
-    install_requires=[],
+    install_requires=[
+        'colorama',
+        'boto3',
+        'psutil',
+        'pluggy',
+    ],
     scripts=[
         'shell_scripts/awsume',
         'shell_scripts/awsume.ps1',
