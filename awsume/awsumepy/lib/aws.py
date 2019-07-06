@@ -54,7 +54,7 @@ def assume_role(
     except Exception as e:
         raise RoleAuthenticationError(str(e))
     logger.debug('Role credentials received')
-    safe_print(colorama.Fore.GREEN + 'Role credentials will expire {}'.format(parse_time(role_session['Expiration'])))
+    safe_print('Role credentials will expire {}'.format(parse_time(role_session['Expiration'])), colorama.Fore.GREEN)
     return role_session
 
 
@@ -63,7 +63,7 @@ def get_session_token(source_credentials: dict, region: str = 'us-east-1', mfa_s
     cache_session = cache_lib.read_aws_cache(cache_file_name)
     if cache_lib.valid_cache_session(cache_session) and not ignore_cache:
         logger.debug('Using cache session')
-        safe_print(colorama.Fore.GREEN + 'Session token will expire at {}'.format(parse_time(cache_session['Expiration'])))
+        safe_print('Session token will expire at {}'.format(parse_time(cache_session['Expiration'])), colorama.Fore.GREEN)
         return cache_session
 
     logger.debug('Getting session token')
@@ -85,7 +85,7 @@ def get_session_token(source_credentials: dict, region: str = 'us-east-1', mfa_s
     logger.debug('Session token received')
     cache_lib.write_aws_cache(cache_file_name, user_session)
     if user_session.get('Expiration'):
-        safe_print(colorama.Fore.GREEN + 'Session token will expire at {}'.format(parse_time(user_session['Expiration'])))
+        safe_print('Session token will expire at {}'.format(parse_time(user_session['Expiration'])), colorama.Fore.GREEN)
     return user_session
 
 

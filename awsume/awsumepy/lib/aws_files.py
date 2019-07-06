@@ -34,7 +34,7 @@ def add_section(name: str, section: dict, file_name: str, overwrite: bool = Fals
     config.read(file_name)
     if config.has_section(name):
         if not overwrite:
-            safe_print(colorama.Fore.RED + 'Cannot overwrite data in {}'.format(file_name))
+            safe_print('Cannot overwrite data in {}'.format(file_name), colorama.Fore.RED)
             return
         config.remove_section(name)
     config.add_section(name)

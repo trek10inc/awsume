@@ -101,22 +101,22 @@ class Awsume(object):
         try:
             result = self.plugin_manager.hook.assume_role(config=self.config, arguments=args, profiles=profiles)
         except ProfileNotFoundError as e:
-            safe_print(colorama.Fore.RED + str(e))
+            safe_print(e, colorama.Fore.RED)
             logger.debug('', exc_info=True)
             self.plugin_manager.hook.catch_profile_not_found_exception(config=self.config, arguments=args, profiles=profiles)
             exit(1)
         except InvalidProfileError as e:
-            safe_print(colorama.Fore.RED + str(e))
+            safe_print(e, colorama.Fore.RED)
             logger.debug('', exc_info=True)
             self.plugin_manager.hook.catch_invalid_profile_error(config=self.config, arguments=args, profiles=profiles)
             exit(1)
         except UserAuthenticationError as e:
-            safe_print(colorama.Fore.RED + str(e))
+            safe_print(e, colorama.Fore.RED)
             logger.debug('', exc_info=True)
             self.plugin_manager.hook.catch_user_authentication_error(config=self.config, arguments=args, profiles=profiles)
             exit(1)
         except RoleAuthenticationError as e:
-            safe_print(colorama.Fore.RED + str(e))
+            safe_print(e, colorama.Fore.RED)
             logger.debug('', exc_info=True)
             self.plugin_manager.hook.catch_role_authentication_error(config=self.config, arguments=args, profiles=profiles)
             exit(1)
