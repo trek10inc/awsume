@@ -5,8 +5,14 @@ DEFAULT_ALIAS = 'alias awsume=". awsume"'
 PYENV_ALIAS = r'alias awsume=". \$(pyenv which awsume)"'
 
 def main(shell: str, alias_file: str):
+    alias_file = str(pathlib.Path(alias_file).expanduser())
     alias = PYENV_ALIAS if find_executable('pyenv') else DEFAULT_ALIAS
-    alias_file = pathlib.Path(alias_file).expanduser()
+
+    basedir = os.path.dirname(alias_file)
+    if not os.path.exists(basedir):
+        os.makedirs(basedir)
+    open(alias_file, 'w').close()
+
     if alias in open(alias_file, 'r').read():
         print('Alias already in ' + alias_file)
     else:

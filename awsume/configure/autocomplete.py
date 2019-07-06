@@ -38,8 +38,14 @@ SCRIPTS = {
 }
 
 def main(shell: str, autocomplete_file: str):
-    autocomplete_file = pathlib.Path(autocomplete_file).expanduser()
+    autocomplete_file = str(pathlib.Path(autocomplete_file).expanduser())
     autocomplete_script = SCRIPTS[shell]
+
+    basedir = os.path.dirname(autocomplete_file)
+    if not os.path.exists(basedir):
+        os.makedirs(basedir)
+    open(autocomplete_file, 'w').close()
+
     if autocomplete_script in open(autocomplete_file, 'r').read():
         print('Autocomplete script already in ' + autocomplete_file)
     else:
