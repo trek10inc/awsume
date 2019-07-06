@@ -9,7 +9,7 @@ def main(shell: str, alias_file: str):
     alias = PYENV_ALIAS if find_executable('pyenv') else DEFAULT_ALIAS
 
     basedir = os.path.dirname(alias_file)
-    if not os.path.exists(basedir):
+    if basedir and not os.path.exists(basedir):
         os.makedirs(basedir)
     open(alias_file, 'w').close()
 
