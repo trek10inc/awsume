@@ -24,8 +24,6 @@ class Awsume(object):
         self.plugin_manager = self.get_plugin_manager()
         self.config = load_config()
         init(autoreset=True)
-        if not self.config.get('colors') == 'true':
-            deinit()
 
 
     def get_plugin_manager(self) -> pluggy.PluginManager:
