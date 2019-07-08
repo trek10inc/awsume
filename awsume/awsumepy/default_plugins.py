@@ -1,5 +1,6 @@
 import argparse
 import configparser
+import json
 import boto3
 import sys
 import colorama
@@ -22,6 +23,7 @@ from . lib import config_management as config_lib
 from . lib.exceptions import ProfileNotFoundError
 from . lib import profile as profile_lib
 from . lib import cache as cache_lib
+from . lib.autoawsume import create_autoawsume_profile
 
 
 def custom_duration_argument_type(string):
@@ -33,6 +35,7 @@ def custom_duration_argument_type(string):
 
 @hookimpl(tryfirst=True)
 def add_arguments(config: dict, parser: argparse.ArgumentParser):
+    logger.info('Adding arguments')
     parser.add_argument('-v', '--version',
         action='store_true',
         dest='version',
@@ -85,7 +88,6 @@ def add_arguments(config: dict, parser: argparse.ArgumentParser):
         dest='refresh_autocomplete',
         help='Refresh all plugin autocomplete profiles',
     )
-
     parser.add_argument('--role-arn',
         action='store',
         dest='role_arn',
@@ -129,7 +131,6 @@ def add_arguments(config: dict, parser: argparse.ArgumentParser):
         metavar='role_duration',
         help='Seconds to get role creds for',
     )
-
     assume_role_method = parser.add_mutually_exclusive_group()
     assume_role_method.add_argument('--with-saml',
         action='store_true',
@@ -141,7 +142,6 @@ def add_arguments(config: dict, parser: argparse.ArgumentParser):
         dest='with_web_identity',
         help='Use web identity (requires plugin)',
     )
-
     parser.add_argument('--credentials-file',
         action='store',
         dest='credentials_file',
@@ -154,7 +154,6 @@ def add_arguments(config: dict, parser: argparse.ArgumentParser):
         metavar='config_file',
         help='Target a config file',
     )
-
     parser.add_argument('--config',
         nargs='*',
         dest='config',
@@ -162,7 +161,6 @@ def add_arguments(config: dict, parser: argparse.ArgumentParser):
         metavar='option',
         help='Configure awsume',
     )
-
     parser.add_argument('--info',
         action='store_true',
         dest='info',
@@ -177,6 +175,8 @@ def add_arguments(config: dict, parser: argparse.ArgumentParser):
 
 @hookimpl(tryfirst=True)
 def post_add_arguments(config: dict, arguments: argparse.Namespace, parser: argparse.ArgumentParser):
+    logger.debug('Post add arguments')
+    logger.debug(json.dumps(vars(arguments)))
     if arguments.role_arn and arguments.auto_refresh:
         safe_print('Cannot use autoawsume with given role_arn', colorama.Fore.RED)
         exit(1)
@@ -196,6 +196,7 @@ def post_add_arguments(config: dict, arguments: argparse.Namespace, parser: argp
         exit(0)
 
     if arguments.role_arn and not arguments.role_arn.startswith('arn:aws:iam::'):
+        logger.debug('Using short-hand role arn syntax')
         parts = arguments.role_arn.split(':')
         if len(parts) != 2:
             parser.error('--role-arn must be a valid role arn or follow the format "<account_id>:<role_name>"')
@@ -205,8 +206,10 @@ def post_add_arguments(config: dict, arguments: argparse.Namespace, parser: argp
 
     if not arguments.profile_name:
         if arguments.role_arn:
+            logger.debug('Role arn passed, target profile name will be role_arn')
             arguments.target_profile_name = arguments.role_arn
         else:
+            logger.debug('No profile name passed, target profile name will be "default"')
             arguments.target_profile_name = 'default'
     else:
         arguments.target_profile_name = arguments.profile_name
@@ -214,6 +217,7 @@ def post_add_arguments(config: dict, arguments: argparse.Namespace, parser: argp
 
 @hookimpl(tryfirst=True)
 def collect_aws_profiles(config: dict, arguments: argparse.Namespace, credentials_file: str, config_file: str):
+    logger.info('Collecting AWS profiles')
     credentials = configparser.ConfigParser()
     credentials.read(credentials_file)
     profiles = {k: dict(v) for k, v in credentials._sections.items()}
@@ -231,31 +235,29 @@ def collect_aws_profiles(config: dict, arguments: argparse.Namespace, credential
 
 @hookimpl(tryfirst=True)
 def post_collect_aws_profiles(config: dict, arguments: argparse.Namespace, profiles: dict):
+    logger.debug('Post collect AWS profiles')
     if arguments.list_profiles:
         logger.debug('Listing profiles')
         profile_lib.list_profile_data(profiles, arguments.list_profiles == 'more')
         exit(0)
 
 
-@hookimpl(tryfirst=True)
-def assume_role(config: dict, arguments: argparse.Namespace, profiles: dict) -> dict:
-    region = profile_lib.get_region(profiles, arguments)
-
-    # Use role_arn from cli instead of role profile
-    if arguments.role_arn:
-        role_duration = arguments.role_duration or int(config.get('role-duration'))
+def assume_role_from_cli(config: dict, arguments: dict, profiles: dict, region: str):
         logger.debug('Using role_arn from the CLI')
+        role_duration = arguments.role_duration or int(config.get('role-duration'))
         session_name = arguments.session_name or 'awsume-cli-role'
+        logger.debug('Session name: {}'.format(session_name))
         if not arguments.source_profile:
+            logger.debug('Using current credentials to assume role')
             role_session = aws_lib.assume_role({}, arguments.role_arn, session_name, region, arguments.external_id, role_duration)
-            return role_session
         else:
-            logger.debug('Using the source_profile from the cli, not using existing creds to call assume_role')
+            logger.debug('Using the source_profile from the cli to call assume_role')
             source_profile = profiles.get(arguments.source_profile)
             if not source_profile:
                 raise ProfileNotFoundError(profile_name=arguments.source_profile)
             source_credentials = profile_lib.profile_to_credentials(source_profile)
-            if role_duration and 'mfa_serial' in source_profile:
+            mfa_serial = source_profile.get('mfa_serial')
+            if role_duration and mfa_serial:
                 source_session = source_credentials
                 role_session = aws_lib.assume_role(
                     source_session,
@@ -264,20 +266,17 @@ def assume_role(config: dict, arguments: argparse.Namespace, profiles: dict) -> 
                     region=region,
                     external_id=arguments.external_id,
                     role_duration=role_duration,
-                    mfa_serial=source_profile['mfa_serial'],
+                    mfa_serial=mfa_serial,
                     mfa_token=arguments.mfa_token,
                 )
             else:
-                if 'mfa_serial' in source_profile:
-                    source_session = aws_lib.get_session_token(
-                        source_credentials,
-                        region=profile_lib.get_region(profiles, arguments),
-                        mfa_serial=source_profile.get('mfa_serial'),
-                        mfa_token=arguments.mfa_token,
-                        ignore_cache=arguments.force_refresh,
-                    )
-                else:
-                    source_session = source_credentials
+                source_session = source_credentials if not mfa_serial else aws_lib.get_session_token(
+                    source_credentials,
+                    region=profile_lib.get_region(profiles, arguments),
+                    mfa_serial=mfa_serial,
+                    mfa_token=arguments.mfa_token,
+                    ignore_cache=arguments.force_refresh,
+                )
                 role_session = aws_lib.assume_role(
                     source_session,
                     arguments.role_arn,
@@ -286,7 +285,17 @@ def assume_role(config: dict, arguments: argparse.Namespace, profiles: dict) -> 
                     external_id=arguments.external_id,
                     role_duration=role_duration,
                 )
-            return role_session
+        return role_session
+
+
+@hookimpl(tryfirst=True)
+def assume_role(config: dict, arguments: argparse.Namespace, profiles: dict) -> dict:
+    logger.info('Getting credentials')
+    region = profile_lib.get_region(profiles, arguments)
+    logger.debug('Using region: {}'.format(region))
+
+    if arguments.role_arn:
+        return assume_role_from_cli(config, arguments, profiles, region)
 
     target_profile = profiles.get(arguments.target_profile_name)
     profile_lib.validate_profile(profiles, arguments.target_profile_name)
@@ -329,9 +338,12 @@ def assume_role(config: dict, arguments: argparse.Namespace, profiles: dict) -> 
         else:
             logger.debug('assume_role call needed')
             if role_duration: # cannot use temp creds with custom role duration
+                source_session = profile_lib.profile_to_credentials(source_profile)
+                if arguments.auto_refresh:
+                    safe_print('Cannot use autoawsume with custom role duration', colorama.Fore.RED)
+                    exit(1)
                 logger.debug('Skipping the get_session_token call, temp creds cannot be used for custom role duration')
                 source_profile = profile_lib.get_source_profile(profiles, arguments.target_profile_name)
-                source_session = profile_lib.profile_to_credentials(source_profile)
                 role_session = aws_lib.assume_role(
                     source_session,
                     target_profile.get('role_arn'),
@@ -342,7 +354,6 @@ def assume_role(config: dict, arguments: argparse.Namespace, profiles: dict) -> 
                     mfa_serial=mfa_serial,
                     mfa_token=arguments.mfa_token,
                 )
-                return role_session
             else:
                 logger.debug('Calling get_session_token to assume role with')
                 source_profile = profile_lib.get_source_profile(profiles, arguments.target_profile_name)
@@ -363,14 +374,8 @@ def assume_role(config: dict, arguments: argparse.Namespace, profiles: dict) -> 
                     role_duration=role_duration,
                 )
                 if arguments.auto_refresh:
-                    _, credentials_file = aws_files_lib.get_aws_files(arguments, config)
-                    autoawsume_profile_name = 'autoawsume-{}'.format(arguments.target_profile_name)
-                    profile = profile_lib.credentials_to_profile(role_session)
-                    profile['expiration'] = role_session.get('Expiration').strftime('%Y-%m-%d %H:%M:%S')
-                    profile['source_expiration'] = source_session.get('Expiration').strftime('%Y-%m-%d %H:%M:%S')
-                    profile['awsumepy_command'] = ' '.join(arguments.system_arguments)
-                    aws_files_lib.add_section(autoawsume_profile_name, profile, credentials_file, True)
-                return role_session
+                    create_autoawsume_profile(config, arguments, role_session, source_session)
+            return role_session
 
 
 @hookimpl
