@@ -27,6 +27,7 @@ def kill(arguments: argparse.Namespace):
             return
         else:
             logger.debug('There were not more autoawsume profiles, stopping autoawsume')
+            print('Kill')
             kill_autoawsume()
     else:
         logger.debug('Stopping all auto refreshing and removing autoawsume profiles')
