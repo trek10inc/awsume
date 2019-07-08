@@ -69,7 +69,7 @@ export AWSUME_PROFILE=my-admin
 
 This way you can easily get credentials to another shell session, for instance through ssh.
 
-This works on Bash, Zsh, PowerShell, and Windows Command Prompt.
+This works on Bash, Zsh, Fish, PowerShell, and Windows Command Prompt.
 
 ## Unset
 
@@ -87,15 +87,29 @@ The `--kill-refresher` flag will handle stopping autoawsume from refreshing a pr
 
 The `--list-profiles` flag will list data on all of the profiles it has available to it (from the config and shared credentials files or any plugins).
 
-If you supply an additional argument "more" to this flag, you can tell awsume to get more data than what is present locally. Currently this only means making the `sts.get_caller_identity` call to get the account ID if it can't derive it from a `role_arn` or `mfa_serial`.
+If you supply an additional argument "more" to this flag, you can tell awsume to get more data than what is present locally. Currently this only means making the `sts.get_caller_identity` call to get the account ID if it can't derive it from a `role_arn` or `mfa_serial`, which will of course be slower.
+
+```
+========================AWS Profiles=======================
+PROFILE         TYPE  SOURCE  MFA?  REGION     ACCOUNT
+app-dev         User  None    No    us-east-1  Unavailable
+app-staging     User  None    No    us-east-1  Unavailable
+app-prod        User  None    No    us-east-1  Unavailable
+iam             User  None    No    us-east-1  Unavailable
+client-dev      Role  iam     Yes   us-west-2  123123123123
+client-staging  Role  iam     Yes   us-west-2  234234234234
+client-prod     Role  iam     Yes   us-west-2  345345345345
+```
+
+In this case, if `TYPE` is a "role", it has a `role_arn`. If it does not have a `role_arn`, it will be classified as a "user" profile type.
 
 ## Refresh Autocomplete
 
-In order to keep autocomplete fast, we do not make use of any of awsumepy's modules or any slow entry points. However, this means that any plugins that supply profiles won't be able to supply autocomplete with their profile names. To circumvent this, we utilize an autocomplete file located at `~/.awsume/autocomplete.json`. When you pass the `--refresh-autocomplete` flag to awsume, it makes the calls to all plugins to collect all profile names together into that file. That way, when the `awsume-autocomplete` helper is called, it simply reads from the config and credentials files, and the `~/.awsume/autocomplete.json` file to return a list of awsume-able profile names.
+In order to keep autocomplete fast, we do not make use of any of awsumepy's modules or any `pkg_resources` slow entry points. However, this means that any plugins that supply profiles won't be able to supply autocomplete with their profile names. To circumvent this, we utilize an autocomplete file located at `~/.awsume/autocomplete.json`. When you pass the `--refresh-autocomplete` flag to awsume, it makes the calls to all plugins to collect all profile names together into that file. That way, when the `awsume-autocomplete` helper is called, it simply reads from the config and credentials files, and the `~/.awsume/autocomplete.json` file to return a list of awsume-able profile names.
 
 ## Role ARN
 
-As of awsume 4, you can use the `--role-arn` flag to awsume a specific role using your current credentials. You can also use a shorthand that follows the following format: `<account_id>:<role_name>`.
+As of awsume 4, you can use the `--role-arn` flag to awsume a specific role using your current credentials. You can also use a shorthand that follows the following format: `<account_id>:<role_name>`. This way you can role-chain as much as you want.
 
 ## Source Profile
 
