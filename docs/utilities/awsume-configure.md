@@ -1,6 +1,6 @@
 # `awsume-configure`
 
-The `awsume-configure` command is intended to let you set up awsume, in case there was a problem during the initial installation of awsume.
+The `awsume-configure` command is intended to let you set up awsume on your own without having to reinstall awsume, just in case there was a problem during the initial installation of awsume.
 
 ## Usage
 

@@ -7,8 +7,11 @@ module.exports = {
   },
   themeConfig: {
     displayAllHeaders: true,
-    // sidebarDepth: 1,
+    sidebarDepth: 0,
     logo: '/logo.png',
+    head: [
+      ['link', { rel: 'icon', href: '/logo.png' }]
+    ],
     nav: [
       { text: 'Home', link: '/' },
       { text: 'GitHub', link: 'https://github.com/trek10inc/awsume' },
@@ -21,9 +24,9 @@ module.exports = {
         collapsable: true,
         children: [
           '/general/quickstart',
+          '/general/overview',
           '/general/aws-file-configuration',
           '/general/usage',
-          '/general/overview',
         ],
       },
       {
@@ -38,6 +41,20 @@ module.exports = {
         collapsable: true,
         children: [
           '/advanced/autoawsume',
+        ],
+      },
+      {
+        title: 'Plugins',
+        collapsable: true,
+        children: [
+          '/plugins/',
+        ],
+      },
+      {
+        title: 'Troubleshooting',
+        collapsable: true,
+        children: [
+          '/troubleshooting/',
         ],
       },
       // {
