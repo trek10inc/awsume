@@ -7,6 +7,7 @@ from pathlib import Path
 from . import constants
 from . safe_print import safe_print
 
+
 def get_aws_files(args: argparse.Namespace, config: dict) -> tuple:
     if os.environ.get('AWS_CONFIG_FILE'):
         config_file = os.environ.get('AWS_CONFIG_FILE')

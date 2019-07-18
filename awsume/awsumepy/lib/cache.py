@@ -33,14 +33,16 @@ def write_aws_cache(cache_file_name: str, session: dict) -> dict:
     ensure_cache_dir()
     cache_path = str(constants.AWSUME_CACHE_DIR) + '/' + cache_file_name
     logger.debug('Cache file path: ' + cache_path)
-    if session.get('Expiration') and type(session.get('Expiration') == datetime):
-        session['Expiration'] = session['Expiration'].astimezone(dateutil.tz.tzlocal())
-        session['Expiration'] = session['Expiration'].strftime('%Y-%m-%d %H:%M:%S')
+    expiration = session['Expiration'].astimezone(dateutil.tz.tzlocal())
+    expiration = expiration.strftime('%Y-%m-%d %H:%M:%S')
     try:
-        json.dump(session, open(cache_path, 'w'), indent=2, default=str)
+        json.dump({
+            **session,
+            'Expiration': expiration,
+        }, open(cache_path, 'w'), indent=2, default=str)
     except:
         logger.debug('There was an error writing to the cache file', exc_info=True)
-    session['Expiration'] = datetime.strptime(session['Expiration'], '%Y-%m-%d %H:%M:%S')
+    session['Expiration'] = datetime.strptime(expiration, '%Y-%m-%d %H:%M:%S')
     return session
 
 

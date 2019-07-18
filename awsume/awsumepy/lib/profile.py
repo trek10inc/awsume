@@ -8,6 +8,7 @@ from . safe_print import safe_print
 from . import aws as aws_lib
 from collections import OrderedDict
 
+
 def is_role(profile: dict) -> bool:
     return 'role_arn' in profile
 
@@ -42,7 +43,7 @@ def validate_profile(profiles: dict, target_profile_name: str) -> bool:
 
     # validate role profiles
     if is_role(profile):
-        source_profile_name = profile.get('source_profile', 'default')
+        source_profile_name = profile.get('source_profile')
         if source_profile_name and not profiles.get(source_profile_name):
             raise ProfileNotFoundError(profile_name=source_profile_name)
         if not source_profile_name and not profiles.get('default'):
@@ -117,7 +118,7 @@ def aggregate_profiles(result: list) -> dict:
     return return_profiles
 
 
-def format_aws_profiles(profiles: dict, get_extra_data: bool) -> list:
+def format_aws_profiles(profiles: dict, get_extra_data: bool) -> list: # pragma: no cover
     sorted_profiles = OrderedDict(sorted(profiles.items()))
     # List headers
     list_headers = ['PROFILE', 'TYPE', 'SOURCE', 'MFA?', 'REGION', 'ACCOUNT']
@@ -140,7 +141,7 @@ def format_aws_profiles(profiles: dict, get_extra_data: bool) -> list:
     return profile_list
 
 
-def print_formatted_data(profile_data: list):
+def print_formatted_data(profile_data: list): # pragma: no cover
     print('Listing...\n')
     widths = [max(map(len, col)) for col in zip(*profile_data)]
     print('AWS Profiles'.center(sum(widths) + 10, '='))
@@ -148,7 +149,7 @@ def print_formatted_data(profile_data: list):
         print('  '.join((val.ljust(width) for val, width in zip(row, widths))))
 
 
-def list_profile_data(profiles: dict, get_extra_data: bool):
+def list_profile_data(profiles: dict, get_extra_data: bool): # pragma: no cover
     profiles = {k: v for k, v in profiles.items() if 'autoawsume-' not in k}
     formatted_profiles = format_aws_profiles(profiles, get_extra_data)
     print_formatted_data(formatted_profiles)

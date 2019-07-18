@@ -4,7 +4,6 @@ import configparser
 import time
 from datetime import datetime, timedelta
 
-from ..awsumepy.main import run_awsume
 from ..awsumepy.lib.aws_files import get_aws_files, delete_section
 
 

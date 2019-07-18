@@ -4,11 +4,6 @@ import boto3
 import colorama
 from datetime import datetime
 
-try:
-    import botostubs
-except:
-    pass
-
 from . import profile as profile_lib
 from . import cache as cache_lib
 from . exceptions import RoleAuthenticationError, UserAuthenticationError
@@ -24,8 +19,8 @@ def assume_role(
     source_credentials: dict,
     role_arn: str,
     session_name: str,
-    region: str = 'us-east-1',
     external_id: str = None,
+    region: str = 'us-east-1',
     role_duration: int = None,
     mfa_serial: str = None,
     mfa_token: str = None,
@@ -58,14 +53,19 @@ def assume_role(
     return role_session
 
 
-def get_session_token(source_credentials: dict, region: str = 'us-east-1', mfa_serial: str = None, mfa_token: str = None, ignore_cache: bool = False) -> dict:
+def get_session_token(
+    source_credentials: dict,
+    region: str = 'us-east-1',
+    mfa_serial: str = None,
+    mfa_token: str = None,
+    ignore_cache: bool = False,
+) -> dict:
     cache_file_name = 'aws-credentials-' + source_credentials.get('AccessKeyId')
     cache_session = cache_lib.read_aws_cache(cache_file_name)
     if cache_lib.valid_cache_session(cache_session) and not ignore_cache:
         logger.debug('Using cache session')
         safe_print('Session token will expire at {}'.format(parse_time(cache_session['Expiration'])), colorama.Fore.GREEN)
         return cache_session
-
     logger.debug('Getting session token')
     user_sts_client = boto3.session.Session(
         aws_access_key_id=source_credentials.get('AccessKeyId'),
@@ -84,8 +84,7 @@ def get_session_token(source_credentials: dict, region: str = 'us-east-1', mfa_s
         raise UserAuthenticationError(str(e))
     logger.debug('Session token received')
     cache_lib.write_aws_cache(cache_file_name, user_session)
-    if user_session.get('Expiration'):
-        safe_print('Session token will expire at {}'.format(parse_time(user_session['Expiration'])), colorama.Fore.GREEN)
+    safe_print('Session token will expire at {}'.format(parse_time(user_session['Expiration'])), colorama.Fore.GREEN)
     return user_session
 
 

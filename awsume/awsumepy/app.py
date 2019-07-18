@@ -5,7 +5,6 @@ import json
 import logging
 import pluggy
 import colorama
-from colorama import init, deinit
 from pathlib import Path
 
 from . lib.profile import aggregate_profiles
@@ -23,7 +22,7 @@ class Awsume(object):
     def __init__(self):
         self.plugin_manager = self.get_plugin_manager()
         self.config = load_config()
-        init(autoreset=True)
+        colorama.init(autoreset=True)
 
 
     def get_plugin_manager(self) -> pluggy.PluginManager:
@@ -44,7 +43,10 @@ class Awsume(object):
             prog='awsume',
             description=description,
             epilog=epilog,
-            formatter_class=lambda prog: (argparse.RawDescriptionHelpFormatter(prog, max_help_position=80, width=80)),
+            formatter_class=lambda prog: (argparse.RawDescriptionHelpFormatter(prog, max_help_position=80, width=80)), # pragma: no cover
+        )
+        self.plugin_manager.hook.pre_add_arguments(
+            config=self.config,
         )
         self.plugin_manager.hook.add_arguments(
             config=self.config,
@@ -97,7 +99,7 @@ class Awsume(object):
     def get_credentials(self, args: argparse.Namespace, profiles: dict) -> dict:
         logger.debug('Getting credentials')
         try:
-            result = self.plugin_manager.hook.assume_role(config=self.config, arguments=args, profiles=profiles)
+            result = self.plugin_manager.hook.get_credentials(config=self.config, arguments=args, profiles=profiles)
         except ProfileNotFoundError as e:
             safe_print(e, colorama.Fore.RED)
             logger.debug('', exc_info=True)
@@ -132,19 +134,29 @@ class Awsume(object):
         args.system_arguments = system_arguments
         profiles = self.get_profiles(args)
 
-        self.plugin_manager.hook.pre_assume_role(
+        self.plugin_manager.hook.pre_get_credentials(
             config=self.config,
             arguments=args,
             profiles=profiles,
         )
         if args.with_saml:
-            credentials = {}
+            credentials = self.plugin_manager.hook.get_credentials_with_saml(
+                config=self.config,
+                arguments=args,
+            )
         elif args.with_web_identity:
-            credentials = {}
+            credentials = self.plugin_manager.hook.get_credentials_with_web_identity(
+                config=self.config,
+                arguments=args,
+            )
         else:
-            assume_role_result = self.get_credentials(args, profiles)
-            credentials = next(_ for _ in assume_role_result if _)
-        self.plugin_manager.hook.post_assume_role(
+            credentials = self.get_credentials(args, profiles)
+
+        credentials = next((_ for _ in credentials if _), {}) # pragma: no cover
+        if not credentials:
+            safe_print('No credentials to awsume', colorama.Fore.RED)
+            exit(1)
+        self.plugin_manager.hook.post_get_credentials(
             config=self.config,
             arguments=args,
             profiles=profiles,
