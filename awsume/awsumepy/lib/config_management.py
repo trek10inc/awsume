@@ -18,10 +18,12 @@ def load_config() -> dict:
     if not os.path.isfile(str(constants.AWSUME_CONFIG)):
         open(str(constants.AWSUME_CONFIG), 'a').close()
 
+    options = {}
     try:
         options = json.load(open(str(constants.AWSUME_CONFIG), 'r'))
-    except Exception:
+    except json.JSONDecodeError:
         write_config(defaults)
+        options = defaults
     return options
 
 
@@ -34,8 +36,7 @@ def write_config(config: dict):
     try:
         json.dump(config, open(str(constants.AWSUME_CONFIG), 'w'), indent=2)
     except Exception as e:
-        safe_print('Unable to write cache: {}'.format(e), colorama.Fore.RED)
-        pass
+        safe_print('Unable to write config: {}'.format(e), colorama.Fore.RED)
 
 
 def update_config(operations: list):
@@ -49,6 +50,5 @@ def update_config(operations: list):
             config[operations[1]] = defaults[operations[1]]
             safe_print('Reset {} to {}'.format(operations[1], defaults[operations[1]]), colorama.Fore.YELLOW)
         else:
-            pass
             safe_print('Key not a valid default: {}'.format(operations[1]), colorama.Fore.YELLOW)
     write_config(config)

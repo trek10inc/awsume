@@ -57,6 +57,13 @@ module.exports = {
           '/troubleshooting/',
         ],
       },
+      {
+        title: 'Changelog',
+        collapsable: true,
+        children: [
+          '/changelog',
+        ],
+      },
       // {
       //   title: 'Plugins',
       //   collapsable: true,

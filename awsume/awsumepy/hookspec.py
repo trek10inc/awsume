@@ -33,23 +33,23 @@ def post_collect_aws_profiles(config: dict, arguments: argparse.Namespace, profi
 
 
 @hookspec
-def pre_assume_role(config: dict, arguments: argparse.Namespace, profiles: dict):
+def pre_get_credentials(config: dict, arguments: argparse.Namespace, profiles: dict):
     """"""
 
 @hookspec
-def assume_role(config: dict, arguments: argparse.Namespace, profiles: dict):
+def get_credentials(config: dict, arguments: argparse.Namespace, profiles: dict):
     """"""
 
 @hookspec
-def assume_role_with_saml(config: dict, arguments: argparse.Namespace):
+def get_credentials_with_saml(config: dict, arguments: argparse.Namespace):
     """"""
 
 @hookspec
-def assume_role_with_web_identity(config: dict, arguments: argparse.Namespace):
+def get_credentials_with_web_identity(config: dict, arguments: argparse.Namespace):
     """"""
 
 @hookspec
-def post_assume_role(config: dict, arguments: argparse.Namespace, profiles: dict, credentials: dict):
+def post_get_credentials(config: dict, arguments: argparse.Namespace, profiles: dict, credentials: dict):
     """"""
 
 

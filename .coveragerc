@@ -1,0 +1,12 @@
+[run]
+omit =
+  .venv/*
+  awsume/awsumepy/__data__.py
+  awsume/awsumepy/hookspec.py
+  awsume/awsumepy/hookimpl.py
+  awsume/autoawsume/*
+  awsume/configure/*
+branch = True
+
+[report]
+show_missing = True
