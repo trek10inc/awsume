@@ -27,7 +27,7 @@ def collect_aws_profiles(config: dict, arguments: argparse.Namespace, credential
     """"""
 
 @hookspec
-def post_collect_aws_profiles(config: dict, arguments: argparse.Namespace, profiles: dict):
+def post_collect_aws_profiles(config: dict, arguments: argparse.Namespace, profiles: dict, credentials: dict):
     """"""
 
 
@@ -55,19 +55,19 @@ def post_get_credentials(config: dict, arguments: argparse.Namespace, profiles: 
 
 
 @hookspec
-def catch_profile_not_found_exception(config: dict, arguments: argparse.Namespace, profiles: dict):
+def catch_profile_not_found_exception(config: dict, arguments: argparse.Namespace, profiles: dict, error: Exception):
     """"""
 
 @hookspec
-def catch_invalid_profile_exception(config: dict, arguments: argparse.Namespace, profiles: dict):
+def catch_invalid_profile_exception(config: dict, arguments: argparse.Namespace, profiles: dict, error: Exception):
     """"""
 
 @hookspec
-def catch_user_authentication_error(config: dict, arguments: argparse.Namespace, profiles: dict):
+def catch_user_authentication_error(config: dict, arguments: argparse.Namespace, profiles: dict, error: Exception):
     """"""
 
 @hookspec
-def catch_role_authentication_error(config: dict, arguments: argparse.Namespace, profiles: dict):
+def catch_role_authentication_error(config: dict, arguments: argparse.Namespace, profiles: dict, error: Exception):
     """"""
 
 

@@ -1,5 +1,4 @@
 import os, pathlib
-from distutils.spawn import find_executable
 
 BASH_AUTOCOMPLETE_SCRIPT = """
 _awsume() {
@@ -7,7 +6,7 @@ _awsume() {
     COMPREPLY=()
     cur="${COMP_WORDS[COMP_CWORD]}"
     prev="${COMP_WORDS[COMP_CWORD-1]}"
-    opts=$(awsumepy --rolesusers)
+    opts=$(awsume-autocomplete)
     COMPREPLY=( $(compgen -W "${opts}" -- ${cur}) )
     return 0
 }
@@ -16,13 +15,13 @@ complete -F _awsume awsume
 
 ZSH_AUTOCOMPLETE_SCRIPT = """
 #compdef awsume
-_arguments "*: :($(awsumepy --rolesusers))"
+_arguments "*: :($(awsume-autocomplete))"
 """
 
 POWERSHELL_AUTOCOMPLETE_SCRIPT = """
 Register-ArgumentCompleter -Native -CommandName awsume -ScriptBlock {
     param($wordToComplete, $commandAst, $cursorPosition)
-    $(awsumepy --rolesusers) |
+    $(awsume-autocomplete) |
     Where-Object { $_ -like "$wordToComplete*" } |
     Sort-Object |
     ForEach-Object {
@@ -44,7 +43,7 @@ def main(shell: str, autocomplete_file: str):
     basedir = os.path.dirname(autocomplete_file)
     if basedir and not os.path.exists(basedir):
         os.makedirs(basedir)
-    open(autocomplete_file, 'w').close()
+    open(autocomplete_file, 'a').close()
 
     if autocomplete_script in open(autocomplete_file, 'r').read():
         print('Autocomplete script already in ' + autocomplete_file)

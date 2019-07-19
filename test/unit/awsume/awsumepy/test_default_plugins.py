@@ -316,7 +316,6 @@ def test_post_collect_aws_profiles_no_list(profile_lib: MagicMock):
     profile_lib.list_profile_data.assert_not_called()
 
 
-
 @patch.object(default_plugins, 'profile_lib')
 @patch.object(default_plugins, 'aws_lib')
 def test_assume_role_from_cli(aws_lib: MagicMock, profile_lib: MagicMock):
@@ -332,8 +331,12 @@ def test_assume_role_from_cli(aws_lib: MagicMock, profile_lib: MagicMock):
     )
     profiles = {}
     default_plugins.assume_role_from_cli(config, arguments, profiles, 'us-east-1')
-    aws_lib.assume_role.assert_called_with({}, arguments.role_arn, 'awsume-cli-role', 'us-east-1', arguments.external_id, 0)
-
+    aws_lib.assume_role.assert_called_with(
+        {}, arguments.role_arn, 'awsume-cli-role',
+        region='us-east-1',
+        external_id=arguments.external_id,
+        role_duration=0,
+    )
 
 
 @patch.object(default_plugins, 'profile_lib')
@@ -374,7 +377,7 @@ def test_assume_role_from_cli_source_profile(aws_lib: MagicMock, profile_lib: Ma
 
 @patch.object(default_plugins, 'profile_lib')
 @patch.object(default_plugins, 'aws_lib')
-def test_assume_role_from_cli_source_profile_role_duration(aws_lib: MagicMock, profile_lib: MagicMock):
+def test_assume_role_from_cli_source_profile_role_duration_mfa(aws_lib: MagicMock, profile_lib: MagicMock):
     config = {}
     arguments = argparse.Namespace(
         role_duration='43200',
@@ -407,6 +410,118 @@ def test_assume_role_from_cli_source_profile_role_duration(aws_lib: MagicMock, p
         role_duration='43200',
         mfa_serial='mymfaserial',
         mfa_token='123123',
+    )
+
+
+@patch.object(default_plugins, 'profile_lib')
+@patch.object(default_plugins, 'aws_lib')
+def test_assume_role_from_cli_source_profile_role_duration_no_mfa(aws_lib: MagicMock, profile_lib: MagicMock):
+    config = {}
+    arguments = argparse.Namespace(
+        role_duration='43200',
+        session_name=None,
+        source_profile='mysource',
+        role_arn='myrolearn',
+        external_id=None,
+        mfa_token=None,
+        force_refresh=False,
+    )
+    profiles = {
+        'mysource': {
+            'aws_access_key_id': 'AKIA...',
+            'aws_secret_access_key': 'SECRET',
+        },
+    }
+    profile_lib.profile_to_credentials.return_value = {
+        'AccessKeyId': 'AKIA...',
+        'SecretAccessKey': 'SECRET',
+    }
+    default_plugins.assume_role_from_cli(config, arguments, profiles, 'us-east-1')
+    aws_lib.get_session_token.assert_not_called()
+    aws_lib.assume_role.assert_called_with(
+        profile_lib.profile_to_credentials.return_value,
+        arguments.role_arn,
+        'awsume-cli-role',
+        region='us-east-1',
+        external_id=arguments.external_id,
+        role_duration='43200',
+    )
+
+
+@patch.object(default_plugins, 'profile_lib')
+@patch.object(default_plugins, 'aws_lib')
+def test_assume_role_from_cli_source_profile_no_role_duration_mfa(aws_lib: MagicMock, profile_lib: MagicMock):
+    config = {}
+    arguments = argparse.Namespace(
+        role_duration=None,
+        session_name=None,
+        source_profile='mysource',
+        role_arn='myrolearn',
+        external_id=None,
+        mfa_token='123123',
+        force_refresh=False,
+    )
+    profiles = {
+        'mysource': {
+            'aws_access_key_id': 'AKIA...',
+            'aws_secret_access_key': 'SECRET',
+            'mfa_serial': 'mymfaserial',
+        },
+    }
+    profile_lib.profile_to_credentials.return_value = {
+        'AccessKeyId': 'AKIA...',
+        'SecretAccessKey': 'SECRET',
+    }
+    default_plugins.assume_role_from_cli(config, arguments, profiles, 'us-east-1')
+    aws_lib.get_session_token.assert_called_with(
+        { 'AccessKeyId': 'AKIA...', 'SecretAccessKey': 'SECRET' },
+        region=profile_lib.get_region.return_value,
+        mfa_serial='mymfaserial',
+        mfa_token='123123',
+        ignore_cache=False,
+    )
+    aws_lib.assume_role.assert_called_with(
+        aws_lib.get_session_token.return_value,
+        arguments.role_arn,
+        'awsume-cli-role',
+        region='us-east-1',
+        external_id=arguments.external_id,
+        role_duration=0,
+    )
+
+
+@patch.object(default_plugins, 'profile_lib')
+@patch.object(default_plugins, 'aws_lib')
+def test_assume_role_from_cli_source_profile_no_role_duration_no_mfa(aws_lib: MagicMock, profile_lib: MagicMock):
+    config = {}
+    arguments = argparse.Namespace(
+        role_duration=None,
+        session_name=None,
+        source_profile='mysource',
+        role_arn='myrolearn',
+        external_id=None,
+        mfa_token=None,
+        force_refresh=False,
+    )
+    profiles = {
+        'mysource': {
+            'aws_access_key_id': 'AKIA...',
+            'aws_secret_access_key': 'SECRET',
+        },
+    }
+    profile_lib.profile_to_credentials.return_value = {
+        'AccessKeyId': 'AKIA...',
+        'SecretAccessKey': 'SECRET',
+    }
+    default_plugins.assume_role_from_cli(config, arguments, profiles, 'us-east-1')
+    aws_lib.get_session_token.assert_not_called()
+    aws_lib.assume_role.assert_called_with(
+        profile_lib.profile_to_credentials.return_value,
+        arguments.role_arn,
+        'awsume-cli-role',
+        region='us-east-1',
+        external_id=arguments.external_id,
+        role_duration=0,
     )
 
 
