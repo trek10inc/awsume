@@ -219,6 +219,7 @@ def collect_aws_profiles(config: dict, arguments: argparse.Namespace, credential
         if short_name not in profiles:
             profiles[short_name] = {}
         profiles[short_name].update(profile)
+    logger.debug('Colelcted {} profiles'.format(len(profiles)))
     return profiles
 
 
@@ -232,13 +233,13 @@ def post_collect_aws_profiles(config: dict, arguments: argparse.Namespace, profi
 
 
 def assume_role_from_cli(config: dict, arguments: dict, profiles: dict, region: str):
-    logger.debug('Using role_arn from the CLI')
+    logger.info('Using role_arn from the CLI')
     role_duration = arguments.role_duration or int(config.get('role-duration', 0))
     session_name = arguments.session_name or 'awsume-cli-role'
     logger.debug('Session name: {}'.format(session_name))
     if not arguments.source_profile:
         logger.debug('Using current credentials to assume role')
-        role_session = aws_lib.assume_role({}, arguments.role_arn, session_name, region, arguments.external_id, role_duration)
+        role_session = aws_lib.assume_role({}, arguments.role_arn, session_name, region=region, external_id=arguments.external_id, role_duration=role_duration)
     else:
         logger.debug('Using the source_profile from the cli to call assume_role')
         source_profile = profiles.get(arguments.source_profile)
@@ -246,26 +247,46 @@ def assume_role_from_cli(config: dict, arguments: dict, profiles: dict, region: 
             raise ProfileNotFoundError(profile_name=arguments.source_profile)
         source_credentials = profile_lib.profile_to_credentials(source_profile)
         mfa_serial = source_profile.get('mfa_serial')
-        if role_duration and mfa_serial:
-            source_session = source_credentials
-            role_session = aws_lib.assume_role(
-                source_session,
-                arguments.role_arn,
-                session_name,
-                region=region,
-                external_id=arguments.external_id,
-                role_duration=role_duration,
-                mfa_serial=mfa_serial,
-                mfa_token=arguments.mfa_token,
-            )
+        if role_duration:
+            logger.debug('Using custom role duration')
+            if mfa_serial:
+                logger.debug('Requires MFA')
+                logger.debug('Using custom role duration for role that needs mfa_serial, skipping get-session-token call')
+                source_session = source_credentials
+                role_session = aws_lib.assume_role(
+                    source_session,
+                    arguments.role_arn,
+                    session_name,
+                    region=region,
+                    external_id=arguments.external_id,
+                    role_duration=role_duration,
+                    mfa_serial=mfa_serial,
+                    mfa_token=arguments.mfa_token,
+                )
+            else:
+                logger.debug('MFA not needed, assuming role from with profile creds')
+                role_session = aws_lib.assume_role(
+                    source_credentials,
+                    arguments.role_arn,
+                    session_name,
+                    region=region,
+                    external_id=arguments.external_id,
+                    role_duration=role_duration,
+                )
         else:
-            source_session = source_credentials if not mfa_serial else aws_lib.get_session_token(
-                source_credentials,
-                region=profile_lib.get_region(profiles, arguments),
-                mfa_serial=mfa_serial,
-                mfa_token=arguments.mfa_token,
-                ignore_cache=arguments.force_refresh,
-            )
+            logger.debug('Using default role duration')
+            if mfa_serial:
+                logger.debug('MFA required')
+                source_session = aws_lib.get_session_token(
+                    source_credentials,
+                    region=profile_lib.get_region(profiles, arguments),
+                    mfa_serial=mfa_serial,
+                    mfa_token=arguments.mfa_token,
+                    ignore_cache=arguments.force_refresh,
+                )
+            else:
+                logger.debug('MFA not required')
+                source_session = source_credentials
             role_session = aws_lib.assume_role(
                 source_session,
                 arguments.role_arn,
@@ -300,6 +321,7 @@ def get_credentials(config: dict, arguments: argparse.Namespace, profiles: dict)
             return_session['Region'] = region
             return return_session
         else:
+            logger.debug('MFA not needed, assuming role with profile credentials')
             source_profile = profile_lib.get_source_profile(profiles, arguments.target_profile_name)
             source_credentials = profile_lib.profile_to_credentials(source_profile)
             role_session = aws_lib.assume_role(

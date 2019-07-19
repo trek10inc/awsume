@@ -48,6 +48,11 @@ module.exports = {
         collapsable: true,
         children: [
           '/plugins/',
+          '/plugins/add-arguments',
+          '/plugins/collect-aws-profiles',
+          '/plugins/get-credentials',
+          '/plugins/get-profile-names',
+          '/plugins/catch-exceptions',
         ],
       },
       {

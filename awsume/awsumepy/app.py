@@ -20,6 +20,7 @@ from . import default_plugins
 
 class Awsume(object):
     def __init__(self):
+        logger.debug('Initalizing app')
         self.plugin_manager = self.get_plugin_manager()
         self.config = load_config()
         colorama.init(autoreset=True)
@@ -103,22 +104,22 @@ class Awsume(object):
         except ProfileNotFoundError as e:
             safe_print(e, colorama.Fore.RED)
             logger.debug('', exc_info=True)
-            self.plugin_manager.hook.catch_profile_not_found_exception(config=self.config, arguments=args, profiles=profiles)
+            self.plugin_manager.hook.catch_profile_not_found_exception(config=self.config, arguments=args, profiles=profiles, error=e)
             exit(1)
         except InvalidProfileError as e:
             safe_print(e, colorama.Fore.RED)
             logger.debug('', exc_info=True)
-            self.plugin_manager.hook.catch_invalid_profile_error(config=self.config, arguments=args, profiles=profiles)
+            self.plugin_manager.hook.catch_invalid_profile_error(config=self.config, arguments=args, profiles=profiles, error=e)
             exit(1)
         except UserAuthenticationError as e:
             safe_print(e, colorama.Fore.RED)
             logger.debug('', exc_info=True)
-            self.plugin_manager.hook.catch_user_authentication_error(config=self.config, arguments=args, profiles=profiles)
+            self.plugin_manager.hook.catch_user_authentication_error(config=self.config, arguments=args, profiles=profiles, error=e)
             exit(1)
         except RoleAuthenticationError as e:
             safe_print(e, colorama.Fore.RED)
             logger.debug('', exc_info=True)
-            self.plugin_manager.hook.catch_role_authentication_error(config=self.config, arguments=args, profiles=profiles)
+            self.plugin_manager.hook.catch_role_authentication_error(config=self.config, arguments=args, profiles=profiles, error=e)
             exit(1)
         return result
 
