@@ -27,7 +27,7 @@ def collect_aws_profiles(config: dict, arguments: argparse.Namespace, credential
     """"""
 
 @hookspec
-def post_collect_aws_profiles(config: dict, arguments: argparse.Namespace, profiles: dict, credentials: dict):
+def post_collect_aws_profiles(config: dict, arguments: argparse.Namespace, profiles: dict):
     """"""
 
 
