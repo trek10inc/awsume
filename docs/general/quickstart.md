@@ -38,7 +38,7 @@ pip install awsume -v
 
 ## Quick Usage
 
-Once you have your alias setup, awsume can now work!
+Once you have your alias setup, awsume can now work.
 
 Run the following command and you'll be able to execute commands and run scripts with that profile's credentials.
 
