@@ -109,7 +109,7 @@ class Awsume(object):
         except InvalidProfileError as e:
             safe_print(e, colorama.Fore.RED)
             logger.debug('', exc_info=True)
-            self.plugin_manager.hook.catch_invalid_profile_error(config=self.config, arguments=args, profiles=profiles, error=e)
+            self.plugin_manager.hook.catch_invalid_profile_exception(config=self.config, arguments=args, profiles=profiles, error=e)
             exit(1)
         except UserAuthenticationError as e:
             safe_print(e, colorama.Fore.RED)
