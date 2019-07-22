@@ -9,10 +9,10 @@ pylint = "*"
 botostubs = "*"
 pytest = "*"
 pytest-cov = "*"
-coverage = "*"
 pytest-describe = "*"
-watchdog = "*"
 pytest-sugar = "*"
+coverage = "*"
+watchdog = "*"
 
 [packages]
 pluggy = "*"
@@ -21,7 +21,7 @@ awsume = {editable = true,path = "."}
 psutil = "*"
 colorama = "*"
 coverage = "*"
-pytest-sugar = "*"
+trek10-accounts-plugin = {editable = true,path = "./../../../internal/awsume-plugins/trek10-accounts/source"}
 
 [scripts]
 test = "pytest --cov=awsume --cov-report term"

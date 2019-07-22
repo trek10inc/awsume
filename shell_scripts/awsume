@@ -1,18 +1,18 @@
 #!/bin/bash
 
-AWSUME_OUTPUT=($(awsumepy $@))
+AWSUME_OUTPUT=($(awsumepy "$@"))
 AWSUME_FLAG=$(echo "${AWSUME_OUTPUT[0]}" | tr -d '\r')
 
 if [ "$AWSUME_FLAG" = "usage:" ]; then
-  awsumepy $@
+  awsumepy "$@"
 
 
 elif [ "$AWSUME_FLAG" = "Version" ]; then
-  awsumepy $@
+  awsumepy "$@"
 
 
 elif [ "$AWSUME_FLAG" = "Listing..." ]; then
-  awsumepy $@
+  awsumepy "$@"
 
 
 elif [ "$AWSUME_FLAG" = "Auto" ]; then
