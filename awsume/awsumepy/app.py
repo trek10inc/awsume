@@ -126,7 +126,7 @@ class Awsume(object):
 
     def export_data(self, awsume_flag: str, awsume_list: list):
         logger.debug('Exporting data')
-        print(awsume_flag)
+        print(awsume_flag, end=' ')
         print(' '.join(awsume_list))
 
 
@@ -140,7 +140,18 @@ class Awsume(object):
             arguments=args,
             profiles=profiles,
         )
-        if args.with_saml:
+        if not sys.stdin.isatty():
+            stdin = sys.stdin.read()
+            args.target_profile_name = 'stdin'
+            try:
+                credentials = json.loads(stdin)
+                if 'Credentials' in credentials:
+                    credentials = credentials['Credentials']
+            except json.JSONDecodeError:
+                safe_print('stdin data is not valid json')
+                exit(1)
+            credentials = [credentials]
+        elif args.with_saml:
             credentials = self.plugin_manager.hook.get_credentials_with_saml(
                 config=self.config,
                 arguments=args,
