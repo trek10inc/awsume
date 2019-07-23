@@ -100,7 +100,29 @@ class Awsume(object):
     def get_credentials(self, args: argparse.Namespace, profiles: dict) -> dict:
         logger.debug('Getting credentials')
         try:
-            result = self.plugin_manager.hook.get_credentials(config=self.config, arguments=args, profiles=profiles)
+            if args.json or not sys.stdin.isatty():
+                args.target_profile_name = 'json' if args.json else 'stdin'
+                json_input = args.json if args.json else sys.stdin.read()
+                try:
+                    credentials = json.loads(json_input)
+                    if 'Credentials' in credentials:
+                        credentials = credentials['Credentials']
+                except json.JSONDecodeError:
+                    safe_print('Data is not valid json')
+                    exit(1)
+                credentials = [credentials]
+            elif args.with_saml:
+                credentials = self.plugin_manager.hook.get_credentials_with_saml(
+                    config=self.config,
+                    arguments=args,
+                )
+            elif args.with_web_identity:
+                credentials = self.plugin_manager.hook.get_credentials_with_web_identity(
+                    config=self.config,
+                    arguments=args,
+                )
+            else:
+                credentials = self.plugin_manager.hook.get_credentials(config=self.config, arguments=args, profiles=profiles)
         except ProfileNotFoundError as e:
             safe_print(e, colorama.Fore.RED)
             logger.debug('', exc_info=True)
@@ -121,7 +143,7 @@ class Awsume(object):
             logger.debug('', exc_info=True)
             self.plugin_manager.hook.catch_role_authentication_error(config=self.config, arguments=args, profiles=profiles, error=e)
             exit(1)
-        return result
+        return next((_ for _ in credentials if _), {}) # pragma: no cover
 
 
     def export_data(self, awsume_flag: str, awsume_list: list):
@@ -140,42 +162,7 @@ class Awsume(object):
             arguments=args,
             profiles=profiles,
         )
-        print(args)
-        if args.json:
-            args.target_profile_name = 'json'
-            try:
-                credentials = json.loads(args.json)
-                if 'Credentials' in credentials:
-                    credentials = credentials['Credentials']
-            except json.JSONDecodeError:
-                safe_print('stdin data is not valid json')
-                exit(1)
-            credentials = [credentials]
-        elif not sys.stdin.isatty():
-            stdin = sys.stdin.read()
-            args.target_profile_name = 'stdin'
-            try:
-                credentials = json.loads(stdin)
-                if 'Credentials' in credentials:
-                    credentials = credentials['Credentials']
-            except json.JSONDecodeError:
-                safe_print('stdin data is not valid json')
-                exit(1)
-            credentials = [credentials]
-        elif args.with_saml:
-            credentials = self.plugin_manager.hook.get_credentials_with_saml(
-                config=self.config,
-                arguments=args,
-            )
-        elif args.with_web_identity:
-            credentials = self.plugin_manager.hook.get_credentials_with_web_identity(
-                config=self.config,
-                arguments=args,
-            )
-        else:
-            credentials = self.get_credentials(args, profiles)
-
-        credentials = next((_ for _ in credentials if _), {}) # pragma: no cover
+        credentials = self.get_credentials(args, profiles)
         if not credentials:
             safe_print('No credentials to awsume', colorama.Fore.RED)
             exit(1)
