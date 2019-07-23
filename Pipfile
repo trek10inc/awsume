@@ -22,6 +22,7 @@ psutil = "*"
 colorama = "*"
 coverage = "*"
 trek10-accounts-plugin = {editable = true,path = "./../../../internal/awsume-plugins/trek10-accounts/source"}
+pyyaml = "*"
 
 [scripts]
 test = "pytest --cov=awsume --cov-report term"
