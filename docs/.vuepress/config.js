@@ -5,13 +5,18 @@ module.exports = {
   themeConfig: {
     lastUpdated: 'Last Updated', // string | boolean
   },
+  plugins: [
+    [
+      '@vuepress/google-analytics',
+      {
+        'ga': 'UA-47115220-9',
+      }
+    ]
+  ],
   themeConfig: {
     displayAllHeaders: true,
     sidebarDepth: 0,
     logo: '/logo.png',
-    head: [
-      ['link', { rel: 'icon', href: '/logo.png' }]
-    ],
     nav: [
       { text: 'Home', link: '/' },
       { text: 'GitHub', link: 'https://github.com/trek10inc/awsume' },
