@@ -2,11 +2,15 @@
 
 ## [4.0.0] - TBD - Major Refactor
 
+- New plugin system: "pluggy"
+  - Define plugins as python packages that can be `pip installed`
 - Allows support for SAML and Web Identity plugins
+- Allows piping credentials into stdin (in json format such as from an `aws sts get-federation-token` call)
+- Allows json input from the `--json` flag
 - Allows using an external ID from the cli
 - Allows using a role arn from the CLI using a targeted source-profile or current credentials
   - This allows you to role chain as much as you want
-- Makes autocomplete faster through the use of an autocomplete file.
+- Makes autocomplete faster through the use of an autocomplete cache file and using `fastentrypoints` to skip the `pkg_resources` import
   - Plugins must implement a `get_profile_names` method which will be used to update this file
   - The `--refresh-autocomplete` must be called to update the file
 - If you run `awsume -l more` it will make additional calls to AWS to get more information about each profile
@@ -16,6 +20,12 @@
 - Allows you to specify custom config and credentials files with the `--config-file` and `--credentials-file` flags
 - Refactors awsume's global configuration, so that plugins can now use it too
   - Implements a "reset" or "clear" function: `awsume --config clear role-duration` to set the role-duration config back to default
+  - JSON config values allowed
+- New cache directory at `~/.awsume`
+  - No longer overrides the awscli `~/.aws/cli/cache` directory to be used for awsume
+- New `awsume-configure` cli to set up awsume's alias and autocomplete after installation without needing to reinstall awsume
+- Allows for the `AWSUME_SKIP_ALIAS_SETUP` variable to make `pip install awsume` skip running `awsume-configure`
+- Handles debug/info logging at the start of awsume's execution
 
 ## [3.2.9] - 2019-7-03 - Various Improvements
 

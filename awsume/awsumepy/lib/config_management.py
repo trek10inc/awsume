@@ -28,8 +28,6 @@ def load_config() -> dict:
     except Exception:
         safe_print('Cannot parse config file: {}'.format(constants.AWSUME_CONFIG), colorama.Fore.RED)
         exit(1)
-        # write_config(defaults)
-        # options = defaults
     if not options:
         options = defaults
     return options

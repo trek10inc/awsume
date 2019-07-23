@@ -3,141 +3,142 @@ import json
 import pytest
 from unittest.mock import patch, MagicMock
 
+import yaml
 from awsume.awsumepy.lib import config_management
 
 
-@patch('json.load')
+@patch('yaml.safe_load')
 @patch('builtins.open')
 @patch('os.makedirs')
 @patch('os.path.isfile')
 @patch('os.path.exists')
-def test_load_config(exists: MagicMock, isfile: MagicMock, makedirs: MagicMock, open: MagicMock, json_load: MagicMock):
+def test_load_config(exists: MagicMock, isfile: MagicMock, makedirs: MagicMock, open: MagicMock, yaml_load: MagicMock):
     exists.return_value = True
     isfile.return_value = True
-    json_load.return_value = {'key': 'value'}
+    yaml_load.return_value = {'key': 'value'}
 
     result = config_management.load_config()
 
-    assert result == json_load.return_value
+    assert result == yaml_load.return_value
     makedirs.assert_not_called()
 
 
-@patch('json.load')
+@patch('yaml.safe_load')
 @patch('builtins.open')
 @patch('os.makedirs')
 @patch('os.path.isfile')
 @patch('os.path.exists')
-def test_load_config_no_path(exists: MagicMock, isfile: MagicMock, makedirs: MagicMock, open: MagicMock, json_load: MagicMock):
+def test_load_config_no_path(exists: MagicMock, isfile: MagicMock, makedirs: MagicMock, open: MagicMock, yaml_load: MagicMock):
     exists.return_value = False
     isfile.return_value = True
-    json_load.return_value = {'key': 'value'}
+    yaml_load.return_value = {'key': 'value'}
 
     result = config_management.load_config()
 
-    assert result == json_load.return_value
+    assert result == yaml_load.return_value
     makedirs.assert_called()
     open.assert_called_once()
     makedirs.assert_called_once()
 
 
-@patch('json.load')
+@patch('yaml.safe_load')
 @patch('builtins.open')
 @patch('os.makedirs')
 @patch('os.path.isfile')
 @patch('os.path.exists')
-def test_load_config_no_file(exists: MagicMock, isfile: MagicMock, makedirs: MagicMock, open: MagicMock, json_load: MagicMock):
+def test_load_config_no_file(exists: MagicMock, isfile: MagicMock, makedirs: MagicMock, open: MagicMock, yaml_load: MagicMock):
     exists.return_value = True
     isfile.return_value = False
-    json_load.return_value = {'key': 'value'}
+    yaml_load.return_value = {'key': 'value'}
 
 
     result = config_management.load_config()
 
-    assert result == json_load.return_value
+    assert result == yaml_load.return_value
     makedirs.assert_not_called()
     assert open.call_count == 2
 
 
+@patch.object(config_management, 'safe_print')
 @patch.object(config_management, 'write_config')
-@patch('json.load')
+@patch('yaml.safe_load')
 @patch('builtins.open')
 @patch('os.makedirs')
 @patch('os.path.isfile')
 @patch('os.path.exists')
-def test_load_config_json_error(exists: MagicMock, isfile: MagicMock, makedirs: MagicMock, open: MagicMock, json_load: MagicMock, write_config: MagicMock):
+def test_load_config_yaml_error(exists: MagicMock, isfile: MagicMock, makedirs: MagicMock, open: MagicMock, yaml_load: MagicMock, write_config: MagicMock, safe_print: MagicMock):
     exists.return_value = True
     isfile.return_value = True
-    json_load.side_effect = json.JSONDecodeError('msg', 'doc', 0)
+    yaml_load.side_effect = yaml.error.YAMLError()
 
-    result = config_management.load_config()
+    with pytest.raises(SystemExit):
+        config_management.load_config()
 
-    assert result == config_management.defaults
     makedirs.assert_not_called()
     open.assert_called_once()
-    write_config.assert_called_once_with(config_management.defaults)
 
 
 @patch.object(config_management, 'safe_print')
-@patch('json.dump')
+@patch('yaml.safe_dump')
 @patch('builtins.open')
 @patch('os.makedirs')
 @patch('os.path.isfile')
 @patch('os.path.exists')
-def test_write_config(exists: MagicMock, isfile: MagicMock, makedirs: MagicMock, open: MagicMock, json_dump: MagicMock, safe_print: MagicMock):
+def test_write_config(exists: MagicMock, isfile: MagicMock, makedirs: MagicMock, open: MagicMock, yaml_dump: MagicMock, safe_print: MagicMock):
     exists.return_value = True
     isfile.return_value = True
 
     config_management.write_config({'key': 'value'})
 
-    json_dump.assert_called_once_with({'key': 'value'}, open.return_value, indent=2)
+    yaml_dump.assert_called_once_with({'key': 'value'}, open.return_value)
     makedirs.assert_not_called()
     open.assert_called_once()
 
 
 @patch.object(config_management, 'safe_print')
-@patch('json.dump')
+@patch('yaml.safe_dump')
 @patch('builtins.open')
 @patch('os.makedirs')
 @patch('os.path.isfile')
 @patch('os.path.exists')
-def test_write_config_no_path(exists: MagicMock, isfile: MagicMock, makedirs: MagicMock, open: MagicMock, json_dump: MagicMock, safe_print: MagicMock):
+def test_write_config_no_path(exists: MagicMock, isfile: MagicMock, makedirs: MagicMock, open: MagicMock, yaml_dump: MagicMock, safe_print: MagicMock):
     exists.return_value = False
     isfile.return_value = True
 
     config_management.write_config({'key': 'value'})
 
-    json_dump.assert_called_once_with({'key': 'value'}, open.return_value, indent=2)
+    yaml_dump.assert_called_once_with({'key': 'value'}, open.return_value)
     makedirs.assert_called_once()
     open.assert_called_once()
 
 
 @patch.object(config_management, 'safe_print')
-@patch('json.dump')
+@patch('yaml.safe_dump')
 @patch('builtins.open')
 @patch('os.makedirs')
 @patch('os.path.isfile')
 @patch('os.path.exists')
-def test_write_config_no_file(exists: MagicMock, isfile: MagicMock, makedirs: MagicMock, open: MagicMock, json_dump: MagicMock, safe_print: MagicMock):
+def test_write_config_no_file(exists: MagicMock, isfile: MagicMock, makedirs: MagicMock, open: MagicMock, yaml_dump: MagicMock, safe_print: MagicMock):
     exists.return_value = True
     isfile.return_value = False
 
     config_management.write_config({'key': 'value'})
 
-    json_dump.assert_called_once_with({'key': 'value'}, open.return_value, indent=2)
+    yaml_dump.assert_called_once_with({'key': 'value'}, open.return_value)
     makedirs.assert_not_called()
     assert open.call_count == 2
 
 
 @patch.object(config_management, 'safe_print')
-@patch('json.dump')
+@patch('yaml.safe_dump')
 @patch('builtins.open')
 @patch('os.makedirs')
 @patch('os.path.isfile')
 @patch('os.path.exists')
-def test_write_config_catches_exception(exists: MagicMock, isfile: MagicMock, makedirs: MagicMock, open: MagicMock, json_dump: MagicMock, safe_print: MagicMock):
+def test_write_config_catches_exception(exists: MagicMock, isfile: MagicMock, makedirs: MagicMock, open: MagicMock, yaml_dump: MagicMock, safe_print: MagicMock):
     exists.return_value = True
     isfile.return_value = False
-    json_dump.side_effect = Exception()
+    yaml_dump.side_effect = Exception()
 
     config_management.write_config({'key': 'value'})
 

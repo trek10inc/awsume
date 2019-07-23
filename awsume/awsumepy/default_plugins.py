@@ -135,6 +135,12 @@ def add_arguments(config: dict, parser: argparse.ArgumentParser):
         dest='with_web_identity',
         help='Use web identity (requires plugin)',
     )
+    parser.add_argument('--json',
+        action='store',
+        dest='json',
+        metavar='json',
+        help='Use json credentials',
+    )
     parser.add_argument('--credentials-file',
         action='store',
         dest='credentials_file',
