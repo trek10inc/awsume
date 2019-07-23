@@ -70,6 +70,7 @@ class Awsume(object):
             arguments=args,
             parser=argument_parser,
         )
+        args.system_arguments = system_arguments
         return args
 
 
@@ -157,6 +158,9 @@ class Awsume(object):
             profiles=profiles,
             credentials=credentials,
         )
+        if not credentials:
+            safe_print('No credentials to awsume', colorama.Fore.RED)
+            exit(1)
         return credentials
 
 
@@ -168,12 +172,9 @@ class Awsume(object):
 
     def run(self, system_arguments: list):
         args = self.parse_args(system_arguments)
-        args.system_arguments = system_arguments
         profiles = self.get_profiles(args)
         credentials = self.get_credentials(args, profiles)
-        if not credentials:
-            safe_print('No credentials to awsume', colorama.Fore.RED)
-            exit(1)
+
         if args.auto_refresh:
             self.export_data('Auto', [
                 'autoawsume-{}'.format(args.target_profile_name),
