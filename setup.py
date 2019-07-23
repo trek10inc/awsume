@@ -20,6 +20,7 @@ setup(
         'boto3',
         'psutil',
         'pluggy',
+        'pyyaml',
     ],
     scripts=[
         'shell_scripts/awsume',
