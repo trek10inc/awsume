@@ -99,8 +99,13 @@ class Awsume(object):
 
     def get_credentials(self, args: argparse.Namespace, profiles: dict) -> dict:
         logger.debug('Getting credentials')
+        self.plugin_manager.hook.pre_get_credentials(
+            config=self.config,
+            arguments=args,
+            profiles=profiles,
+        )
         try:
-            if args.json or not sys.stdin.isatty():
+            if args.json or not sys.stdin.isatty(): # piping/sending credentials to awsume directly
                 args.target_profile_name = 'json' if args.json else 'stdin'
                 json_input = args.json if args.json else sys.stdin.read()
                 try:
@@ -143,7 +148,14 @@ class Awsume(object):
             logger.debug('', exc_info=True)
             self.plugin_manager.hook.catch_role_authentication_error(config=self.config, arguments=args, profiles=profiles, error=e)
             exit(1)
-        return next((_ for _ in credentials if _), {}) # pragma: no cover
+        credentials = next((_ for _ in credentials if _), {}) # pragma: no cover
+        self.plugin_manager.hook.post_get_credentials(
+            config=self.config,
+            arguments=args,
+            profiles=profiles,
+            credentials=credentials,
+        )
+        return credentials
 
 
     def export_data(self, awsume_flag: str, awsume_list: list):
@@ -156,22 +168,10 @@ class Awsume(object):
         args = self.parse_args(system_arguments)
         args.system_arguments = system_arguments
         profiles = self.get_profiles(args)
-
-        self.plugin_manager.hook.pre_get_credentials(
-            config=self.config,
-            arguments=args,
-            profiles=profiles,
-        )
         credentials = self.get_credentials(args, profiles)
         if not credentials:
             safe_print('No credentials to awsume', colorama.Fore.RED)
             exit(1)
-        self.plugin_manager.hook.post_get_credentials(
-            config=self.config,
-            arguments=args,
-            profiles=profiles,
-            credentials=credentials,
-        )
         if args.auto_refresh:
             self.export_data('Auto', [
                 'autoawsume-{}'.format(args.target_profile_name),
