@@ -148,7 +148,9 @@ class Awsume(object):
             logger.debug('', exc_info=True)
             self.plugin_manager.hook.catch_role_authentication_error(config=self.config, arguments=args, profiles=profiles, error=e)
             exit(1)
+        print(credentials)
         credentials = next((_ for _ in credentials if _), {}) # pragma: no cover
+        print(credentials)
         self.plugin_manager.hook.post_get_credentials(
             config=self.config,
             arguments=args,
