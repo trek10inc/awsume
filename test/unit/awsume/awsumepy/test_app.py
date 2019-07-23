@@ -295,21 +295,21 @@ def test_run_auto_refresh(__init__: MagicMock, isatty: MagicMock):
 
 
 
-@patch.object(sys.stdin, 'isatty')
-@patch.object(app, 'safe_print')
-@patch.object(app.Awsume, '__init__')
-def test_run_no_credentials(__init__: MagicMock, safe_print: MagicMock, isatty: MagicMock):
-    __init__.return_value = None
-    obj = app.Awsume()
-    obj.config = {}
-    obj.plugin_manager = MagicMock()
-    obj.parse_args = MagicMock()
-    obj.get_profiles = MagicMock()
-    obj.export_data = MagicMock()
-    obj.get_credentials = MagicMock()
-    obj.parse_args.return_value = argparse.Namespace(with_saml=False, with_web_identity=False, auto_refresh=False, target_profile_name='default', json=None)
-    obj.get_credentials.return_value = []
-    isatty.return_value = True
+# @patch.object(sys.stdin, 'isatty')
+# @patch.object(app, 'safe_print')
+# @patch.object(app.Awsume, '__init__')
+# def test_run_no_credentials(__init__: MagicMock, safe_print: MagicMock, isatty: MagicMock):
+#     __init__.return_value = None
+#     obj = app.Awsume()
+#     obj.config = {}
+#     obj.plugin_manager = MagicMock()
+#     obj.parse_args = MagicMock()
+#     obj.get_profiles = MagicMock()
+#     obj.export_data = MagicMock()
+#     obj.get_credentials = MagicMock()
+#     obj.parse_args.return_value = argparse.Namespace(with_saml=False, with_web_identity=False, auto_refresh=False, target_profile_name='default', json=None)
+#     obj.get_credentials.return_value = []
+#     isatty.return_value = True
 
-    with pytest.raises(SystemExit):
-        obj.run([])
+#     with pytest.raises(SystemExit):
+#         obj.run([])
