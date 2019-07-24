@@ -182,7 +182,7 @@ def test_update_config_clear(write_config: MagicMock, load_config: MagicMock, sa
     config_management.update_config(['clear', 'key'])
 
     load_config.assert_called()
-    write_config.assert_called_with({'key': 'default-value'})
+    write_config.assert_called_with({})
 
 
 @patch.object(config_management, 'defaults', {'key': 'default-value'})
@@ -192,7 +192,7 @@ def test_update_config_clear(write_config: MagicMock, load_config: MagicMock, sa
 def test_update_config_reset_no_key(write_config: MagicMock, load_config: MagicMock, safe_print: MagicMock):
     load_config.return_value = {'key': 'value'}
 
-    config_management.update_config(['clear', 'no-key'])
+    config_management.update_config(['reset', 'no-key'])
 
     load_config.assert_called()
     write_config.assert_called_with({'key': 'value'})
