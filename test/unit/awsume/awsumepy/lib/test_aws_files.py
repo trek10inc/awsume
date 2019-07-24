@@ -26,8 +26,8 @@ def test_get_aws_files_args():
 
     config_file, credentials_file = aws_files.get_aws_files(args, config)
 
-    assert config_file == 'my/config/file'
-    assert credentials_file == 'my/credentials/file'
+    assert config_file == str(Path('my/config/file'))
+    assert credentials_file == str(Path('my/credentials/file'))
 
 
 
@@ -40,8 +40,8 @@ def test_get_aws_files_config():
 
     config_file, credentials_file = aws_files.get_aws_files(args, config)
 
-    assert config_file == 'my/config/file'
-    assert credentials_file == 'my/credentials/file'
+    assert config_file == str(Path('my/config/file'))
+    assert credentials_file == str(Path('my/credentials/file'))
 
 
 @patch.dict('os.environ', {'AWS_CONFIG_FILE': 'my/config/file', 'AWS_SHARED_CREDENTIALS_FILE': 'my/credentials/file'}, clear=True)
@@ -51,8 +51,8 @@ def test_get_aws_files_environment():
 
     config_file, credentials_file = aws_files.get_aws_files(args, config)
 
-    assert config_file == 'my/config/file'
-    assert credentials_file == 'my/credentials/file'
+    assert config_file == str(Path('my/config/file'))
+    assert credentials_file == str(Path('my/credentials/file'))
 
 
 @patch('builtins.open')
