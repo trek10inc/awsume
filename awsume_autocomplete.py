@@ -33,8 +33,10 @@ def uniquely_concat_lists(list1, list2):
 def main():
     config, credentials = get_aws_files()
     profile_names = get_profile_names(credentials, config)
-    autocomplete = json.load(open(str(Path('~/.awsume/autocomplete.json').expanduser())))
-    profile_names = uniquely_concat_lists(profile_names, autocomplete['profile-names'])
+    autocomplete_file = str(Path('~/.awsume/autocomplete.json').expanduser())
+    if os.path.isfile(autocomplete_file):
+        autocomplete = json.load(open(autocomplete_file))
+        profile_names = uniquely_concat_lists(profile_names, autocomplete['profile-names'])
     print('\n'.join(profile_names))
 
 if __name__ == "__main__":
