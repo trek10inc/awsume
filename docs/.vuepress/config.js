@@ -74,14 +74,6 @@ module.exports = {
           '/changelog',
         ],
       },
-      // {
-      //   title: 'Plugins',
-      //   collapsable: true,
-      //   children: [
-      //     '/plugins/',
-      //     '/plugins/profiles',
-      //   ],
-      // },
     ],
   },
 };

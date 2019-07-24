@@ -40,7 +40,7 @@ def write_config(config: dict):
         open(str(constants.AWSUME_CONFIG), 'a').close()
 
     try:
-        yaml.safe_dump(config, open(str(constants.AWSUME_CONFIG), 'w'))
+        yaml.safe_dump(config, open(str(constants.AWSUME_CONFIG), 'w'), width=1000)
     except Exception as e:
         safe_print('Unable to write config: {}'.format(e), colorama.Fore.RED)
 
@@ -55,7 +55,15 @@ def update_config(operations: list):
         except json.JSONDecodeError:
             logger.debug('Cannot parse input', exc_info=True)
             value = operations[2]
-        config[operations[1]] = value
+        parts = operations[1].split('.') # ['console', 'command']
+        location = config
+        for path in parts[:-1]:
+            if path in location:
+                location = location[path]
+            else:
+                location[path] = {}
+                location = location[path]
+        location[parts[-1]] = value
     if operations[0].lower() in ['reset', 'clear']:
         if operations[1] in defaults:
             config[operations[1]] = defaults[operations[1]]
