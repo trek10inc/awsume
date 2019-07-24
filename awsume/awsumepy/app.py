@@ -1,6 +1,7 @@
 import os
 import sys
 import argparse
+import difflib
 import json
 import logging
 import pluggy
@@ -14,6 +15,8 @@ from . lib.exceptions import ProfileNotFoundError, InvalidProfileError, UserAuth
 from . lib.logger import logger
 from . lib.safe_print import safe_print
 from . lib import constants
+from . lib import saml as saml
+from . lib import aws as aws_lib
 from . import hookspec
 from . import default_plugins
 
@@ -98,6 +101,46 @@ class Awsume(object):
         return profiles
 
 
+    def get_saml_credentials(self, args: argparse.Namespace) -> dict:
+        assertion = self.plugin_manager.hook.get_credentials_with_saml(
+            config=self.config,
+            arguments=args,
+        )
+        assertion = next((_ for _ in assertion if _), None) # pragma: no cover
+        if not assertion:
+            safe_print('No assertion to use!', colorama.Fore.RED)
+        roles = saml.parse_assertion(assertion)
+
+        role_arn = None
+        principal_arn = None
+        if args.role_arn:
+            choice = difflib.get_close_matches(args.role_arn, roles, cutoff=0)[0]
+            safe_print('Closest match: {}'.format(choice))
+        else:
+            safe_print('Prompting for choice', colorama.Fore.GREEN)
+            for index, choice in enumerate(roles):
+                safe_print('{}) {}'.format(index, choice), color=colorama.Fore.LIGHTYELLOW_EX)
+            safe_print('Enter the number > ', end='', color=colorama.Fore.LIGHTCYAN_EX)
+            response = input()
+            if response.isnumeric():
+                choice = roles[int(response)]
+            else:
+                choice = difflib.get_close_matches(response, roles, cutoff=0)[0]
+        safe_print('Assuming role: {}'.format(choice), color=colorama.Fore.GREEN)
+        role_arn = choice.split(',')[1]
+        principal_arn = choice.split(',')[0]
+
+        role_duration = args.role_duration or int(self.config.get('role-duration', '0'))
+        credentials = aws_lib.assume_role_with_saml(
+            role_arn,
+            principal_arn,
+            assertion,
+            region=None,
+            role_duration=role_duration,
+        )
+        return credentials
+
+
     def get_credentials(self, args: argparse.Namespace, profiles: dict) -> dict:
         logger.debug('Getting credentials')
         self.plugin_manager.hook.pre_get_credentials(
@@ -118,10 +161,8 @@ class Awsume(object):
                     exit(1)
                 credentials = [credentials]
             elif args.with_saml:
-                credentials = self.plugin_manager.hook.get_credentials_with_saml(
-                    config=self.config,
-                    arguments=args,
-                )
+                credentials = self.get_saml_credentials(args)
+                credentials = [credentials]
             elif args.with_web_identity:
                 credentials = self.plugin_manager.hook.get_credentials_with_web_identity(
                     config=self.config,
@@ -149,9 +190,7 @@ class Awsume(object):
             logger.debug('', exc_info=True)
             self.plugin_manager.hook.catch_role_authentication_error(config=self.config, arguments=args, profiles=profiles, error=e)
             exit(1)
-        print(credentials)
         credentials = next((_ for _ in credentials if _), {}) # pragma: no cover
-        print(credentials)
         self.plugin_manager.hook.post_get_credentials(
             config=self.config,
             arguments=args,

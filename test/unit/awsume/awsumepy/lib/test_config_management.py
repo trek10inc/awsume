@@ -90,7 +90,7 @@ def test_write_config(exists: MagicMock, isfile: MagicMock, makedirs: MagicMock,
 
     config_management.write_config({'key': 'value'})
 
-    yaml_dump.assert_called_once_with({'key': 'value'}, open.return_value)
+    yaml_dump.assert_called_once_with({'key': 'value'}, open.return_value, width=1000)
     makedirs.assert_not_called()
     open.assert_called_once()
 
@@ -107,7 +107,7 @@ def test_write_config_no_path(exists: MagicMock, isfile: MagicMock, makedirs: Ma
 
     config_management.write_config({'key': 'value'})
 
-    yaml_dump.assert_called_once_with({'key': 'value'}, open.return_value)
+    yaml_dump.assert_called_once_with({'key': 'value'}, open.return_value, width=1000)
     makedirs.assert_called_once()
     open.assert_called_once()
 
@@ -124,7 +124,7 @@ def test_write_config_no_file(exists: MagicMock, isfile: MagicMock, makedirs: Ma
 
     config_management.write_config({'key': 'value'})
 
-    yaml_dump.assert_called_once_with({'key': 'value'}, open.return_value)
+    yaml_dump.assert_called_once_with({'key': 'value'}, open.return_value, width=1000)
     makedirs.assert_not_called()
     assert open.call_count == 2
 

@@ -100,3 +100,27 @@ def get_account_id(credentials: dict):
         return response.get('Account', 'Unavailable')
     except:
         return 'Unavailable'
+
+
+def assume_role_with_saml(
+    role_arn: str,
+    principal_arn: str,
+    saml_assertion: str,
+    region: str = 'us-east-1',
+    role_duration: int = None,
+) -> dict:
+    logger.debug('Assuming role with saml: {}'.format(role_arn))
+    role_sts_client = boto3.session.Session().client('sts') # type: botostubs.STS
+
+    try:
+        kwargs = { 'RoleArn': role_arn, 'PrincipalArn': principal_arn, 'SAMLAssertion': saml_assertion }
+        if role_duration:
+            kwargs['DurationSeconds'] = role_duration
+        role_session = role_sts_client.assume_role_with_saml(**kwargs).get('Credentials')
+        role_session['Expiration'] = role_session['Expiration'].astimezone(dateutil.tz.tzlocal())
+        role_session['Region'] = region
+    except Exception as e:
+        raise RoleAuthenticationError(str(e))
+    logger.debug('Role credentials received')
+    safe_print('Role credentials will expire {}'.format(parse_time(role_session['Expiration'])), colorama.Fore.GREEN)
+    return role_session

@@ -23,11 +23,12 @@ colorama = "*"
 coverage = "*"
 trek10-accounts-plugin = {editable = true,path = "./../../../internal/awsume-plugins/trek10-accounts/source"}
 pyyaml = "*"
+xmltodict = "*"
 
 [scripts]
-test = "pytest --cov=awsume --cov-report term"
-test-html = "pytest --cov=awsume --cov-report html:coverage/html"
-test-only = "pytest"
+test = "pytest test --cov=awsume --cov-report term"
+test-html = "pytest test --cov=awsume --cov-report html:coverage/html"
+test-only = "pytest test"
 test-watch = "watchmedo shell-command --patterns='*.py;*.txt' --recursive --command='pipenv run test-html -s'"
 build = "python setup.py sdist"
 deploy-test = "twine upload -r test dist/*"
