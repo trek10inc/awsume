@@ -156,6 +156,7 @@ class Awsume(object):
         )
         try:
             if args.json or not sys.stdin.isatty(): # piping/sending credentials to awsume directly
+                logger.debug('Pulling credentials from {}'.format('json parameter' if args.json else 'stdin'))
                 args.target_profile_name = 'json' if args.json else 'stdin'
                 json_input = args.json if args.json else sys.stdin.read()
                 try:
@@ -167,14 +168,17 @@ class Awsume(object):
                     exit(1)
                 credentials = [credentials]
             elif args.with_saml:
+                logger.debug('Pulling credentials from saml')
                 credentials = self.get_saml_credentials(args)
                 credentials = [credentials]
             elif args.with_web_identity:
+                logger.debug('Pulling credentials from web identity')
                 credentials = self.plugin_manager.hook.get_credentials_with_web_identity(
                     config=self.config,
                     arguments=args,
                 )
             else:
+                logger.debug('Pulling credentials from default awsume flow')
                 credentials = self.plugin_manager.hook.get_credentials(config=self.config, arguments=args, profiles=profiles)
         except ProfileNotFoundError as e:
             safe_print(e, colorama.Fore.RED)
