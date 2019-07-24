@@ -109,28 +109,34 @@ class Awsume(object):
         assertion = next((_ for _ in assertion if _), None) # pragma: no cover
         if not assertion:
             safe_print('No assertion to use!', colorama.Fore.RED)
+            exit(1)
         roles = saml.parse_assertion(assertion)
-
+        if not roles:
+            safe_print('No roles found in the saml assertion', colorama.Fore.RED)
+            exit(1)
         role_arn = None
         principal_arn = None
-        if args.role_arn:
-            choice = difflib.get_close_matches(args.role_arn, roles, cutoff=0)[0]
-            safe_print('Closest match: {}'.format(choice))
-        else:
-            safe_print('Prompting for choice', colorama.Fore.GREEN)
-            for index, choice in enumerate(roles):
-                safe_print('{}) {}'.format(index, choice), color=colorama.Fore.LIGHTYELLOW_EX)
-            safe_print('Enter the number > ', end='', color=colorama.Fore.LIGHTCYAN_EX)
-            response = input()
-            if response.isnumeric():
-                choice = roles[int(response)]
-            else:
-                choice = difflib.get_close_matches(response, roles, cutoff=0)[0]
-        safe_print('Assuming role: {}'.format(choice), color=colorama.Fore.GREEN)
-        role_arn = choice.split(',')[1]
-        principal_arn = choice.split(',')[0]
-
         role_duration = args.role_duration or int(self.config.get('role-duration', '0'))
+
+        if len(roles) > 1:
+            if args.role_arn:
+                choice = difflib.get_close_matches(args.role_arn, roles, cutoff=0)[0]
+                safe_print('Closest match: {}'.format(choice))
+            else:
+                for index, choice in enumerate(roles):
+                    safe_print('{}) {}'.format(index, choice), color=colorama.Fore.LIGHTYELLOW_EX)
+                safe_print('Which role do you want to assume? > ', end='', color=colorama.Fore.LIGHTCYAN_EX)
+                response = input()
+                if response.isnumeric():
+                    choice = roles[int(response)]
+                else:
+                    choice = difflib.get_close_matches(response, roles, cutoff=0)[0]
+            role_arn = choice.split(',')[1]
+            principal_arn = choice.split(',')[0]
+        else:
+            role_arn = roles[0].split(',')[1]
+            principal_arn = roles[0].split(',')[0]
+        safe_print('Assuming role: {},{}'.format(principal_arn, role_arn), color=colorama.Fore.GREEN)
         credentials = aws_lib.assume_role_with_saml(
             role_arn,
             principal_arn,
