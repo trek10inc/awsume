@@ -39,5 +39,6 @@ def main():
         profile_names = uniquely_concat_lists(profile_names, autocomplete['profile-names'])
     print('\n'.join(profile_names))
 
+
 if __name__ == "__main__":
     main()
