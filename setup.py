@@ -21,6 +21,7 @@ setup(
         'psutil',
         'pluggy',
         'pyyaml',
+        'xmltodict',
     ],
     scripts=[
         'shell_scripts/awsume',

@@ -1,3 +1,2 @@
 include readme.md
 include fastentrypoints.py
-include autocomplete.py
