@@ -68,6 +68,11 @@ class Awsume(object):
             profile_names = [y for x in result for y in x]
             json.dump({'profile-names': profile_names}, open(autocomplete_file, 'w'))
             exit(0)
+        if args.list_plugins:
+            for plugin_name, _ in self.plugin_manager.list_name_plugin():
+                if 'default_plugins' not in plugin_name:
+                    safe_print(plugin_name, color=colorama.Fore.LIGHTCYAN_EX)
+            exit(0)
         self.plugin_manager.hook.post_add_arguments(
             config=self.config,
             arguments=args,
@@ -220,6 +225,7 @@ class Awsume(object):
 
 
     def run(self, system_arguments: list):
+        result = self.plugin_manager.list_name_plugin()
         args = self.parse_args(system_arguments)
         profiles = self.get_profiles(args)
         credentials = self.get_credentials(args, profiles)

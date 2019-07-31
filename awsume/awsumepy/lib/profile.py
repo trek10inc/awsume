@@ -8,19 +8,22 @@ from . safe_print import safe_print
 from . import aws as aws_lib
 from collections import OrderedDict
 
+VALID_CREDENTIAL_SOURCES = [ None, 'Environment' ]
+
 
 def is_role(profile: dict) -> bool:
     return 'role_arn' in profile
 
 
 def profile_to_credentials(profile: dict) -> dict:
-    return {
-        'AccessKeyId': profile.get('aws_access_key_id'),
-        'SecretAccessKey': profile.get('aws_secret_access_key'),
-        'SessionToken': profile.get('aws_session_token'),
-        'Region': profile.get('region'),
-    }
-
+    if profile:
+        return {
+            'AccessKeyId': profile.get('aws_access_key_id'),
+            'SecretAccessKey': profile.get('aws_secret_access_key'),
+            'SessionToken': profile.get('aws_session_token'),
+            'Region': profile.get('region'),
+        }
+    return {}
 
 def credentials_to_profile(credentials: dict) -> dict:
     result =  {}
@@ -43,25 +46,32 @@ def validate_profile(profiles: dict, target_profile_name: str) -> bool:
 
     # validate role profiles
     if is_role(profile):
+        if profile.get('credential_process'):
+            raise InvalidProfileError(target_profile_name, message='awsume does not support the credential_process profile option: {}')
+        if profile.get('credential_source') and profile.get('source_profile'):
+            raise InvalidProfileError(target_profile_name, message='credential_source and source_profile are mutually exclusive profile options')
+        if not profile.get('credential_source') and not profile.get('source_profile'):
+            raise InvalidProfileError(target_profile_name, message='role profiles must contain one of credential_source or source_profile')
+        if profile.get('credential_source') not in VALID_CREDENTIAL_SOURCES:
+            raise InvalidProfileError(target_profile_name, message='unsupported awsume credential_source profile option: {}'.format(profile.get('credential_source')))
         source_profile_name = profile.get('source_profile')
         if source_profile_name and not profiles.get(source_profile_name):
             raise ProfileNotFoundError(profile_name=source_profile_name)
-        if not source_profile_name and not profiles.get('default'):
-            raise ProfileNotFoundError(message='Source profile not provided in role profile and no default profile exists')
         user_profile = get_source_profile(profiles, target_profile_name)
         user_profile_name = source_profile_name
     else:
         user_profile = profile
         user_profile_name = target_profile_name
 
-    # validate user profiles
-    missing_keys = []
-    if 'aws_access_key_id' not in user_profile:
-        missing_keys.append('aws_access_key_id')
-    if 'aws_secret_access_key' not in user_profile:
-        missing_keys.append('aws_secret_access_key')
-    if missing_keys:
-        raise InvalidProfileError(user_profile_name, message='Missing keys {}'.format(', '.join(missing_keys)))
+    # validate user profile
+    if user_profile:
+        missing_keys = []
+        if 'aws_access_key_id' not in user_profile:
+            missing_keys.append('aws_access_key_id')
+        if 'aws_secret_access_key' not in user_profile:
+            missing_keys.append('aws_secret_access_key')
+        if missing_keys:
+            raise InvalidProfileError(user_profile_name, message='Missing keys {}'.format(', '.join(missing_keys)))
     return True
 
 
@@ -125,7 +135,7 @@ def format_aws_profiles(profiles: dict, get_extra_data: bool) -> list: # pragma:
     profile_list = []
     profile_list.append([])
     profile_list[0].extend(list_headers)
-    #now fill the tables with the appropriate data
+    # now fill the tables with the appropriate data
     for name in sorted_profiles:
         #don't add any autoawsume profiles
         if 'auto-refresh-' not in name:

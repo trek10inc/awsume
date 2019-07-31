@@ -160,6 +160,11 @@ def add_arguments(config: dict, parser: argparse.ArgumentParser):
         metavar='option',
         help='Configure awsume',
     )
+    parser.add_argument('--list-plugins',
+        action='store_true',
+        dest='list_plugins',
+        help='List installed plugins',
+    )
     parser.add_argument('--info',
         action='store_true',
         dest='info',
@@ -372,16 +377,20 @@ def get_credentials(config: dict, arguments: argparse.Namespace, profiles: dict)
                     mfa_token=arguments.mfa_token,
                 )
             else:
-                logger.debug('Calling get_session_token to assume role with')
                 source_profile = profile_lib.get_source_profile(profiles, arguments.target_profile_name)
-                source_credentials = profile_lib.profile_to_credentials(source_profile)
-                source_session = aws_lib.get_session_token(
-                    source_credentials,
-                    region=region,
-                    mfa_serial=mfa_serial,
-                    mfa_token=arguments.mfa_token,
-                    ignore_cache=arguments.force_refresh,
-                )
+                if source_profile:
+                    logger.debug('Calling get_session_token to assume role with')
+                    source_credentials = profile_lib.profile_to_credentials(source_profile)
+                    source_session = aws_lib.get_session_token(
+                        source_credentials,
+                        region=region,
+                        mfa_serial=mfa_serial,
+                        mfa_token=arguments.mfa_token,
+                        ignore_cache=arguments.force_refresh,
+                    )
+                elif target_profile.get('credential_source') == 'Environment':
+                    logger.debug('Using environment variables')
+                    source_session = {}
                 role_session = aws_lib.assume_role(
                     source_session,
                     target_profile.get('role_arn'),
