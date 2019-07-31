@@ -42,6 +42,7 @@ optional arguments:
   --credentials-file credentials_file  Target a shared credentials file
   --config-file config_file            Target a config file
   --config [option [option ...]]       Configure awsume
+  --list-plugins                       List installed plugins
   --info                               Print any info logs to stderr
   --debug                              Print any debug logs to stderr
 
@@ -168,6 +169,10 @@ awsume --config reset role-duration
 ```
 
 The configuration is stored in the `~/.awsume/config.json` file.
+
+## List Plugins
+
+This will list all of the currently-installed awsume plugins.
 
 ## Info
 
