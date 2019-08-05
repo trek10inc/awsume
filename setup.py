@@ -11,7 +11,7 @@ setup(
     author=awsume.__AUTHOR__,
     author_email=awsume.__AUTHOR_EMAIL__,
     description=awsume.__DESCRIPTION__,
-    long_description=open('readme.md', 'r').read(),
+    long_description=open('README.md', 'r').read(),
     long_description_content_type='text/markdown',
     license=awsume.__LICENSE__,
     url=awsume.__HOMEPAGE__,

@@ -6,4 +6,4 @@ Awsume is a convenient way to manage session tokens and assume role credentials.
 
 <img src="./demo.gif" style="display: block; margin: 0 auto;" />
 
-For a quick getting started guide, check out the [quick start](./quickstart.md) section.
+For a quick getting started guide, check out the [quick start](./general/quickstart.md) section.
