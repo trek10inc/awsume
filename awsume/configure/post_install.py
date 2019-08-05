@@ -13,8 +13,9 @@ class CustomInstall(install):
         paths = [Path(_).expanduser() for _ in BASH_LOGIN_FILES]
         result = [_ for _ in paths if os.path.exists(_) and os.path.isfile(_) and os.access(_, os.R_OK)]
         if not result:
-            open('~/.bash_profile', 'w').close()
-            result = [Path('~/.bash_profile').expanduser()]
+            default = paths[0]
+            open(default, 'w').close()
+            result = [default]
         return result[0]
 
     def get_zsh_file(self) -> str:
@@ -39,7 +40,10 @@ class CustomInstall(install):
             run('zsh', zsh_file, zsh_file)
         if find_executable('powershell'):
             print('===== Setting up powershell =====')
-            (powershell_file, _) = subprocess.Popen(['powershell', '$profile'], stdout=subprocess.PIPE, shell=True).communicate()
-            powershell_file = str(powershell_file.decode('ascii')).replace('\r\n', '')
-            run('powershell', None, powershell_file)
+            (powershell_file, _) = subprocess.Popen(['powershell', 'Write-Host $profile'], stdout=subprocess.PIPE, shell=True).communicate()
+            if powershell_file:
+                powershell_file = str(powershell_file.decode('ascii')).replace('\r\n', '')
+                run('powershell', None, powershell_file)
+            else:
+                print('===== Could not locate powershell file =====')
         print('===== Finished setting up =====', file=sys.stderr)
