@@ -11,8 +11,8 @@ from .safe_print import safe_print
 
 
 defaults = {
-    'role-duration': '0',
-    'colors': 'true'
+    'role-duration': 0,
+    'colors': True
 }
 
 
@@ -28,8 +28,9 @@ def load_config() -> dict:
     except Exception:
         safe_print('Cannot parse config file: {}'.format(constants.AWSUME_CONFIG), colorama.Fore.RED)
         exit(1)
-    if not options:
+    if options is None:
         options = defaults
+        write_config(options)
     return options
 
 
@@ -54,58 +55,66 @@ def update_config(operations: list):
             safe_print('Must supply value to set {} to'.format(operations[1]))
             exit(1)
         logger.debug('Setting {} to {}'.format(operations[1], operations[2]))
-        values = operations[2:]
-        for index, value in enumerate(values):
-            try:
-                values[index] = json.loads(operations[2])
-            except json.JSONDecodeError:
-                logger.debug('Cannot parse input', exc_info=True)
-        if len(values) == 1:
-            value = values[0]
-        else:
-            value = values
-
-        parts = operations[1].split('.') # ['console', 'command']
-        location = config
-        for path in parts[:-1]:
-            if path in location:
-                location = location[path]
-            else:
-                location[path] = {}
-                location = location[path]
-        location[parts[-1]] = value
+        value = get_value_from_args(operations[2:])
+        config = update_dict_parts(config, operations[1], value)
 
     if operations[0].lower() in ['reset']:
-        parts = operations[1].split('.')
-        location = config
-        default_location = defaults
-        for path in parts[:-1]:
-            if path in default_location:
-                default_location = default_location[path]
-            else:
-                safe_print('Key does not have a default: {}'.format(operations[1]), colorama.Fore.YELLOW)
-                exit(1)
-            if path in location:
-                location = location[path]
-            else:
-                safe_print('No such key in config: {}'.format(operations[1]), colorama.Fore.YELLOW)
-                exit(1)
-        if location.get(parts[-1]) is not None and default_location.get(parts[-1]) is not None:
-            location[parts[-1]] = default_location[parts[-1]]
-            safe_print('Reset key {} to {}'.format(operations[1], default_location[parts[-1]]), colorama.Fore.YELLOW)
-        else:
-            safe_print('No such key {}'.format(operations[1]))
+        default_value = get_dict_parts(defaults, operations[1])
+        if default_value is None:
+            safe_print('Key does not have a default: {}'.format(operations[1]), colorama.Fore.YELLOW)
+            exit(1)
+        config = update_dict_parts(config, operations[1], default_value)
+        safe_print('Reset key {} to {}'.format(operations[1], default_value), colorama.Fore.YELLOW)
 
     if operations[0].lower() in ['clear']:
-        parts = operations[1].split('.')
-        location = config
-        for path in parts[:-1]:
-            if path in location:
-                location = location[path]
-            else:
-                break
-        if location.get(parts[-1]):
-            del location[parts[-1]]
+        config, deleted = delete_dict_value_parts(config, operations[1])
+        if deleted:
             safe_print('Deleted key {}'.format(operations[1]), colorama.Fore.YELLOW)
 
     write_config(config)
+
+
+def get_value_from_args(args):
+    values = args
+    for index, value in enumerate(args):
+        try:
+            values[index] = json.loads(value)
+        except json.JSONDecodeError:
+            logger.debug('Cannot parse input', exc_info=True)
+    return values[0] if len(values) == 1 else values
+
+
+def get_dict_parts(obj, parts_string):
+    parts = parts_string.split('.')
+    location = obj
+    for path in parts:
+        if path in location:
+            location = location[path]
+        else:
+            return None
+    return location
+
+
+def update_dict_parts(obj, parts_string, value):
+    parts = parts_string.split('.')
+    location = obj
+    for path in parts[:-1]:
+        if path in location:
+            location = location[path]
+        else:
+            location[path] = {}
+            location = location[path]
+    location[parts[-1]] = value
+    return obj
+
+
+def delete_dict_value_parts(obj, parts_string):
+    parts = parts_string.split('.')
+    location = obj
+    for path in parts[:-1]:
+        if path in location:
+            location = location[path]
+        else:
+            return obj, False
+    del location[parts[-1]]
+    return obj, True
