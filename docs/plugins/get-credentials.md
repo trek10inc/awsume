@@ -42,7 +42,7 @@ def get_credentials(config: dict, arguments: argparse.Namespace, profiles: dict)
 
 ## `get_credentials_with_saml`
 
-This hook will only be called when awsuem is given the `--with-saml` flag, and will prevent other `get_credentials...` hooks from being called.
+This hook will only be called when awsuem is given the `--with-saml` flag, and will prevent other `get_credentials...` hooks from being called. If there is only one role provided in the assertion, it will be used. If there are multiple and `--role-arn` is provided to awsume, it will use the closest match. If there are multiple and `--role-arn` is not provided, it will prompt the user for which role to use.
 
 ### Parameters
 
@@ -52,15 +52,10 @@ This hook will only be called when awsuem is given the `--with-saml` flag, and w
 
 ### Returns
 
-- A `dict` of aws credentials in the following format:
+- A `str` of the saml assertion:
 
 ```python
-{
-  'AccessKeyId': '',
-  'SecretAccessKey': '',
-  'SessionToken': '',
-  'Region': '',
-}
+'PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZ...3NhbWwycDpSZXNwb25zZT4='
 ```
 
 ### Example

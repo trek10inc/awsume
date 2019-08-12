@@ -61,6 +61,13 @@ module.exports = {
         ],
       },
       {
+        title: 'Updating to v4',
+        collapsable: true,
+        children: [
+          '/updating-v4/',
+        ],
+      },
+      {
         title: 'Troubleshooting',
         collapsable: true,
         children: [
