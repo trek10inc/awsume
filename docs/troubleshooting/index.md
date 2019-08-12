@@ -1,5 +1,9 @@
 # Troubleshooting Awsume
 
+::: warning
+If none of these help you, feel free to [open an issue](https://github.com/trek10inc/awsume/issues/new)!
+:::
+
 ## AWSume is installed, but when I run it, my environment is not updating with my profile's credentials
 
 This is most likely due to an issue with the alias. You should have an alias `awsume='. awsume'` to source the awsume shell wrapper. Usually, the installation of AWSume will put that alias declaration within one of your login files, so make sure that the alias exists within your login file, such as `~/.bashrc`, `~/.bash_profile`, etc.
