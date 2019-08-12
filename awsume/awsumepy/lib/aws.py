@@ -25,6 +25,9 @@ def assume_role(
     mfa_serial: str = None,
     mfa_token: str = None,
 ) -> dict:
+    if len(session_name) < 2:
+        session_name = session_name.center(2, '_')
+
     logger.debug('Assuming role: {}'.format(role_arn))
     logger.debug('Session name: {}'.format(session_name))
     role_sts_client = boto3.session.Session(
