@@ -199,7 +199,7 @@ def post_add_arguments(config: dict, arguments: argparse.Namespace, parser: argp
         kill(arguments)
         exit(0)
 
-    if arguments.role_arn and not arguments.role_arn.startswith('arn:aws:iam::'):
+    if arguments.role_arn and not arguments.role_arn.startswith('arn:'):
         logger.debug('Using short-hand role arn syntax')
         parts = arguments.role_arn.split(':')
         if len(parts) != 2:

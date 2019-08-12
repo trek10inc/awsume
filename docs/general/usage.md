@@ -168,7 +168,37 @@ Or you can reset to the default value with:
 awsume --config reset role-duration
 ```
 
-The configuration is stored in the `~/.awsume/config.json` file.
+You can delete a value with:
+
+```
+awsume --config clear role-duration
+```
+
+And you can get complex with your config like this:
+
+```yaml
+# awsume --config set a.b.c x '{"hello":"world"}' 1 '"2"'
+a:
+  b:
+    c:
+     - 'x'
+     - hello: world
+     - 1
+     - '2'
+```
+
+For each value, if it can be parsed as JSON, it will be. Otherwise it will be a string.
+
+If you only provide one value, it will set the key to that value directly, without nesting it in an array, as follows:
+
+```yaml
+# awsume --config set a.b.c x
+a:
+  b:
+    c: x
+```
+
+The configuration is stored in the `~/.awsume/config.yaml` file.
 
 ## List Plugins
 

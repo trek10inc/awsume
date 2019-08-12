@@ -1,3 +1,3 @@
 # AWSume: AWS Assume Made Awesome
 
-Awsume v4 is a work in progress.
+Check out the documentation at [awsu.me](https://awsu.me)!
