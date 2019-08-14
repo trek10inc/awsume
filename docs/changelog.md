@@ -1,6 +1,6 @@
 # Awsume Changelog
 
-## [4.0.0] - TBD - Major Refactor
+## [4.0.0] - 2019-08-15 - Major Refactor
 
 - New plugin system: "pluggy"
   - Define plugins as python packages that can be `pip installed`
