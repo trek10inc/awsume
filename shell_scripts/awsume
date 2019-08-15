@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -o ksh_arrays 2&> /dev/null || true
+
 AWSUME_OUTPUT=($(awsumepy "$@"))
 AWSUME_FLAG=$(echo "${AWSUME_OUTPUT[0]}" | tr -d '\r')
 
