@@ -1,5 +1,10 @@
 # Awsume Changelog
 
+## [4.0.1] - 2019-08-15 - Bug Fix
+
+- Fixed support for zsh shells
+  - Zsh shells index from 1, which threw off the `awsume` shell wrapper
+
 ## [4.0.0] - 2019-08-15 - Major Refactor
 
 - New plugin system: "pluggy"
