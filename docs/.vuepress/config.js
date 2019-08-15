@@ -53,11 +53,18 @@ module.exports = {
         collapsable: true,
         children: [
           '/plugins/',
-          '/plugins/add-arguments',
-          '/plugins/collect-aws-profiles',
-          '/plugins/get-credentials',
-          '/plugins/get-profile-names',
-          '/plugins/catch-exceptions',
+        ],
+      },
+      {
+        title: 'Plugins Development',
+        collapsable: true,
+        children: [
+          '/plugin-development/',
+          '/plugin-development/add-arguments',
+          '/plugin-development/collect-aws-profiles',
+          '/plugin-development/get-credentials',
+          '/plugin-development/get-profile-names',
+          '/plugin-development/catch-exceptions',
         ],
       },
       {
