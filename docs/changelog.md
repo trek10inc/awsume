@@ -1,5 +1,9 @@
 # Awsume Changelog
 
+## [4.0.2] - 2019-08-15 - Bug Fix
+
+- Fixed support for zsh autocomplete
+
 ## [4.0.1] - 2019-08-15 - Bug Fix
 
 - Fixed support for zsh shells

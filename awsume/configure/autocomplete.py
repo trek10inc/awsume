@@ -14,7 +14,11 @@ complete -F _awsume awsume
 """
 
 ZSH_AUTOCOMPLETE_SCRIPT = """
-#compdef awsume
+#Auto-Complete function for AWSume
+fpath=(~/.awsume/zsh-autocomplete/ $fpath)
+"""
+
+ZSH_AUTOCOMPLETE_FUNCTION = """#compdef awsume
 _arguments "*: :($(awsume-autocomplete))"
 """
 
@@ -52,3 +56,19 @@ def main(shell: str, autocomplete_file: str):
             f.write('\n#Auto-Complete function for AWSume')
             f.write(autocomplete_script)
         print('Wrote autocomplete script to ' + autocomplete_file)
+
+    # install autocomplete function if zsh
+    if shell == 'zsh':
+        zsh_autocomplete_function_file = str(pathlib.Path('~/.awsume/zsh-autocomplete/_awsume').expanduser())
+        basedir = os.path.dirname(zsh_autocomplete_function_file)
+        if basedir and not os.path.exists(basedir):
+            os.makedirs(basedir)
+        if not os.path.isfile(zsh_autocomplete_function_file):
+            open(zsh_autocomplete_function_file, 'w').close()
+
+        if ZSH_AUTOCOMPLETE_FUNCTION in open(zsh_autocomplete_function_file, 'r').read():
+            print('Zsh function already in ' + zsh_autocomplete_function_file)
+        else:
+            with open(zsh_autocomplete_function_file, 'a') as f:
+                f.write(ZSH_AUTOCOMPLETE_FUNCTION)
+            print('Wrote zsh function to ' + zsh_autocomplete_function_file)
