@@ -1,5 +1,9 @@
 # Awsume Changelog
 
+## [4.0.3] - 2019-08-18 - Bug Fix
+
+- Fixed ksh_arrays bug for zsh profiles
+
 ## [4.0.2] - 2019-08-15 - Bug Fix
 
 - Fixed support for zsh autocomplete
