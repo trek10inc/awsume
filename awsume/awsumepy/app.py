@@ -220,7 +220,7 @@ class Awsume(object):
 
     def export_data(self, awsume_flag: str, awsume_list: list):
         logger.debug('Exporting data')
-        print(awsume_flag)
+        print(awsume_flag, end=' ')
         print(' '.join(awsume_list))
 
 
