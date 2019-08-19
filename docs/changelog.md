@@ -1,5 +1,9 @@
 # Awsume Changelog
 
+## [4.0.4] - 2019-08-19 - Bug Fix
+
+- Fixed zsh environment variable issue
+
 ## [4.0.3] - 2019-08-18 - Bug Fix
 
 - Fixed ksh_arrays bug for zsh profiles
