@@ -10,7 +10,7 @@ BASH_LOGIN_FILES = ['~/.bash_profile', '~/.bash_login', '~/.profile', '~/.bashrc
 
 class CustomInstall(install):
     def get_bash_file(self) -> str:
-        paths = [Path(_).expanduser() for _ in BASH_LOGIN_FILES]
+        paths = [str(Path(_).expanduser()) for _ in BASH_LOGIN_FILES]
         result = [_ for _ in paths if os.path.exists(_) and os.path.isfile(_) and os.access(_, os.R_OK)]
         if not result:
             default = paths[0]
@@ -20,7 +20,7 @@ class CustomInstall(install):
 
     def get_zsh_file(self) -> str:
         z_dot_dir = os.environ.get('ZDOTDIR', '~')
-        zsh_file = Path(z_dot_dir + '/.zshenv').expanduser()
+        zsh_file = str(Path(z_dot_dir + '/.zshenv').expanduser())
         if not os.path.exists(zsh_file) or not os.path.isfile(zsh_file):
             open(zsh_file, 'w').close()
         return zsh_file

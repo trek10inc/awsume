@@ -12,7 +12,8 @@ from . safe_print import safe_print
 
 
 def parse_time(date_time: datetime):
-    return date_time.astimezone(dateutil.tz.tzlocal()).strftime('%Y-%m-%d %H:%M:%S')
+    date_time.replace(tzinfo=dateutil.tz.tzlocal())
+    return date_time.strftime('%Y-%m-%d %H:%M:%S')
 
 
 def assume_role(
