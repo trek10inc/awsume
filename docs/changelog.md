@@ -1,5 +1,9 @@
 # Awsume Changelog
 
+## [4.0.5] - 2019-08-19 - Bug Fix
+
+- Fixed python 3.5.7 dateutil incompatibility
+
 ## [4.0.4] - 2019-08-19 - Bug Fix
 
 - Fixed zsh environment variable issue
