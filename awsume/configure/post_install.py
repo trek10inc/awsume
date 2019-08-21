@@ -42,7 +42,7 @@ class CustomInstall(install):
             print('===== Setting up powershell =====')
             (powershell_file, _) = subprocess.Popen(['powershell', 'Write-Host $profile'], stdout=subprocess.PIPE, shell=True).communicate()
             if powershell_file:
-                powershell_file = str(powershell_file.decode('ascii')).replace('\r\n', '')
+                powershell_file = str(powershell_file.decode('ascii')).replace('\r\n', '').replace('\n', '')
                 run('powershell', None, powershell_file)
             else:
                 print('===== Could not locate powershell file =====')
