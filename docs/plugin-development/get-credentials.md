@@ -66,13 +66,9 @@ from awsume.awsumepy import hookimpl
 
 @hookimpl
 def get_credentials_with_saml(config: dict, arguments: argparse.Namespace, profiles: dict):
-    # ... handle getting credentials
-    return {
-        'AccessKeyId': 'AKIA...',
-        'SecretAccessKey': 'SECRET',
-        'SessionToken': 'LONGSECRET',
-        'Region': 'us-east-2',
-    }
+    # ... handle getting saml assertion
+    saml_assertion = 'PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZ...3NhbWwycDpSZXNwb25zZT4='
+    return saml_assertion
 ```
 
 ## `get_credentials_with_web_identity`
