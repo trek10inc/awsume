@@ -1,12 +1,16 @@
 import argparse
 import json
 import re
+import operator
 import colorama
+import Levenshtein
+import difflib
 from . exceptions import ProfileNotFoundError, InvalidProfileError
 from . logger import logger
 from . safe_print import safe_print
 from . import aws as aws_lib
 from collections import OrderedDict
+from difflib import SequenceMatcher
 
 VALID_CREDENTIAL_SOURCES = [ None, 'Environment' ]
 
@@ -83,17 +87,21 @@ def get_source_profile(profiles: dict, target_profile_name: str) -> dict:
     return None
 
 
-def get_region(profiles: dict, arguments: argparse.Namespace) -> str:
+def get_region(profiles: dict, arguments: argparse.Namespace, config: dict) -> str:
     if arguments.region:
         return arguments.region
-    if arguments.role_arn and arguments.source_profile:
-        return profiles.get(arguments.source_profile, {}).get('region')
+    if arguments.role_arn and arguments.source_profile and profiles.get(arguments.source_profile, {}).get('region'):
+        return profiles[arguments.source_profile]['region']
     target_profile = profiles.get(arguments.target_profile_name, {})
     if target_profile.get('region'):
         return target_profile['region']
     source_profile = get_source_profile(profiles, arguments.target_profile_name)
     if source_profile and source_profile.get('region'):
         return source_profile['region']
+    if profiles.get('default', {}).get('region'):
+        return profiles['default']['region']
+    if config.get('region'):
+        return config['region']
     return None
 
 
@@ -174,3 +182,61 @@ def get_account_id(profile: dict, call_aws: bool = False) -> str:
     if call_aws and profile.get('aws_access_key_id') and profile.get('aws_secret_access_key'):
         return aws_lib.get_account_id(profile_to_credentials(profile))
     return 'Unavailable'
+
+
+def get_profile(config: dict, arguments: argparse.Namespace, profiles: dict, profile_name: str) -> dict:
+    if profile_name in profiles or not config.get('fuzzy_match'):
+        return profiles.get(profile_name)
+
+    profile_names = list(profiles.keys())
+
+    matched_prefix_profile = match_prefix(profile_names, arguments.profile_name)
+    if matched_prefix_profile:
+        safe_print('Using profile ' + matched_prefix_profile, color=colorama.Fore.YELLOW)
+        arguments.target_profile_name = matched_prefix_profile
+        return profiles.get(matched_prefix_profile)
+
+    matched_contains_profile = match_contains(profile_names, arguments.profile_name)
+    if matched_contains_profile:
+        safe_print('Using profile ' + matched_contains_profile, color=colorama.Fore.YELLOW)
+        arguments.target_profile_name = matched_contains_profile
+        return profiles.get(matched_contains_profile)
+
+    matched_levenshtein_profile = match_levenshtein(profile_names, arguments.profile_name)
+    if matched_levenshtein_profile:
+        safe_print('Using profile ' + matched_levenshtein_profile, color=colorama.Fore.YELLOW)
+        arguments.target_profile_name = matched_levenshtein_profile
+        return profiles.get(matched_levenshtein_profile)
+
+    profile = profiles.get(profile_name)
+    return profile
+
+
+def match_prefix(profile_names: list, profile_name: str) -> str:
+    prefix_words = [_ for _ in profile_names if _.startswith(profile_name)]
+    if len(prefix_words) is 1:
+        return prefix_words[0]
+    return None
+
+
+def match_contains(profile_names: list, profile_name: str) -> str:
+    def longest_contains(str1, str2):
+        sequence_match = SequenceMatcher(None,str1,str2)
+        match = sequence_match.find_longest_match(0, len(str1), 0, len(str2))
+        return match.size
+
+    matches = {profile: longest_contains(profile_name, profile) for profile in profile_names}
+    biggest_match = max(matches.values())
+    result = [k for k in matches.keys() if matches[k] == biggest_match]
+    if len(result) is 1:
+        return result[0]
+    return None
+
+
+def match_levenshtein(profile_names: list, profile_name: str) -> str:
+    matches = {profile: Levenshtein.distance(profile_name, profile) for profile in profile_names}
+    closest_match = min(matches.values())
+    result = [k for k in matches.keys() if matches[k] == closest_match]
+    if len(result) is 1:
+        return result[0]
+    return None

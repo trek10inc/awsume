@@ -12,7 +12,8 @@ from .safe_print import safe_print
 
 defaults = {
     'role-duration': 0,
-    'colors': True
+    'colors': True,
+    'fuzzy-match': False,
 }
 
 

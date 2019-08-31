@@ -32,6 +32,7 @@ module.exports = {
           '/general/overview',
           '/general/aws-file-configuration',
           '/general/usage',
+          '/general/config',
         ],
       },
       {
@@ -46,6 +47,10 @@ module.exports = {
         collapsable: true,
         children: [
           '/advanced/autoawsume',
+          '/advanced/region',
+          '/advanced/role-duration',
+          '/advanced/external-id',
+          '/advanced/fuzzy-matching',
         ],
       },
       {

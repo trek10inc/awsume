@@ -78,7 +78,7 @@ The `--unset` flag will clear your current shell's AWS environment variables.
 
 ## Auto Refresh
 
-The `--auto-refresh` flag will tell awsume to automatically refresh the credentials. You can read more about how this works [here](../advanced/autoawsume.md)
+The `--auto-refresh` flag will tell awsume to automatically refresh the credentials. You can read more about how this works [here](../advanced/autoawsume.md).
 
 ## Kill Refresher
 
@@ -154,51 +154,7 @@ With the `--config-file` flag, you can target a config file to use, instead of t
 
 ## Config
 
-The `--config` flag will help you configure awsume and any plugins making use of the configuration system.
-
-You can set a value like this:
-
-```
-awsume --config set role-duration 43200
-```
-
-Or you can reset to the default value with:
-
-```
-awsume --config reset role-duration
-```
-
-You can delete a value with:
-
-```
-awsume --config clear role-duration
-```
-
-And you can get complex with your config like this:
-
-```yaml
-# awsume --config set a.b.c x '{"hello":"world"}' 1 '"2"'
-a:
-  b:
-    c:
-     - 'x'
-     - hello: world
-     - 1
-     - '2'
-```
-
-For each value, if it can be parsed as JSON, it will be. Otherwise it will be a string.
-
-If you only provide one value, it will set the key to that value directly, without nesting it in an array, as follows:
-
-```yaml
-# awsume --config set a.b.c x
-a:
-  b:
-    c: x
-```
-
-The configuration is stored in the `~/.awsume/config.yaml` file.
+The `--config` flag will help you configure awsume and any plugins making use of the configuration system. See the [config documentation](./config) for more details.
 
 ## List Plugins
 
