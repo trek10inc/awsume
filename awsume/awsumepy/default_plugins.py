@@ -290,7 +290,7 @@ def assume_role_from_cli(config: dict, arguments: dict, profiles: dict, region: 
                 logger.debug('MFA required')
                 source_session = aws_lib.get_session_token(
                     source_credentials,
-                    region=profile_lib.get_region(profiles, arguments),
+                    region=profile_lib.get_region(profiles, arguments, config),
                     mfa_serial=mfa_serial,
                     mfa_token=arguments.mfa_token,
                     ignore_cache=arguments.force_refresh,
@@ -312,13 +312,13 @@ def assume_role_from_cli(config: dict, arguments: dict, profiles: dict, region: 
 @hookimpl(tryfirst=True)
 def get_credentials(config: dict, arguments: argparse.Namespace, profiles: dict) -> dict:
     logger.info('Getting credentials')
-    region = profile_lib.get_region(profiles, arguments)
+    region = profile_lib.get_region(profiles, arguments, config)
     logger.debug('Using region: {}'.format(region))
 
     if arguments.role_arn:
         return assume_role_from_cli(config, arguments, profiles, region)
 
-    target_profile = profiles.get(arguments.target_profile_name)
+    target_profile = profile_lib.get_profile(config, arguments, profiles, arguments.target_profile_name)
     profile_lib.validate_profile(profiles, arguments.target_profile_name)
     is_role = profile_lib.is_role(target_profile)
     mfa_serial = profile_lib.get_mfa_serial(profiles, arguments.target_profile_name)
