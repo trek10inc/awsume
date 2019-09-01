@@ -23,3 +23,17 @@ Awsume also defines the following hookspecs to handle your plugin in the event o
 ## Calling Your Hooks
 
 Awsume will call your plugin's hooks with the arguments specified in the hookspecs. You can see the various types of methods in the next pages of the documentation. You'll notice that a `config` variable is passed into almost all of the hook methods. You can read more about that [here](../general/usage.html#config).
+
+## Common Arguments
+
+There are a couple of common arguments to the hooks you can define: `arguments` and `config`.
+
+### Arguments
+
+Arguments is an `argparse.Namespace` containing the parsed command-line arguments. It's properties depend on the plugins you have installed, and the version of awsume you're running. This is the value returned from the `argparse.ArgumentParser` `parse_args` function. You can see all of the arguments by running `awsume -h`, or all of the default arguments [here](../general/usage).
+
+### Config
+
+Awsume's global configuration is supplied through the `config` argument. This is of the type `dict` and contains all the values from awsume's configuration. See more about that [here](../general/config).
+
+An additional property is added to the config at runtime: `is_interactive`. This will be true for all invocations of awsume from the CLI. It will be false for any invocations from the `awsume.awsumepy.awsume` method call. See more about that [here](../advanced/non-interactive-awsume).

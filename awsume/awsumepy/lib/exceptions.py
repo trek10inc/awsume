@@ -32,3 +32,35 @@ class RoleAuthenticationError(Exception):
         self.message = message
     def __str__(self):
         return self.message if self.message else 'Unable to assume role'
+
+
+class SAMLAssertionNotFoundError(Exception):
+    """"""
+    def __init__(self, message=''):
+        self.message = message
+    def __str__(self):
+        return self.message if self.message else 'No SAML assertion'
+
+
+class SAMLAssertionMissingRoleError(Exception):
+    """"""
+    def __init__(self, message=''):
+        self.message = message
+    def __str__(self):
+        return self.message if self.message else 'No role in the SAML assertion'
+
+
+class SAMLAssertionParseError(Exception):
+    """"""
+    def __init__(self, message=''):
+        self.message = message
+    def __str__(self):
+        return self.message if self.message else 'Cannot parse SAML assertion'
+
+
+class NoCredentialsError(Exception):
+    """"""
+    def __init__(self, message=''):
+        self.message = message
+    def __str__(self):
+        return self.message if self.message else 'No credentials'

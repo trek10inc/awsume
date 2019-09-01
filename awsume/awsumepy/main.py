@@ -33,4 +33,4 @@ def main():
         logger.setLevel(logging.INFO)
         logger.info('Info logs are visible')
     logger.debug('Executing awsume')
-    run_awsume(sys.argv)
+    run_awsume(sys.argv[1:])

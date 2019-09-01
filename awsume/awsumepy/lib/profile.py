@@ -185,7 +185,7 @@ def get_account_id(profile: dict, call_aws: bool = False) -> str:
 
 
 def get_profile(config: dict, arguments: argparse.Namespace, profiles: dict, profile_name: str) -> dict:
-    if profile_name in profiles or not config.get('fuzzy_match'):
+    if profile_name in profiles or not config.get('fuzzy-match'):
         return profiles.get(profile_name)
 
     profile_names = list(profiles.keys())
