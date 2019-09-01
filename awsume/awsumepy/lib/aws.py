@@ -11,6 +11,9 @@ from . logger import logger
 from . safe_print import safe_print
 
 
+DEFAULT_REGION = 'us-east-1'
+
+
 def parse_time(date_time: datetime):
     date_time.replace(tzinfo=dateutil.tz.tzlocal())
     return date_time.strftime('%Y-%m-%d %H:%M:%S')
@@ -21,7 +24,7 @@ def assume_role(
     role_arn: str,
     session_name: str,
     external_id: str = None,
-    region: str = 'us-east-1',
+    region: str = None,
     role_duration: int = None,
     mfa_serial: str = None,
     mfa_token: str = None,
@@ -35,7 +38,7 @@ def assume_role(
         aws_access_key_id=source_credentials.get('AccessKeyId'),
         aws_secret_access_key=source_credentials.get('SecretAccessKey'),
         aws_session_token=source_credentials.get('SessionToken'),
-        region_name=region,
+        region_name=region or DEFAULT_REGION,
     ).client('sts') # type: botostubs.STS
 
     try:
@@ -49,7 +52,7 @@ def assume_role(
             kwargs['TokenCode'] = mfa_token or profile_lib.get_mfa_token()
         role_session = role_sts_client.assume_role(**kwargs).get('Credentials')
         role_session['Expiration'] = role_session['Expiration'].astimezone(dateutil.tz.tzlocal())
-        role_session['Region'] = region
+        role_session['Region'] = region or DEFAULT_REGION
     except Exception as e:
         raise RoleAuthenticationError(str(e))
     logger.debug('Role credentials received')
@@ -59,7 +62,7 @@ def assume_role(
 
 def get_session_token(
     source_credentials: dict,
-    region: str = 'us-east-1',
+    region: str = None,
     mfa_serial: str = None,
     mfa_token: str = None,
     ignore_cache: bool = False,
@@ -69,13 +72,15 @@ def get_session_token(
     if cache_lib.valid_cache_session(cache_session) and not ignore_cache:
         logger.debug('Using cache session')
         safe_print('Session token will expire at {}'.format(parse_time(cache_session['Expiration'])), colorama.Fore.GREEN)
+        if region:
+            cache_session['Region'] = region
         return cache_session
     logger.debug('Getting session token')
     user_sts_client = boto3.session.Session(
         aws_access_key_id=source_credentials.get('AccessKeyId'),
         aws_secret_access_key=source_credentials.get('SecretAccessKey'),
         aws_session_token=source_credentials.get('SessionToken'),
-        region_name=region,
+        region_name=region or DEFAULT_REGION,
     ).client('sts') # type: botostubs.STS
     try:
         user_session = user_sts_client.get_session_token(
@@ -83,7 +88,7 @@ def get_session_token(
             TokenCode=None if not mfa_serial else (mfa_token or profile_lib.get_mfa_token()),
         ).get('Credentials')
         user_session['Expiration'] = user_session['Expiration'].astimezone(dateutil.tz.tzlocal())
-        user_session['Region'] = region
+        user_session['Region'] = region or DEFAULT_REGION
     except Exception as e:
         raise UserAuthenticationError(str(e))
     logger.debug('Session token received')

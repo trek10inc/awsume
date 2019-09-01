@@ -1,5 +1,9 @@
 # Awsume Changelog
 
+## [4.1.1] - 2019-09-01 - Bug Fix
+
+- Fixed setting overriding cached region
+
 ## [4.1.0] - 2019-09-01 - Non-Interactive Awsume Update
 
 - Adds support for using awsume from python scripts in a non-interactive way
