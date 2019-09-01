@@ -1,5 +1,12 @@
 # Awsume Changelog
 
+## [4.1.0] - 2019-09-01 - Non-Interactive Awsume Update
+
+- Adds support for using awsume from python scripts in a non-interactive way
+- Adds fuzzy-match functionality to help match small typos to the intended profile name
+- Fixes default profile region bug, will now successfully use the default profile's region as the region to use
+  - Also adds `region` global configuration property
+
 ## [4.0.6] - 2019-08-19 - Bug Fix
 
 - Fixed bug impacting Windows Powershell installs
