@@ -46,6 +46,7 @@ module.exports = {
         title: 'Advanced',
         collapsable: true,
         children: [
+          '/advanced/non-interactive-awsume',
           '/advanced/autoawsume',
           '/advanced/region',
           '/advanced/role-duration',
