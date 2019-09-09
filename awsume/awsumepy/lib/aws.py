@@ -14,11 +14,6 @@ from . safe_print import safe_print
 DEFAULT_REGION = 'us-east-1'
 
 
-def parse_time(date_time: datetime):
-    date_time.replace(tzinfo=dateutil.tz.tzlocal())
-    return date_time.strftime('%Y-%m-%d %H:%M:%S')
-
-
 def assume_role(
     source_credentials: dict,
     role_arn: str,
@@ -56,7 +51,6 @@ def assume_role(
     except Exception as e:
         raise RoleAuthenticationError(str(e))
     logger.debug('Role credentials received')
-    safe_print('Role credentials will expire {}'.format(parse_time(role_session['Expiration'])), colorama.Fore.GREEN)
     return role_session
 
 
@@ -69,31 +63,31 @@ def get_session_token(
 ) -> dict:
     cache_file_name = 'aws-credentials-' + source_credentials.get('AccessKeyId')
     cache_session = cache_lib.read_aws_cache(cache_file_name)
+
     if cache_lib.valid_cache_session(cache_session) and not ignore_cache:
         logger.debug('Using cache session')
-        safe_print('Session token will expire at {}'.format(parse_time(cache_session['Expiration'])), colorama.Fore.GREEN)
         if region:
             cache_session['Region'] = region
-        return cache_session
-    logger.debug('Getting session token')
-    user_sts_client = boto3.session.Session(
-        aws_access_key_id=source_credentials.get('AccessKeyId'),
-        aws_secret_access_key=source_credentials.get('SecretAccessKey'),
-        aws_session_token=source_credentials.get('SessionToken'),
-        region_name=region or DEFAULT_REGION,
-    ).client('sts') # type: botostubs.STS
-    try:
-        user_session = user_sts_client.get_session_token(
-            SerialNumber=mfa_serial if mfa_serial else None,
-            TokenCode=None if not mfa_serial else (mfa_token or profile_lib.get_mfa_token()),
-        ).get('Credentials')
-        user_session['Expiration'] = user_session['Expiration'].astimezone(dateutil.tz.tzlocal())
-        user_session['Region'] = region or DEFAULT_REGION
-    except Exception as e:
-        raise UserAuthenticationError(str(e))
-    logger.debug('Session token received')
-    cache_lib.write_aws_cache(cache_file_name, user_session)
-    safe_print('Session token will expire at {}'.format(parse_time(user_session['Expiration'])), colorama.Fore.GREEN)
+        user_session = cache_session
+    else:
+        logger.debug('Getting session token')
+        user_sts_client = boto3.session.Session(
+            aws_access_key_id=source_credentials.get('AccessKeyId'),
+            aws_secret_access_key=source_credentials.get('SecretAccessKey'),
+            aws_session_token=source_credentials.get('SessionToken'),
+            region_name=region or DEFAULT_REGION,
+        ).client('sts') # type: botostubs.STS
+        try:
+            user_session = user_sts_client.get_session_token(
+                SerialNumber=mfa_serial if mfa_serial else None,
+                TokenCode=None if not mfa_serial else (mfa_token or profile_lib.get_mfa_token()),
+            ).get('Credentials')
+            user_session['Expiration'] = user_session['Expiration'].astimezone(dateutil.tz.tzlocal())
+            user_session['Region'] = region or DEFAULT_REGION
+        except Exception as e:
+            raise UserAuthenticationError(str(e))
+        logger.debug('Session token received')
+        cache_lib.write_aws_cache(cache_file_name, user_session)
     return user_session
 
 

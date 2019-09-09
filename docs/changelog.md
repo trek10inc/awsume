@@ -1,5 +1,11 @@
 # Awsume Changelog
 
+## [4.1.2] - WIP - Bug Fix
+
+- Removed signal catch
+- Removed printing expirations from non-interactive calls
+- Added cleaner way to import awsume: `from awsume import awsume`
+
 ## [4.1.1] - 2019-09-01 - Bug Fix
 
 - Fixed setting overriding cached region

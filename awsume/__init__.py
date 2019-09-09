@@ -1,5 +1,7 @@
 from awsume import __data__
 
+from awsume.awsumepy import awsume
+
 __VERSION__ = __data__.version
 __NAME__ = __data__.name
 __AUTHOR__ = __data__.author

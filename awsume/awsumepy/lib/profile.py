@@ -2,6 +2,8 @@ import argparse
 import json
 import re
 import operator
+from datetime import datetime
+import dateutil
 import colorama
 import Levenshtein
 import difflib
@@ -15,8 +17,9 @@ from difflib import SequenceMatcher
 VALID_CREDENTIAL_SOURCES = [ None, 'Environment' ]
 
 
-def is_role(profile: dict) -> bool:
-    return 'role_arn' in profile
+def parse_time(date_time: datetime):
+    date_time.replace(tzinfo=dateutil.tz.tzlocal())
+    return date_time.strftime('%Y-%m-%d %H:%M:%S')
 
 
 def profile_to_credentials(profile: dict) -> dict:
@@ -28,6 +31,7 @@ def profile_to_credentials(profile: dict) -> dict:
             'Region': profile.get('region'),
         }
     return {}
+
 
 def credentials_to_profile(credentials: dict) -> dict:
     result =  {}
@@ -49,7 +53,7 @@ def validate_profile(profiles: dict, target_profile_name: str) -> bool:
         raise ProfileNotFoundError(profile_name=target_profile_name)
 
     # validate role profiles
-    if is_role(profile):
+    if 'role_arn' in profile:
         if profile.get('credential_process'):
             raise InvalidProfileError(target_profile_name, message='awsume does not support the credential_process profile option: {}')
         if profile.get('credential_source') and profile.get('source_profile'):
@@ -105,6 +109,22 @@ def get_region(profiles: dict, arguments: argparse.Namespace, config: dict) -> s
     return None
 
 
+def get_external_id(arguments: argparse.Namespace, target_profile: dict):
+    if arguments.external_id:
+        return arguments.external_id
+    return target_profile.get('external_id')
+
+
+def get_role_duration(config: dict, arguments: argparse.Namespace, target_profile: dict):
+    if arguments.role_duration:
+        return arguments.role_duration
+    if target_profile.get('duration_seconds'):
+        return target_profile.get('duration_seconds')
+    if config.get('role-duration'):
+        return int(config.get('role-duration'))
+    return 0
+
+
 def get_mfa_serial(profiles: dict, target_profile_name: str) -> dict:
     target_profile = profiles.get(target_profile_name)
     mfa_serial = target_profile.get('mfa_serial')
@@ -148,7 +168,7 @@ def format_aws_profiles(profiles: dict, get_extra_data: bool) -> list: # pragma:
         #don't add any autoawsume profiles
         if 'auto-refresh-' not in name:
             profile = sorted_profiles[name]
-            is_role_profile = is_role(profile)
+            is_role_profile = 'role_arn' in profile
             profile_type = 'Role' if is_role_profile else 'User'
             source_profile = profile['source_profile'] if is_role_profile else 'None'
             mfa_needed = 'Yes' if 'mfa_serial' in profile else 'No'
