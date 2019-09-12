@@ -1,6 +1,6 @@
 # Awsume Changelog
 
-## [4.1.2] - WIP - Bug Fix
+## [4.1.2] - 2019-09-12 - Bug Fix
 
 - Removed signal catch
 - Removed printing expirations from non-interactive calls
