@@ -125,5 +125,5 @@ def assume_role_with_saml(
     except Exception as e:
         raise RoleAuthenticationError(str(e))
     logger.debug('Role credentials received')
-    safe_print('Role credentials will expire {}'.format(parse_time(role_session['Expiration'])), colorama.Fore.GREEN)
+    safe_print('Role credentials will expire {}'.format(profile_lib.parse_time(role_session['Expiration'])), colorama.Fore.GREEN)
     return role_session
