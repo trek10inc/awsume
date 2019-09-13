@@ -109,7 +109,7 @@ class Awsume(object):
         return profiles
 
 
-    def get_saml_credentials(self, args: argparse.Namespace) -> dict:
+    def get_saml_credentials(self, args: argparse.Namespace, profiles: dict) -> dict:
         assertion = self.plugin_manager.hook.get_credentials_with_saml(
             config=self.config,
             arguments=args,
@@ -140,6 +140,17 @@ class Awsume(object):
             if args.role_arn:
                 choice = difflib.get_close_matches(args.role_arn, roles, cutoff=0)[0]
                 safe_print('Closest match: {}'.format(choice))
+            if args.profile_name:
+                profile_role_arn = profiles.get(args.profile_name, {}).get('role_arn')
+                if profile_role_arn is None:
+                    raise exceptions.InvalidProfileError(args.profile_name)
+                # FIXME: It's possible to get a different role_arn than expected because of
+                # get_close_matches() fuzziness.
+                if profile_role_arn in roles:
+                    choice = profile_role_arn
+                else:
+                    raise exceptions.SAMLRoleNotFoundError(profile_role_arn)
+                safe_print('Match: {}'.format(choice))
             else:
                 for index, choice in enumerate(roles):
                     safe_print('{}) {}'.format(index, choice), color=colorama.Fore.LIGHTYELLOW_EX)
@@ -189,7 +200,7 @@ class Awsume(object):
                 credentials = [credentials]
             elif args.with_saml:
                 logger.debug('Pulling credentials from saml')
-                credentials = self.get_saml_credentials(args)
+                credentials = self.get_saml_credentials(args, profiles)
                 credentials = [credentials]
             elif args.with_web_identity:
                 logger.debug('Pulling credentials from web identity')
