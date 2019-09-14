@@ -1,9 +1,15 @@
 # Awsume Changelog
 
+## [4.1.3] - WIP - Bug Fix
+
+- Fixed library bug
+- [WIP] Adds support for SAML profiles
+
 ## [4.1.2] - 2019-09-12 - Bug Fix
 
 - Removed signal catch
 - Removed printing expirations from non-interactive calls
+- [!63](https://github.com/trek10inc/awsume/pull/63) Adds support for SAML 1 in addition to SAML 2
 
 ## [4.1.1] - 2019-09-01 - Bug Fix
 
