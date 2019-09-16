@@ -140,7 +140,7 @@ class Awsume(object):
             if args.role_arn:
                 choice = difflib.get_close_matches(args.role_arn, roles, cutoff=0)[0]
                 safe_print('Closest match: {}'.format(choice))
-            if args.profile_name:
+            elif args.profile_name:
                 profile_role_arn = profiles.get(args.profile_name, {}).get('role_arn')
                 principal_arn = profiles.get(args.profile_name, {}).get('principal_arn')
                 if profile_role_arn is None or principal_arn is None:
