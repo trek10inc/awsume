@@ -58,7 +58,7 @@ def validate_profile(profiles: dict, target_profile_name: str) -> bool:
             raise InvalidProfileError(target_profile_name, message='awsume does not support the credential_process profile option: {}')
         if profile.get('credential_source') and profile.get('source_profile'):
             raise InvalidProfileError(target_profile_name, message='credential_source and source_profile are mutually exclusive profile options')
-        if not profile.get('credential_source') and not profile.get('source_profile'):
+        if not profile.get('credential_source') and not profile.get('source_profile') and not profile.get('principal_arn'):
             raise InvalidProfileError(target_profile_name, message='role profiles must contain one of credential_source or source_profile')
         if profile.get('credential_source') not in VALID_CREDENTIAL_SOURCES:
             raise InvalidProfileError(target_profile_name, message='unsupported awsume credential_source profile option: {}'.format(profile.get('credential_source')))
