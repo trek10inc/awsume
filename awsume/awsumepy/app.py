@@ -142,14 +142,14 @@ class Awsume(object):
                 safe_print('Closest match: {}'.format(choice))
             if args.profile_name:
                 profile_role_arn = profiles.get(args.profile_name, {}).get('role_arn')
-                if profile_role_arn is None:
+                principal_arn = profiles.get(args.profile_name, {}).get('principal_arn')
+                if profile_role_arn is None or principal_arn is None:
                     raise exceptions.InvalidProfileError(args.profile_name)
-                # FIXME: It's possible to get a different role_arn than expected because of
-                # get_close_matches() fuzziness.
-                if profile_role_arn in roles:
-                    choice = profile_role_arn
+                principal_plus_profile_role_arn = ','.join([principal_arn, profile_role_arn])
+                if principal_plus_profile_role_arn in roles:
+                    choice = principal_plus_profile_role_arn
                 else:
-                    raise exceptions.SAMLRoleNotFoundError(profile_role_arn)
+                    raise exceptions.SAMLRoleNotFoundError(principal_arn, profile_role_arn)
                 safe_print('Match: {}'.format(choice))
             else:
                 for index, choice in enumerate(roles):
