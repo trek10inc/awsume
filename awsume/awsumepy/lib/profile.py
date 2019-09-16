@@ -170,7 +170,16 @@ def format_aws_profiles(profiles: dict, get_extra_data: bool) -> list: # pragma:
             profile = sorted_profiles[name]
             is_role_profile = 'role_arn' in profile
             profile_type = 'Role' if is_role_profile else 'User'
-            source_profile = profile.get('source_profile')
+            # Assume source_profile is None unless we find otherwise afterwards.
+            if is_role_profile:
+                if 'source_profile' in profile.keys():
+                    source_profile = profile['source_profile']
+                elif 'principal_arn' in profile.keys():
+                    source_profile = profile['principal_arn'].split(':')[-1]
+                else:
+                    source_profile = 'None'
+            else:
+                source_profile = 'None'
             mfa_needed = 'Yes' if 'mfa_serial' in profile else 'No'
             profile_region = str(profile.get('region'))
             profile_account_id = get_account_id(profile, get_extra_data)
