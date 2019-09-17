@@ -1,6 +1,6 @@
 # Awsume Changelog
 
-## [4.1.3] - WIP - Bug Fix
+## [4.1.3] - 2019-09-17 - Bug Fix
 
 - Fixed library bug
 - [#65](https://github.com/trek10inc/awsume/pull/65) Adds support for SAML profiles
