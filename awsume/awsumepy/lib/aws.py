@@ -41,7 +41,7 @@ def assume_role(
         if external_id:
             kwargs['ExternalId'] = external_id
         if role_duration:
-            kwargs['DurationSeconds'] = role_duration
+            kwargs['DurationSeconds'] = int(role_duration)
         if mfa_serial:
             kwargs['SerialNumber'] = mfa_serial
             kwargs['TokenCode'] = mfa_token or profile_lib.get_mfa_token()
@@ -118,7 +118,7 @@ def assume_role_with_saml(
     try:
         kwargs = { 'RoleArn': role_arn, 'PrincipalArn': principal_arn, 'SAMLAssertion': saml_assertion }
         if role_duration:
-            kwargs['DurationSeconds'] = role_duration
+            kwargs['DurationSeconds'] = int(role_duration)
         role_session = role_sts_client.assume_role_with_saml(**kwargs).get('Credentials')
         role_session['Expiration'] = role_session['Expiration'].astimezone(dateutil.tz.tzlocal())
         role_session['Region'] = region
