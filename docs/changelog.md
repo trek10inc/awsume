@@ -5,6 +5,9 @@
 - Fixed library bug
 - [#65](https://github.com/trek10inc/awsume/pull/65) Adds support for SAML profiles
 - [#66](https://github.com/trek10inc/awsume/issues/66) Fixed role_duration profile property bug
+- Adds `--principal-arn` to be used with saml role choices
+- Fuzzy match config now affects selecting a saml role if `--principal-arn` and `--role-arn` are specified
+- Fixed expiration log for non-role profiles without mfa
 
 ## [4.1.2] - 2019-09-12 - Bug Fix
 
