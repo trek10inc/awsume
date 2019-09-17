@@ -50,6 +50,16 @@ class SAMLAssertionMissingRoleError(Exception):
         return self.message if self.message else 'No role in the SAML assertion'
 
 
+class SAMLRoleNotFoundError(Exception):
+    """"""
+    def __init__(self, principal_arn, role_arn, message=''):
+        self.role_arn = role_arn
+        self.principal_arn = principal_arn
+        self.message = message
+    def __str__(self):
+        return self.message if self.message else 'No match for SAML principal and role: {},{}'.format(self.principal_arn, self.role_arn)
+
+
 class SAMLAssertionParseError(Exception):
     """"""
     def __init__(self, message=''):
