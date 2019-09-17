@@ -1,5 +1,6 @@
 import json
 import os
+import sys
 
 import colorama
 
@@ -47,9 +48,26 @@ def write_config(config: dict):
         safe_print('Unable to write config: {}'.format(e), colorama.Fore.RED)
 
 
-def update_config(operations: list):
+def handle_config(operations: list):
     logger.debug('Updating config: {}'.format(', '.join(operations)))
     config = load_config()
+
+    if operations[0].lower() == 'get':
+        if len(operations) != 2:
+            safe_print('Must supply value to get')
+            exit(1)
+        logger.debug('Getting {}'.format(operations[1]))
+        value = get_dict_parts(config, operations[1])
+        safe_print(json.dumps(value))
+        exit(0)
+
+    if operations[0].lower() == 'list':
+        if len(operations) != 1:
+            safe_print('No operands are valid for operation "list"')
+            exit(1)
+        logger.debug('Listing config')
+        yaml.safe_dump(config, sys.stderr)
+        exit(0)
 
     if operations[0].lower() == 'set':
         if len(operations) < 3:

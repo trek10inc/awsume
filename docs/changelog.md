@@ -8,6 +8,7 @@
 - Adds `--principal-arn` to be used with saml role choices
 - Fuzzy match config now affects selecting a saml role if `--principal-arn` and `--role-arn` are specified
 - Fixed expiration log for non-role profiles without mfa
+- Adds config `get` and `list` operations
 
 ## [4.1.2] - 2019-09-12 - Bug Fix
 
