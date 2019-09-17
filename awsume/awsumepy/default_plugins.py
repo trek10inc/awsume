@@ -87,6 +87,12 @@ def add_arguments(config: dict, parser: argparse.ArgumentParser):
         metavar='role_arn',
         help='Role ARN to assume',
     )
+    parser.add_argument('--principal-arn',
+        action='store',
+        dest='principal_arn',
+        metavar='principal_arn',
+        help='Principal ARN to use from a saml assertion',
+    )
     parser.add_argument('--source-profile',
         action='store',
         dest='source_profile',
@@ -199,6 +205,12 @@ def post_add_arguments(config: dict, arguments: argparse.Namespace, parser: argp
         kill(arguments)
         exit(0)
 
+    if arguments.with_saml:
+        if bool(arguments.role_arn) is not bool(arguments.principal_arn):
+            parser.error('both or neither --principal-arn and --role-arn must be specified with saml')
+    if not arguments.with_saml and arguments.principal_arn:
+        parser.error('--principal-arn can only be specified with --with-saml')
+
     if arguments.role_arn and not arguments.role_arn.startswith('arn:'):
         logger.debug('Using short-hand role arn syntax')
         parts = arguments.role_arn.split(':')
@@ -207,6 +219,16 @@ def post_add_arguments(config: dict, arguments: argparse.Namespace, parser: argp
         if not parts[0].isnumeric() or len(parts[0]) is not 12:
             parser.error('--role-arn account id must be valid numeric account id of length 12')
         arguments.role_arn = 'arn:aws:iam::{}:role/{}'.format(parts[0], parts[1])
+
+    if arguments.principal_arn and not arguments.principal_arn.startswith('arn:'):
+        logger.debug('Using short-hand role arn syntax')
+        parts = arguments.principal_arn.split(':')
+        if len(parts) != 2:
+            parser.error('--principal-arn must be a valid role arn or follow the format "<account_id>:<provider_name>"')
+        if not parts[0].isnumeric() or len(parts[0]) is not 12:
+            parser.error('--principal-arn account id must be valid numeric account id of length 12')
+        arguments.principal_arn = 'arn:aws:iam::{}:saml-provider/{}'.format(parts[0], parts[1])
+
 
     if not arguments.profile_name:
         if arguments.role_arn:
@@ -436,8 +458,10 @@ def get_credentials(config: dict, arguments: argparse.Namespace, profiles: dict)
 
     if config.get('is_interactive'):
         if user_session:
-            safe_print('Session token will expire at {}'.format(profile_lib.parse_time(user_session['Expiration'])), colorama.Fore.GREEN)
+            if user_session.get('Expiration'):
+                safe_print('Session token will expire at {}'.format(profile_lib.parse_time(user_session['Expiration'])), colorama.Fore.GREEN)
         if role_session:
-            safe_print('Role credentials will expire {}'.format(profile_lib.parse_time(role_session['Expiration'])), colorama.Fore.GREEN)
+            if role_session.get('Expiration'):
+                safe_print('Role credentials will expire {}'.format(profile_lib.parse_time(role_session['Expiration'])), colorama.Fore.GREEN)
 
     return role_session or user_session

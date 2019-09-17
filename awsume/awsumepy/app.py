@@ -137,14 +137,21 @@ class Awsume(object):
         role_duration = args.role_duration or int(self.config.get('role-duration', '0'))
 
         if len(roles) > 1:
-            if args.role_arn:
-                choice = difflib.get_close_matches(args.role_arn, roles, cutoff=0)[0]
-                safe_print('Closest match: {}'.format(choice))
+            if args.role_arn and args.principal_arn:
+                principal_plus_role_arn = ','.join(args.role_arn, args.principal_arn)
+                if self.config.get('fuzzy-match'):
+                    choice = difflib.get_close_matches(principal_plus_role_arn, roles, cutoff=0)[0]
+                    safe_print('Closest match: {}'.format(choice))
+                else:
+                    if principal_plus_role_arn not in roles:
+                        raise exceptions.SAMLRoleNotFoundError(args.principal_arn, args.role_arn)
+                    else:
+                        choice = principal_plus_role_arn
             elif args.profile_name:
                 profile_role_arn = profiles.get(args.profile_name, {}).get('role_arn')
                 principal_arn = profiles.get(args.profile_name, {}).get('principal_arn')
                 if profile_role_arn is None or principal_arn is None:
-                    raise exceptions.InvalidProfileError(args.profile_name)
+                    raise exceptions.InvalidProfileError(args.profile_name, 'both role_arn and principal_arn are necessary for saml profiles')
                 principal_plus_profile_role_arn = ','.join([principal_arn, profile_role_arn])
                 if principal_plus_profile_role_arn in roles:
                     choice = principal_plus_profile_role_arn
