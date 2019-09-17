@@ -66,7 +66,7 @@ def handle_config(operations: list):
             safe_print('No operands are valid for operation "list"')
             exit(1)
         logger.debug('Listing config')
-        yaml.safe_dump(config, sys.stderr)
+        yaml.safe_dump(config, sys.stderr, width=1000)
         exit(0)
 
     if operations[0].lower() == 'set':
