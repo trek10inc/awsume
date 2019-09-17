@@ -58,7 +58,7 @@ def validate_profile(profiles: dict, target_profile_name: str) -> bool:
             raise InvalidProfileError(target_profile_name, message='awsume does not support the credential_process profile option: {}')
         if profile.get('credential_source') and profile.get('source_profile'):
             raise InvalidProfileError(target_profile_name, message='credential_source and source_profile are mutually exclusive profile options')
-        if not profile.get('credential_source') and not profile.get('source_profile'):
+        if not profile.get('credential_source') and not profile.get('source_profile') and not profile.get('principal_arn'):
             raise InvalidProfileError(target_profile_name, message='role profiles must contain one of credential_source or source_profile')
         if profile.get('credential_source') not in VALID_CREDENTIAL_SOURCES:
             raise InvalidProfileError(target_profile_name, message='unsupported awsume credential_source profile option: {}'.format(profile.get('credential_source')))
@@ -170,7 +170,16 @@ def format_aws_profiles(profiles: dict, get_extra_data: bool) -> list: # pragma:
             profile = sorted_profiles[name]
             is_role_profile = 'role_arn' in profile
             profile_type = 'Role' if is_role_profile else 'User'
-            source_profile = profile.get('source_profile')
+            # Assume source_profile is None unless we find otherwise afterwards.
+            if is_role_profile:
+                if 'source_profile' in profile.keys():
+                    source_profile = profile['source_profile']
+                elif 'principal_arn' in profile.keys():
+                    source_profile = profile['principal_arn'].split(':')[-1]
+                else:
+                    source_profile = 'None'
+            else:
+                source_profile = 'None'
             mfa_needed = 'Yes' if 'mfa_serial' in profile else 'No'
             profile_region = str(profile.get('region'))
             profile_account_id = get_account_id(profile, get_extra_data)
