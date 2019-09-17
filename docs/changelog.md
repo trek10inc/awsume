@@ -3,7 +3,8 @@
 ## [4.1.3] - WIP - Bug Fix
 
 - Fixed library bug
-- [WIP] Adds support for SAML profiles
+- [#65](https://github.com/trek10inc/awsume/pull/65) Adds support for SAML profiles
+- [#66](https://github.com/trek10inc/awsume/issues/66) Fixed role_duration profile property bug
 
 ## [4.1.2] - 2019-09-12 - Bug Fix
 
