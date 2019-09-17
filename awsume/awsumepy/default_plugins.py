@@ -199,7 +199,7 @@ def post_add_arguments(config: dict, arguments: argparse.Namespace, parser: argp
         print('Unset', [])
         exit(0)
     if arguments.config:
-        config_lib.update_config(arguments.config)
+        config_lib.handle_config(arguments.config)
         exit(0)
     if arguments.kill:
         kill(arguments)
