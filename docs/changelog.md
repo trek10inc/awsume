@@ -1,6 +1,6 @@
 # Awsume Changelog
 
-## [4.1.3] - 2019-09-23 - Bug Fix
+## [4.1.4] - 2019-09-23 - Bug Fix
 
 - Fixed profile validation bug, validates fuzzy-matched profile if enabled
 
