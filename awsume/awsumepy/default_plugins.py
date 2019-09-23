@@ -433,7 +433,7 @@ def get_credentials(config: dict, arguments: argparse.Namespace, profiles: dict)
     if arguments.role_arn:
         return assume_role_from_cli(config, arguments, profiles)
 
-    profile_lib.validate_profile(profiles, arguments.target_profile_name)
+    profile_lib.validate_profile(config, arguments, profiles, arguments.target_profile_name)
     target_profile = profile_lib.get_profile(config, arguments, profiles, arguments.target_profile_name)
 
     mfa_serial = profile_lib.get_mfa_serial(profiles, arguments.target_profile_name)

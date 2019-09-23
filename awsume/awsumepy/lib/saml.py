@@ -6,6 +6,7 @@ import colorama
 from . safe_print import safe_print
 from . exceptions import SAMLAssertionParseError
 
+
 def parse_assertion(assertion: str) -> list:
     roles = []
     response = xmltodict.parse(base64.b64decode(assertion))
