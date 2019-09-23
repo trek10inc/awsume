@@ -48,7 +48,6 @@ This hook will only be called when awsuem is given the `--with-saml` flag, and w
 
 - `config` - a `dict` of awsume's configuration
 - `arguments` - an `argparse.Namespace` object containing awsume's arguments
-- `profiles` - the collected aws profiles
 
 ### Returns
 
@@ -65,7 +64,7 @@ import argparse
 from awsume.awsumepy import hookimpl
 
 @hookimpl
-def get_credentials_with_saml(config: dict, arguments: argparse.Namespace, profiles: dict):
+def get_credentials_with_saml(config: dict, arguments: argparse.Namespace):
     # ... handle getting saml assertion
     saml_assertion = 'PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZ...3NhbWwycDpSZXNwb25zZT4='
     return saml_assertion
