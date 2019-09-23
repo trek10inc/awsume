@@ -46,9 +46,9 @@ def credentials_to_profile(credentials: dict) -> dict:
     return result
 
 
-def validate_profile(profiles: dict, target_profile_name: str) -> bool:
+def validate_profile(config: dict, arguments: argparse.Namespace, profiles: dict, target_profile_name: str) -> bool:
     logger.debug('Validating profile')
-    profile = profiles.get(target_profile_name)
+    profile = get_profile(config, arguments, profiles, target_profile_name)
     if not profile:
         raise ProfileNotFoundError(profile_name=target_profile_name)
 
