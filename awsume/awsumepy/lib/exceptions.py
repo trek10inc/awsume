@@ -1,4 +1,10 @@
-class ProfileNotFoundError(Exception):
+class AwsumeException(Exception):
+    """"""
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+
+class ProfileNotFoundError(AwsumeException):
     """"""
     def __init__(self, profile_name='', message=''):
         self.profile_name = profile_name
@@ -9,7 +15,7 @@ class ProfileNotFoundError(Exception):
         return 'Profile {} not found.'.format(self.profile_name)
 
 
-class InvalidProfileError(Exception):
+class InvalidProfileError(AwsumeException):
     """"""
     def __init__(self, profile_name, message=''):
         self.profile_name = profile_name
@@ -18,7 +24,7 @@ class InvalidProfileError(Exception):
         return 'Invalid profile {} {}'.format(self.profile_name, self.message)
 
 
-class UserAuthenticationError(Exception):
+class UserAuthenticationError(AwsumeException):
     """"""
     def __init__(self, message=''):
         self.message = message
@@ -26,7 +32,7 @@ class UserAuthenticationError(Exception):
         return self.message if self.message else 'Unable to get session token'
 
 
-class RoleAuthenticationError(Exception):
+class RoleAuthenticationError(AwsumeException):
     """"""
     def __init__(self, message=''):
         self.message = message
@@ -34,7 +40,7 @@ class RoleAuthenticationError(Exception):
         return self.message if self.message else 'Unable to assume role'
 
 
-class SAMLAssertionNotFoundError(Exception):
+class SAMLAssertionNotFoundError(AwsumeException):
     """"""
     def __init__(self, message=''):
         self.message = message
@@ -42,7 +48,7 @@ class SAMLAssertionNotFoundError(Exception):
         return self.message if self.message else 'No SAML assertion'
 
 
-class SAMLAssertionMissingRoleError(Exception):
+class SAMLAssertionMissingRoleError(AwsumeException):
     """"""
     def __init__(self, message=''):
         self.message = message
@@ -50,7 +56,7 @@ class SAMLAssertionMissingRoleError(Exception):
         return self.message if self.message else 'No role in the SAML assertion'
 
 
-class SAMLRoleNotFoundError(Exception):
+class SAMLRoleNotFoundError(AwsumeException):
     """"""
     def __init__(self, principal_arn, role_arn, message=''):
         self.role_arn = role_arn
@@ -60,7 +66,7 @@ class SAMLRoleNotFoundError(Exception):
         return self.message if self.message else 'No match for SAML principal and role: {},{}'.format(self.principal_arn, self.role_arn)
 
 
-class SAMLAssertionParseError(Exception):
+class SAMLAssertionParseError(AwsumeException):
     """"""
     def __init__(self, message=''):
         self.message = message
@@ -68,9 +74,15 @@ class SAMLAssertionParseError(Exception):
         return self.message if self.message else 'Cannot parse SAML assertion'
 
 
-class NoCredentialsError(Exception):
+class NoCredentialsError(AwsumeException):
     """"""
     def __init__(self, message=''):
         self.message = message
     def __str__(self):
         return self.message if self.message else 'No credentials'
+
+
+class EarlyExit(AwsumeException):
+    """"""
+    def __init__(self):
+        pass
