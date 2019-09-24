@@ -70,12 +70,12 @@ class Awsume(object):
             )
             profile_names = [y for x in result for y in x]
             json.dump({'profile-names': profile_names}, open(autocomplete_file, 'w'))
-            exit(0)
+            raise exceptions.EarlyExit()
         if args.list_plugins:
             for plugin_name, _ in self.plugin_manager.list_name_plugin():
                 if 'default_plugins' not in plugin_name:
                     safe_print(plugin_name, color=colorama.Fore.LIGHTCYAN_EX)
-            exit(0)
+            raise exceptions.EarlyExit()
         self.plugin_manager.hook.post_add_arguments(
             config=self.config,
             arguments=args,
@@ -116,22 +116,10 @@ class Awsume(object):
         )
         assertion = next((_ for _ in assertion if _), None) # pragma: no cover
         if not assertion:
-            safe_print('No assertion to use!', colorama.Fore.RED)
-            if self.is_interactive:
-                exit(1)
-            raise exceptions.SAMLAssertionNotFoundError()
-        try:
-            roles = saml.parse_assertion(assertion)
-        except exceptions.SAMLAssertionParseError:
-            safe_print('Unable to parse SAML assertion', colorama.Fore.RED)
-            if self.is_interactive:
-                exit(1)
-            raise
+            raise exceptions.SAMLAssertionNotFoundError('No assertion to use!')
+        roles = saml.parse_assertion(assertion)
         if not roles:
-            safe_print('No roles found in the saml assertion', colorama.Fore.RED)
-            if self.is_interactive:
-                exit(1)
-            raise exceptions.SAMLAssertionMissingRoleError()
+            raise exceptions.SAMLAssertionMissingRoleError('No roles found in the saml assertion')
         role_arn = None
         principal_arn = None
         role_duration = args.role_duration or int(self.config.get('role-duration', '0'))
@@ -195,15 +183,9 @@ class Awsume(object):
                 logger.debug('Pulling credentials from {}'.format('json parameter' if args.json else 'stdin'))
                 args.target_profile_name = 'json' if args.json else 'stdin'
                 json_input = args.json if args.json else sys.stdin.read()
-                try:
-                    credentials = json.loads(json_input)
-                    if 'Credentials' in credentials:
-                        credentials = credentials['Credentials']
-                except json.JSONDecodeError:
-                    safe_print('Data is not valid json')
-                    if self.is_interactive:
-                        exit(1)
-                    raise
+                credentials = json.loads(json_input)
+                if 'Credentials' in credentials:
+                    credentials = credentials['Credentials']
                 credentials = [credentials]
             elif args.with_saml:
                 logger.debug('Pulling credentials from saml')
@@ -219,32 +201,16 @@ class Awsume(object):
                 logger.debug('Pulling credentials from default awsume flow')
                 credentials = self.plugin_manager.hook.get_credentials(config=self.config, arguments=args, profiles=profiles)
         except exceptions.ProfileNotFoundError as e:
-            safe_print(e, colorama.Fore.RED)
-            logger.debug('', exc_info=True)
             self.plugin_manager.hook.catch_profile_not_found_exception(config=self.config, arguments=args, profiles=profiles, error=e)
-            if self.is_interactive:
-                exit(1)
             raise
         except exceptions.InvalidProfileError as e:
-            safe_print(e, colorama.Fore.RED)
-            logger.debug('', exc_info=True)
             self.plugin_manager.hook.catch_invalid_profile_exception(config=self.config, arguments=args, profiles=profiles, error=e)
-            if self.is_interactive:
-                exit(1)
             raise
         except exceptions.UserAuthenticationError as e:
-            safe_print(e, colorama.Fore.RED)
-            logger.debug('', exc_info=True)
             self.plugin_manager.hook.catch_user_authentication_error(config=self.config, arguments=args, profiles=profiles, error=e)
-            if self.is_interactive:
-                exit(1)
             raise
         except exceptions.RoleAuthenticationError as e:
-            safe_print(e, colorama.Fore.RED)
-            logger.debug('', exc_info=True)
             self.plugin_manager.hook.catch_role_authentication_error(config=self.config, arguments=args, profiles=profiles, error=e)
-            if self.is_interactive:
-                exit(1)
             raise
         credentials = next((_ for _ in credentials if _), {}) # pragma: no cover
         self.plugin_manager.hook.post_get_credentials(
@@ -255,8 +221,6 @@ class Awsume(object):
         )
         if not credentials:
             safe_print('No credentials to awsume', colorama.Fore.RED)
-            if self.is_interactive:
-                exit(1)
             raise exceptions.NoCredentialsError()
         return credentials
 
@@ -275,21 +239,27 @@ class Awsume(object):
 
 
     def run(self, system_arguments: list):
-        args = self.parse_args(system_arguments)
-        profiles = self.get_profiles(args)
-        credentials = self.get_credentials(args, profiles)
+        try:
+            args = self.parse_args(system_arguments)
+            profiles = self.get_profiles(args)
+            credentials = self.get_credentials(args, profiles)
 
-        if args.auto_refresh:
-            return self.export_data(credentials, 'Auto', [
-                'autoawsume-{}'.format(args.target_profile_name),
-                credentials.get('Region'),
-                args.target_profile_name,
-            ])
-        else:
-            return self.export_data(credentials, 'Awsume', [
-                str(credentials.get('AccessKeyId')),
-                str(credentials.get('SecretAccessKey')),
-                str(credentials.get('SessionToken')),
-                str(credentials.get('Region')),
-                str(args.target_profile_name),
-            ])
+            if args.auto_refresh:
+                return self.export_data(credentials, 'Auto', [
+                    'autoawsume-{}'.format(args.target_profile_name),
+                    credentials.get('Region'),
+                    args.target_profile_name,
+                ])
+            else:
+                return self.export_data(credentials, 'Awsume', [
+                    str(credentials.get('AccessKeyId')),
+                    str(credentials.get('SecretAccessKey')),
+                    str(credentials.get('SessionToken')),
+                    str(credentials.get('Region')),
+                    str(args.target_profile_name),
+                ])
+        except exceptions.EarlyExit:
+            pass
+        except exceptions.AwsumeException as e:
+            safe_print('Awsume error: {}'.format(e), color=colorama.Fore.RED)
+            logger.debug('', exc_info=True)
