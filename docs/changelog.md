@@ -1,5 +1,11 @@
 # Awsume Changelog
 
+## [4.1.5] - WIP - Code Improvements, Bug Fix
+
+- Fixed targeted profile name bug with default profile
+- Removed all short-circuiting `exit` calls
+  - Raise exception or `EarlyExit` if no work left to do
+
 ## [4.1.4] - 2019-09-23 - Bug Fix
 
 - Fixed profile validation bug, validates fuzzy-matched profile if enabled

@@ -1,3 +1,6 @@
+from . config_management import CONFIG_MANAGEMENT_HELP
+
+
 class AwsumeException(Exception):
     """"""
     def __init__(self, *args, **kwargs):
@@ -22,6 +25,32 @@ class InvalidProfileError(AwsumeException):
         self.message = message
     def __str__(self):
         return 'Invalid profile {} {}'.format(self.profile_name, self.message)
+
+
+class ValidationException(AwsumeException):
+    """"""
+    def __init__(self, message='no message'):
+        self.message = message
+    def __str__(self):
+        return 'Validation Exception - {}'.format(self.message)
+
+
+class ConfigParseException(AwsumeException):
+    """"""
+    def __init__(self, file_name, message='no message', error=None):
+        self.file_name = file_name
+        self.message = message
+        self.error = error
+    def __str__(self):
+        return 'ConfigParseException - ({}) {} {}'.format(self.file_name, self.message, self.error)
+
+
+class ConfigOperationException(AwsumeException):
+    """"""
+    def __init__(self, message='no message'):
+        self.message = message
+    def __str__(self):
+        return '{}\n{}'.format(self.message, CONFIG_MANAGEMENT_HELP)
 
 
 class UserAuthenticationError(AwsumeException):
@@ -86,3 +115,5 @@ class EarlyExit(AwsumeException):
     """"""
     def __init__(self):
         pass
+    def __str__(self):
+        return 'Early exit exception, nothing left to do'

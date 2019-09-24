@@ -6,6 +6,7 @@ import colorama
 
 import yaml
 
+from . import exceptions
 from . import constants
 from .logger import logger
 from .safe_print import safe_print
@@ -18,6 +19,16 @@ defaults = {
 }
 
 
+CONFIG_MANAGEMENT_HELP = """
+usage: --config operation [operands]
+operations:
+  - help
+  - list
+  - get [config_key]
+  - set [config_key] [config_value]
+"""
+
+
 def load_config() -> dict:
     if not os.path.exists(str(constants.AWSUME_DIR)):
         os.makedirs(str(constants.AWSUME_DIR))
@@ -27,9 +38,8 @@ def load_config() -> dict:
     options = None
     try:
         options = yaml.safe_load(open(str(constants.AWSUME_CONFIG), 'r'))
-    except Exception:
-        safe_print('Cannot parse config file: {}'.format(constants.AWSUME_CONFIG), colorama.Fore.RED)
-        exit(1)
+    except Exception as e:
+        raise exceptions.ConfigParseException(constants.AWSUME_CONFIG, message='Cannot parse config file', error=e)
     if options is None:
         options = defaults
         write_config(options)
@@ -52,27 +62,27 @@ def handle_config(operations: list):
     logger.debug('Updating config: {}'.format(', '.join(operations)))
     config = load_config()
 
+    if not len(operations):
+        raise exceptions.ConfigOperationException('Must supply a config management operand')
+
     if operations[0].lower() == 'get':
         if len(operations) != 2:
-            safe_print('Must supply value to get')
-            exit(1)
+            raise exceptions.ConfigOperationException('Must supply value to get')
         logger.debug('Getting {}'.format(operations[1]))
         value = get_dict_parts(config, operations[1])
         safe_print(json.dumps(value))
-        exit(0)
+        raise exceptions.EarlyExit()
 
     if operations[0].lower() == 'list':
         if len(operations) != 1:
-            safe_print('No operands are valid for operation "list"')
-            exit(1)
+            raise exceptions.ConfigOperationException('No operands are valid for operation "list"')
         logger.debug('Listing config')
         yaml.safe_dump(config, sys.stderr, width=1000)
-        exit(0)
+        raise exceptions.EarlyExit()
 
     if operations[0].lower() == 'set':
         if len(operations) < 3:
-            safe_print('Must supply value to set {} to'.format(operations[1]))
-            exit(1)
+            raise exceptions.ConfigOperationException('Must supply value to set {} to'.format(operations[1]))
         logger.debug('Setting {} to {}'.format(operations[1], operations[2]))
         value = get_value_from_args(operations[2:])
         config = update_dict_parts(config, operations[1], value)
@@ -80,8 +90,7 @@ def handle_config(operations: list):
     if operations[0].lower() in ['reset']:
         default_value = get_dict_parts(defaults, operations[1])
         if default_value is None:
-            safe_print('Key does not have a default: {}'.format(operations[1]), colorama.Fore.YELLOW)
-            exit(1)
+            raise exceptions.ConfigOperationException('Key does not have a default: {}'.format(operations[1]), colorama.Fore.YELLOW)
         config = update_dict_parts(config, operations[1], default_value)
         safe_print('Reset key {} to {}'.format(operations[1], default_value), colorama.Fore.YELLOW)
 

@@ -4,7 +4,7 @@ import json
 import colorama
 
 
-from . lib.exceptions import UserAuthenticationError, RoleAuthenticationError
+from . lib import exceptions
 from . hookimpl import hookimpl
 from .. import __data__
 from ..autoawsume.process import kill
@@ -13,7 +13,6 @@ from . lib import aws_files as aws_files_lib
 from . lib.logger import logger
 from . lib.safe_print import safe_print
 from . lib import config_management as config_lib
-from . lib.exceptions import ProfileNotFoundError
 from . lib import profile as profile_lib
 from . lib import cache as cache_lib
 from . lib.autoawsume import create_autoawsume_profile
@@ -188,22 +187,21 @@ def post_add_arguments(config: dict, arguments: argparse.Namespace, parser: argp
     logger.debug('Post add arguments')
     logger.debug(json.dumps(vars(arguments)))
     if arguments.role_arn and arguments.auto_refresh:
-        safe_print('Cannot use autoawsume with given role_arn', colorama.Fore.RED)
-        exit(1)
+        raise exceptions.ValidationException('Cannot use autoawsume with given role_arn')
     if arguments.version:
         logger.debug('Logging version')
         safe_print(__data__.version)
-        exit(0)
+        raise exceptions.EarlyExit()
     if arguments.unset_variables:
         logger.debug('Unsetting environment variables')
         print('Unset', [])
-        exit(0)
-    if arguments.config:
+        raise exceptions.EarlyExit()
+    if type(arguments.config) is list:
         config_lib.handle_config(arguments.config)
-        exit(0)
+        raise exceptions.EarlyExit()
     if arguments.kill:
         kill(arguments)
-        exit(0)
+        raise exceptions.EarlyExit()
 
     if arguments.with_saml:
         if bool(arguments.role_arn) is not bool(arguments.principal_arn):
@@ -262,7 +260,7 @@ def post_collect_aws_profiles(config: dict, arguments: argparse.Namespace, profi
     if arguments.list_profiles:
         logger.debug('Listing profiles')
         profile_lib.list_profile_data(profiles, arguments.list_profiles == 'more')
-        exit(0)
+        raise exceptions.EarlyExit()
 
 
 def assume_role_from_cli(config: dict, arguments: dict, profiles: dict):
@@ -278,7 +276,7 @@ def assume_role_from_cli(config: dict, arguments: dict, profiles: dict):
         logger.debug('Using the source_profile from the cli to call assume_role')
         source_profile = profiles.get(arguments.source_profile)
         if not source_profile:
-            raise ProfileNotFoundError(profile_name=arguments.source_profile)
+            raise exceptions.ProfileNotFoundError(profile_name=arguments.source_profile)
         source_credentials = profile_lib.profile_to_credentials(source_profile)
         mfa_serial = source_profile.get('mfa_serial')
         if role_duration:
@@ -382,8 +380,7 @@ def get_assume_role_credentials_mfa_required(config: dict, arguments: argparse.N
 
 def get_assume_role_credentials_mfa_required_custom_duration(config: dict, arguments: argparse.Namespace, profiles: dict, target_profile: dict, role_duration: int):
     if arguments.auto_refresh:
-        safe_print('Cannot use autoawsume with custom role duration', colorama.Fore.RED)
-        exit(1)
+        raise exceptions.ValidationException('Cannot use autoawsume with custom role duration')
     logger.debug('Skipping the get_session_token call, temp creds cannot be used for custom role duration')
 
     region = profile_lib.get_region(profiles, arguments, config)
