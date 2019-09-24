@@ -65,6 +65,10 @@ def handle_config(operations: list):
     if not len(operations):
         raise exceptions.ConfigOperationException('Must supply a config management operand')
 
+    if operations[0].lower() == 'help':
+        safe_print(CONFIG_MANAGEMENT_HELP)
+        raise exceptions.EarlyExit()
+
     if operations[0].lower() == 'get':
         if len(operations) != 2:
             raise exceptions.ConfigOperationException('Must supply value to get')
