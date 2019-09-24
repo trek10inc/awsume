@@ -219,19 +219,19 @@ def get_profile(config: dict, arguments: argparse.Namespace, profiles: dict, pro
 
     profile_names = list(profiles.keys())
 
-    matched_prefix_profile = match_prefix(profile_names, arguments.profile_name)
+    matched_prefix_profile = match_prefix(profile_names, profile_name)
     if matched_prefix_profile:
         safe_print('Using profile ' + matched_prefix_profile, color=colorama.Fore.YELLOW)
         arguments.target_profile_name = matched_prefix_profile
         return profiles.get(matched_prefix_profile)
 
-    matched_contains_profile = match_contains(profile_names, arguments.profile_name)
+    matched_contains_profile = match_contains(profile_names, profile_name)
     if matched_contains_profile:
         safe_print('Using profile ' + matched_contains_profile, color=colorama.Fore.YELLOW)
         arguments.target_profile_name = matched_contains_profile
         return profiles.get(matched_contains_profile)
 
-    matched_levenshtein_profile = match_levenshtein(profile_names, arguments.profile_name)
+    matched_levenshtein_profile = match_levenshtein(profile_names, profile_name)
     if matched_levenshtein_profile:
         safe_print('Using profile ' + matched_levenshtein_profile, color=colorama.Fore.YELLOW)
         arguments.target_profile_name = matched_levenshtein_profile
