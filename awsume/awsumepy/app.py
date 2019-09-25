@@ -259,7 +259,8 @@ class Awsume(object):
                     str(args.target_profile_name),
                 ])
         except exceptions.EarlyExit:
-            pass
+            logger.debug('', exc_info=True)
+            logger.debug('EarlyExit exception raised, no more work to do')
         except exceptions.AwsumeException as e:
             logger.debug('', exc_info=True)
             if self.is_interactive:
