@@ -261,5 +261,8 @@ class Awsume(object):
         except exceptions.EarlyExit:
             pass
         except exceptions.AwsumeException as e:
-            safe_print('Awsume error: {}'.format(e), color=colorama.Fore.RED)
             logger.debug('', exc_info=True)
+            if self.is_interactive:
+                safe_print('Awsume error: {}'.format(e), color=colorama.Fore.RED)
+            else:
+                raise
