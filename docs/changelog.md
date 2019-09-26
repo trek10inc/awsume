@@ -7,6 +7,10 @@
   - Raise exception or `EarlyExit` if no work left to do
 - Adds a `--config` help message
 - Improves handling of region name
+- Adds support for aws partition in arguments
+  - `--role-arn <partition>:<account_id>:<role_name>`
+  - `--principal-arn <partition>:<account_id>:<provider_na,e>`
+- Logs expiration for inline role assumption
 
 ## [4.1.4] - 2019-09-23 - Bug Fix
 
