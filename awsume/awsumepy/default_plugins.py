@@ -84,13 +84,13 @@ def add_arguments(config: dict, parser: argparse.ArgumentParser):
         action='store',
         dest='role_arn',
         metavar='role_arn',
-        help='Role ARN to assume',
+        help='Role ARN or <partition>:<account_id>:<role_name>',
     )
     parser.add_argument('--principal-arn',
         action='store',
         dest='principal_arn',
         metavar='principal_arn',
-        help='Principal ARN to use from a saml assertion',
+        help='Principal ARN or <partition>:<account_id>:<provider_name>',
     )
     parser.add_argument('--source-profile',
         action='store',
@@ -212,20 +212,36 @@ def post_add_arguments(config: dict, arguments: argparse.Namespace, parser: argp
     if arguments.role_arn and not arguments.role_arn.startswith('arn:'):
         logger.debug('Using short-hand role arn syntax')
         parts = arguments.role_arn.split(':')
-        if len(parts) != 2:
-            parser.error('--role-arn must be a valid role arn or follow the format "<account_id>:<role_name>"')
-        if not parts[0].isnumeric() or len(parts[0]) is not 12:
+        if len(parts) == 2:
+            partition = 'aws'
+            account_id = parts[0]
+            role_name = parts[1]
+        elif len(parts) == 3:
+            partition = parts[0]
+            account_id = parts[1]
+            role_name = parts[2]
+        else:
+            parser.error('--role-arn must be a valid role arn or follow the format "<partition>:<account_id>:<role_name>"')
+        if not account_id.isnumeric() or len(account_id) is not 12:
             parser.error('--role-arn account id must be valid numeric account id of length 12')
-        arguments.role_arn = 'arn:aws:iam::{}:role/{}'.format(parts[0], parts[1])
+        arguments.role_arn = 'arn:{}:iam::{}:role/{}'.format(partition, account_id, role_name)
 
     if arguments.principal_arn and not arguments.principal_arn.startswith('arn:'):
         logger.debug('Using short-hand role arn syntax')
         parts = arguments.principal_arn.split(':')
-        if len(parts) != 2:
-            parser.error('--principal-arn must be a valid role arn or follow the format "<account_id>:<provider_name>"')
-        if not parts[0].isnumeric() or len(parts[0]) is not 12:
+        if len(parts) == 2:
+            partition = 'aws'
+            account_id = parts[0]
+            provider_name = parts[1]
+        elif len(parts) == 3:
+            partition = parts[0]
+            account_id = parts[1]
+            provider_name = parts[2]
+        else:
+            parser.error('--principal-arn must be a valid role arn or follow the format "<partition>:<account_id>:<provider_name>"')
+        if not provider_name.isnumeric() or len(provider_name) is not 12:
             parser.error('--principal-arn account id must be valid numeric account id of length 12')
-        arguments.principal_arn = 'arn:aws:iam::{}:saml-provider/{}'.format(parts[0], parts[1])
+        arguments.principal_arn = 'arn:{}:iam::{}:role/{}'.format(partition, account_id, provider_name)
 
 
     if not arguments.profile_name:
@@ -427,31 +443,32 @@ def get_session_token_credentials(config: dict, arguments: argparse.Namespace, p
 def get_credentials(config: dict, arguments: argparse.Namespace, profiles: dict) -> dict:
     logger.info('Getting credentials')
 
-    if arguments.role_arn:
-        return assume_role_from_cli(config, arguments, profiles)
-
-    profile_lib.validate_profile(config, arguments, profiles, arguments.target_profile_name)
-    target_profile = profile_lib.get_profile(config, arguments, profiles, arguments.target_profile_name)
-
-    mfa_serial = profile_lib.get_mfa_serial(profiles, arguments.target_profile_name)
-
     user_session = None
     role_session = None
-    if 'role_arn' in target_profile:
-        logger.debug('assume_role call needed')
-        if mfa_serial:
-            role_duration = profile_lib.get_role_duration(config, arguments, target_profile)
-            if role_duration: # cannot use temp creds with custom role duration
-                role_session = get_assume_role_credentials_mfa_required_custom_duration(config, arguments, profiles, target_profile, role_duration)
-            else:
-                user_session, role_session = get_assume_role_credentials_mfa_required(config, arguments, profiles, target_profile)
-        else:
-            role_session = get_assume_role_credentials(config, arguments, profiles, target_profile)
+
+    if arguments.role_arn:
+        role_session = assume_role_from_cli(config, arguments, profiles)
     else:
-        if mfa_serial:
-            user_session = get_session_token_credentials(config, arguments, profiles, target_profile)
+        profile_lib.validate_profile(config, arguments, profiles, arguments.target_profile_name)
+        target_profile = profile_lib.get_profile(config, arguments, profiles, arguments.target_profile_name)
+
+        mfa_serial = profile_lib.get_mfa_serial(profiles, arguments.target_profile_name)
+
+        if 'role_arn' in target_profile:
+            logger.debug('assume_role call needed')
+            if mfa_serial:
+                role_duration = profile_lib.get_role_duration(config, arguments, target_profile)
+                if role_duration: # cannot use temp creds with custom role duration
+                    role_session = get_assume_role_credentials_mfa_required_custom_duration(config, arguments, profiles, target_profile, role_duration)
+                else:
+                    user_session, role_session = get_assume_role_credentials_mfa_required(config, arguments, profiles, target_profile)
+            else:
+                role_session = get_assume_role_credentials(config, arguments, profiles, target_profile)
         else:
-            user_session = get_credentials_no_mfa(config, arguments, profiles, target_profile)
+            if mfa_serial:
+                user_session = get_session_token_credentials(config, arguments, profiles, target_profile)
+            else:
+                user_session = get_credentials_no_mfa(config, arguments, profiles, target_profile)
 
     if config.get('is_interactive'):
         if user_session:
