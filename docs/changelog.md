@@ -6,6 +6,7 @@
 - Removed all short-circuiting `exit` calls
   - Raise exception or `EarlyExit` if no work left to do
 - Adds a `--config` help message
+- Improves handling of region name
 
 ## [4.1.4] - 2019-09-23 - Bug Fix
 
