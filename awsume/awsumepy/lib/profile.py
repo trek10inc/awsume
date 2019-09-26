@@ -91,7 +91,7 @@ def get_source_profile(profiles: dict, target_profile_name: str) -> dict:
     return None
 
 
-def get_region(profiles: dict, arguments: argparse.Namespace, config: dict) -> str:
+def get_region(profiles: dict, arguments: argparse.Namespace, config: dict, ignore_config: bool = False, ignore_default: bool = False) -> str:
     if arguments.region:
         return arguments.region
     if arguments.role_arn and arguments.source_profile and profiles.get(arguments.source_profile, {}).get('region'):
@@ -102,9 +102,9 @@ def get_region(profiles: dict, arguments: argparse.Namespace, config: dict) -> s
     source_profile = get_source_profile(profiles, arguments.target_profile_name)
     if source_profile and source_profile.get('region'):
         return source_profile['region']
-    if profiles.get('default', {}).get('region'):
+    if not ignore_default and profiles.get('default', {}).get('region'):
         return profiles['default']['region']
-    if config.get('region'):
+    if not ignore_config and config.get('region'):
         return config['region']
     return None
 

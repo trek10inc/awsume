@@ -264,7 +264,7 @@ def post_collect_aws_profiles(config: dict, arguments: argparse.Namespace, profi
 
 
 def assume_role_from_cli(config: dict, arguments: dict, profiles: dict):
-    region = profile_lib.get_region(profiles, arguments, config)
+    region = profile_lib.get_region(profiles, arguments, config, ignore_config=True, ignore_default=True)
     logger.info('Using role_arn from the CLI')
     role_duration = arguments.role_duration or int(config.get('role-duration', 0))
     session_name = arguments.session_name or 'awsume-cli-role'

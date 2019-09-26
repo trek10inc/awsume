@@ -29,12 +29,13 @@ def assume_role(
 
     logger.debug('Assuming role: {}'.format(role_arn))
     logger.debug('Session name: {}'.format(session_name))
-    role_sts_client = boto3.session.Session(
+    boto_session = boto3.session.Session(
         aws_access_key_id=source_credentials.get('AccessKeyId'),
         aws_secret_access_key=source_credentials.get('SecretAccessKey'),
         aws_session_token=source_credentials.get('SessionToken'),
-        region_name=region or DEFAULT_REGION,
-    ).client('sts') # type: botostubs.STS
+        region_name=region,
+    )
+    role_sts_client = boto_session.client('sts') # type: botostubs.STS
 
     try:
         kwargs = { 'RoleSessionName': session_name, 'RoleArn': role_arn }
@@ -47,7 +48,7 @@ def assume_role(
             kwargs['TokenCode'] = mfa_token or profile_lib.get_mfa_token()
         role_session = role_sts_client.assume_role(**kwargs).get('Credentials')
         role_session['Expiration'] = role_session['Expiration'].astimezone(dateutil.tz.tzlocal())
-        role_session['Region'] = region or DEFAULT_REGION
+        role_session['Region'] = region or boto_session.region_name
     except Exception as e:
         raise RoleAuthenticationError(str(e))
     logger.debug('Role credentials received')
@@ -71,19 +72,20 @@ def get_session_token(
         user_session = cache_session
     else:
         logger.debug('Getting session token')
-        user_sts_client = boto3.session.Session(
+        boto_session = boto3.session.Session(
             aws_access_key_id=source_credentials.get('AccessKeyId'),
             aws_secret_access_key=source_credentials.get('SecretAccessKey'),
             aws_session_token=source_credentials.get('SessionToken'),
-            region_name=region or DEFAULT_REGION,
-        ).client('sts') # type: botostubs.STS
+            region_name=region,
+        )
+        user_sts_client = boto_session.client('sts') # type: botostubs.STS
         try:
             user_session = user_sts_client.get_session_token(
                 SerialNumber=mfa_serial if mfa_serial else None,
                 TokenCode=None if not mfa_serial else (mfa_token or profile_lib.get_mfa_token()),
             ).get('Credentials')
             user_session['Expiration'] = user_session['Expiration'].astimezone(dateutil.tz.tzlocal())
-            user_session['Region'] = region or DEFAULT_REGION
+            user_session['Region'] = region or boto_session.region_name
         except Exception as e:
             raise UserAuthenticationError(str(e))
         logger.debug('Session token received')
