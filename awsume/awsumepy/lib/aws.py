@@ -29,15 +29,14 @@ def assume_role(
 
     logger.debug('Assuming role: {}'.format(role_arn))
     logger.debug('Session name: {}'.format(session_name))
-    boto_session = boto3.session.Session(
-        aws_access_key_id=source_credentials.get('AccessKeyId'),
-        aws_secret_access_key=source_credentials.get('SecretAccessKey'),
-        aws_session_token=source_credentials.get('SessionToken'),
-        region_name=region,
-    )
-    role_sts_client = boto_session.client('sts') # type: botostubs.STS
-
     try:
+        boto_session = boto3.session.Session(
+            aws_access_key_id=source_credentials.get('AccessKeyId'),
+            aws_secret_access_key=source_credentials.get('SecretAccessKey'),
+            aws_session_token=source_credentials.get('SessionToken'),
+            region_name=region,
+        )
+        role_sts_client = boto_session.client('sts') # type: botostubs.STS
         kwargs = { 'RoleSessionName': session_name, 'RoleArn': role_arn }
         if external_id:
             kwargs['ExternalId'] = external_id
@@ -46,7 +45,9 @@ def assume_role(
         if mfa_serial:
             kwargs['SerialNumber'] = mfa_serial
             kwargs['TokenCode'] = mfa_token or profile_lib.get_mfa_token()
+        logger.debug('Assuming role now')
         role_session = role_sts_client.assume_role(**kwargs).get('Credentials')
+        logger.debug('Received role credentials')
         role_session['Expiration'] = role_session['Expiration'].astimezone(dateutil.tz.tzlocal())
         role_session['Region'] = region or boto_session.region_name
     except Exception as e:

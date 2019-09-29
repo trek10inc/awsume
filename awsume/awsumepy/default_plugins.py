@@ -1,6 +1,7 @@
 import argparse
 import configparser
 import json
+import os
 import colorama
 
 
@@ -266,7 +267,7 @@ def collect_aws_profiles(config: dict, arguments: argparse.Namespace, credential
         if short_name not in profiles:
             profiles[short_name] = {}
         profiles[short_name].update(profile)
-    logger.debug('Colelcted {} profiles'.format(len(profiles)))
+    logger.debug('Collected {} profiles'.format(len(profiles)))
     return profiles
 
 
@@ -382,6 +383,11 @@ def get_assume_role_credentials_mfa_required(config: dict, arguments: argparse.N
     elif target_profile.get('credential_source') == 'Environment':
         logger.debug('Using current environment to assume role')
         source_session = {}
+
+    if arguments.auto_refresh and os.environ.get('AWS_PROFILE').startswith('autoawsume-'):
+        os.environ.pop('AWS_PROFILE')
+        os.environ.pop('AWS_DEFAULT_PROFILE')
+
     role_session = aws_lib.assume_role(
         source_session,
         target_profile.get('role_arn'),
