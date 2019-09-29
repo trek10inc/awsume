@@ -230,12 +230,14 @@ class Awsume(object):
         if self.is_interactive:
             print(awsume_flag, end=' ')
             print(' '.join(awsume_list))
-        return boto3.Session(
+        session = boto3.Session(
             aws_access_key_id=credentials.get('AccessKeyId'),
             aws_secret_access_key=credentials.get('SecretAccessKey'),
             aws_session_token=credentials.get('SessionToken'),
             region_name=credentials.get('Region'),
         )
+        session.awsume_credentials = credentials
+        return session
 
 
     def run(self, system_arguments: list):
