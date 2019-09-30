@@ -1,6 +1,6 @@
 # Awsume Changelog
 
-## [4.1.5] - WIP - Code Improvements, Bug Fix
+## [4.1.5] - 2019-09-30 - Code Improvements, Bug Fix
 
 - Fixed targeted profile name bug with default profile
 - Removed all short-circuiting `exit` calls
@@ -12,6 +12,7 @@
   - `--principal-arn <partition>:<account_id>:<provider_na,e>`
 - Logs expiration for inline role assumption
 - Fixed autoawsume bug with profile name and expired (removed) autoawsume profile
+- Non-interactive awsume patches the credentials dictionary to the session object before returning
 
 ## [4.1.4] - 2019-09-23 - Bug Fix
 
