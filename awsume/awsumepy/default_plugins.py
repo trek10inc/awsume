@@ -384,7 +384,7 @@ def get_assume_role_credentials_mfa_required(config: dict, arguments: argparse.N
         logger.debug('Using current environment to assume role')
         source_session = {}
 
-    if arguments.auto_refresh and os.environ.get('AWS_PROFILE').startswith('autoawsume-'):
+    if arguments.auto_refresh and os.environ.get('AWS_PROFILE', '').startswith('autoawsume-'):
         os.environ.pop('AWS_PROFILE')
         os.environ.pop('AWS_DEFAULT_PROFILE')
 

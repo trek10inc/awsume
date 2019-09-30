@@ -1,5 +1,9 @@
 # Awsume Changelog
 
+## [4.1.6] - 2019-09-30 - Code Improvements, Bug Fix
+
+- Fixed autoawsume bug with existing aws profile environment variable
+
 ## [4.1.5] - 2019-09-30 - Code Improvements, Bug Fix
 
 - Fixed targeted profile name bug with default profile
