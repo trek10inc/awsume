@@ -1,5 +1,10 @@
 # Awsume Changelog
 
+## [4.1.7] - 2019-10-02 - Autoawsume Bug Fix
+
+- Fixed autoawsume bug with datetime comparisons
+- Fixed stdin bug when auto refreshing
+
 ## [4.1.6] - 2019-09-30 - Code Improvements, Bug Fix
 
 - Fixed autoawsume bug with existing aws profile environment variable

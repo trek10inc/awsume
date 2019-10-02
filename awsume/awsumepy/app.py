@@ -179,7 +179,7 @@ class Awsume(object):
             profiles=profiles,
         )
         try:
-            if args.json or not sys.stdin.isatty(): # piping/sending credentials to awsume directly
+            if not args.auto_refresh and (args.json or not sys.stdin.isatty()): # piping/sending credentials to awsume directly
                 logger.debug('Pulling credentials from {}'.format('json parameter' if args.json else 'stdin'))
                 args.target_profile_name = 'json' if args.json else 'stdin'
                 json_input = args.json if args.json else sys.stdin.read()
