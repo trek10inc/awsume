@@ -187,8 +187,11 @@ def add_arguments(config: dict, parser: argparse.ArgumentParser):
 def post_add_arguments(config: dict, arguments: argparse.Namespace, parser: argparse.ArgumentParser):
     logger.debug('Post add arguments')
     logger.debug(json.dumps(vars(arguments)))
-    if arguments.role_arn and arguments.auto_refresh:
-        raise exceptions.ValidationException('Cannot use autoawsume with given role_arn')
+    if arguments.auto_refresh:
+        if arguments.role_arn:
+            raise exceptions.ValidationException('Cannot use autoawsume with a given role_arn')
+        if arguments.json:
+            raise exceptions.ValidationException('Cannot use autoawsume with json')
     if arguments.version:
         logger.debug('Logging version')
         safe_print(__data__.version)
@@ -243,7 +246,6 @@ def post_add_arguments(config: dict, arguments: argparse.Namespace, parser: argp
         if not provider_name.isnumeric() or len(provider_name) is not 12:
             parser.error('--principal-arn account id must be valid numeric account id of length 12')
         arguments.principal_arn = 'arn:{}:iam::{}:role/{}'.format(partition, account_id, provider_name)
-
 
     if not arguments.profile_name:
         if arguments.role_arn:
