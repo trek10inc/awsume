@@ -1,6 +1,10 @@
 # Awsume Changelog
 
-## [4.1.8] - WIP - Bug Fix
+## [4.1.9] - 2019-10-03 - Bug Fix
+
+- Removed Fish path
+
+## [4.1.8] - 2019-10-03 - Bug Fix
 
 - Removed support for piping credentials to stdin
 
