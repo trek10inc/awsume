@@ -1,5 +1,9 @@
 # Awsume Changelog
 
+## [4.1.8] - WIP - Bug Fix
+
+- Removed support for piping credentials to stdin
+
 ## [4.1.7] - 2019-10-02 - Autoawsume Bug Fix
 
 - Fixed autoawsume bug with datetime comparisons
