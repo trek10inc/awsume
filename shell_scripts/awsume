@@ -1,21 +1,24 @@
 #!/bin/bash
 
+AWSUMEPATH=$(dirname $(readlink -e $BASH_SOURCE))
+
 #AWSUME_FLAG - what awsumepy told the shell to do
 #AWSUME_n - the data from awsumepy
-read AWSUME_FLAG AWSUME_1 AWSUME_2 AWSUME_3 AWSUME_4 AWSUME_5 AWSUME_6 <<< $(awsumepy "$@")
+read AWSUME_FLAG AWSUME_1 AWSUME_2 AWSUME_3 AWSUME_4 AWSUME_5 AWSUME_6 <<< $(${AWSUMEPATH}/awsumepy "$@")
 # remove carraige return
 AWSUME_FLAG=$(echo "$AWSUME_FLAG" | tr -d '\r')
 
 if [ "$AWSUME_FLAG" = "usage:" ]; then
-  awsumepy "$@"
+  ${AWSUMEPATH}/awsumepy "$@"
 
 
 elif [ "$AWSUME_FLAG" = "Version" ]; then
-  awsumepy "$@"
+  ${AWSUMEPATH}/awsumepy "$@"
 
 
 elif [ "$AWSUME_FLAG" = "Listing..." ]; then
-  awsumepy "$@"
+  ${AWSUMEPATH}/awsumepy "$@"
+
 
 
 elif [ "$AWSUME_FLAG" = "Auto" ]; then
