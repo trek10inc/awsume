@@ -2,7 +2,7 @@
 
 ## What is awsume?
 
-Awsume is a command-line utility for retreiving and exporting AWS credentials to your shell's environment.
+Awsume is a command-line utility for retrieving and exporting AWS credentials to your shell's environment.
 
 With awsume, you can get credentials for any profile located in your [config and credentials files](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-files.html), including those that require MFA or an `assume-role` call.
 
