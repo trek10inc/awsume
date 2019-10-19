@@ -459,7 +459,6 @@ def get_credentials(config: dict, arguments: argparse.Namespace, profiles: dict)
     else:
         profile_lib.validate_profile(config, arguments, profiles, arguments.target_profile_name)
         target_profile = profile_lib.get_profile(config, arguments, profiles, arguments.target_profile_name)
-
         mfa_serial = profile_lib.get_mfa_serial(profiles, arguments.target_profile_name)
 
         if 'role_arn' in target_profile:

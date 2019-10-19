@@ -7,7 +7,7 @@ import dateutil
 import colorama
 import Levenshtein
 import difflib
-from . exceptions import ProfileNotFoundError, InvalidProfileError
+from . import exceptions
 from . logger import logger
 from . safe_print import safe_print
 from . import aws as aws_lib
@@ -50,21 +50,21 @@ def validate_profile(config: dict, arguments: argparse.Namespace, profiles: dict
     logger.debug('Validating profile')
     profile = get_profile(config, arguments, profiles, target_profile_name)
     if not profile:
-        raise ProfileNotFoundError(profile_name=target_profile_name)
+        raise exceptions.ProfileNotFoundError(profile_name=target_profile_name)
 
     # validate role profiles
     if 'role_arn' in profile:
         if profile.get('credential_process'):
-            raise InvalidProfileError(target_profile_name, message='awsume does not support the credential_process profile option: {}')
+            raise exceptions.InvalidProfileError(target_profile_name, message='awsume does not support the credential_process profile option: {}')
         if profile.get('credential_source') and profile.get('source_profile'):
-            raise InvalidProfileError(target_profile_name, message='credential_source and source_profile are mutually exclusive profile options')
+            raise exceptions.InvalidProfileError(target_profile_name, message='credential_source and source_profile are mutually exclusive profile options')
         if not profile.get('credential_source') and not profile.get('source_profile') and not profile.get('principal_arn'):
-            raise InvalidProfileError(target_profile_name, message='role profiles must contain one of credential_source or source_profile')
+            raise exceptions.InvalidProfileError(target_profile_name, message='role profiles must contain one of credential_source or source_profile')
         if profile.get('credential_source') not in VALID_CREDENTIAL_SOURCES:
-            raise InvalidProfileError(target_profile_name, message='unsupported awsume credential_source profile option: {}'.format(profile.get('credential_source')))
+            raise exceptions.InvalidProfileError(target_profile_name, message='unsupported awsume credential_source profile option: {}'.format(profile.get('credential_source')))
         source_profile_name = profile.get('source_profile')
         if source_profile_name and not profiles.get(source_profile_name):
-            raise ProfileNotFoundError(profile_name=source_profile_name)
+            raise exceptions.ProfileNotFoundError(profile_name=source_profile_name)
         user_profile = get_source_profile(profiles, target_profile_name)
         user_profile_name = source_profile_name
     else:
@@ -79,7 +79,11 @@ def validate_profile(config: dict, arguments: argparse.Namespace, profiles: dict
         if 'aws_secret_access_key' not in user_profile:
             missing_keys.append('aws_secret_access_key')
         if missing_keys:
-            raise InvalidProfileError(user_profile_name, message='Missing keys {}'.format(', '.join(missing_keys)))
+            raise exceptions.InvalidProfileError(user_profile_name, message='Missing keys {}'.format(', '.join(missing_keys)))
+
+    # validate arguments with profile
+    if 'role_arn' not in profile and arguments.auto_refresh:
+        raise exceptions.ValidationException('Cannot use autoawsume with non-role profile')
     return True
 
 

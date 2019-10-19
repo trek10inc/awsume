@@ -1,5 +1,11 @@
 # Awsume Changelog
 
+## [4.1.10] - WIP - Bug Fixes, Small Improvements
+
+- Added logging to autoawsume
+- Logger automatically redacts access key id and secret access keys
+- Throws if running autoawsume on non-role profile
+
 ## [4.1.9] - 2019-10-03 - Bug Fix
 
 - Removed Fish path
