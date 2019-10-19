@@ -5,6 +5,7 @@
 - Added logging to autoawsume
 - Logger automatically redacts access key id and secret access keys
 - Throws if running autoawsume on non-role profile
+- Prevents multiple instances of autoawsume from running at the same time
 
 ## [4.1.9] - 2019-10-03 - Bug Fix
 
