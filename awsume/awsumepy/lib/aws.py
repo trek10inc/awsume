@@ -62,6 +62,7 @@ def get_session_token(
     mfa_serial: str = None,
     mfa_token: str = None,
     ignore_cache: bool = False,
+    duration_seconds: int = None,
 ) -> dict:
     cache_file_name = 'aws-credentials-' + source_credentials.get('AccessKeyId')
     cache_session = cache_lib.read_aws_cache(cache_file_name)
@@ -81,10 +82,13 @@ def get_session_token(
         )
         user_sts_client = boto_session.client('sts') # type: botostubs.STS
         try:
-            user_session = user_sts_client.get_session_token(
-                SerialNumber=mfa_serial if mfa_serial else None,
-                TokenCode=None if not mfa_serial else (mfa_token or profile_lib.get_mfa_token()),
-            ).get('Credentials')
+            kwargs = {
+                'SerialNumber': mfa_serial if mfa_serial else None,
+                'TokenCode': None if not mfa_serial else (mfa_token or profile_lib.get_mfa_token()),
+            }
+            if duration_seconds:
+                kwargs['DurationSeconds'] = duration_seconds
+            user_session = user_sts_client.get_session_token(**kwargs).get('Credentials')
             user_session['Expiration'] = user_session['Expiration'].astimezone(dateutil.tz.tzlocal())
             user_session['Region'] = region or boto_session.region_name
         except Exception as e:

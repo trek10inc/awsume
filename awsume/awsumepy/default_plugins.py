@@ -334,6 +334,7 @@ def assume_role_from_cli(config: dict, arguments: dict, profiles: dict):
                     mfa_serial=mfa_serial,
                     mfa_token=arguments.mfa_token,
                     ignore_cache=arguments.force_refresh,
+                    duration_seconds=config.get('debug', {}).get('session_token_duration'),
                 )
             else:
                 logger.debug('MFA not required')
@@ -349,10 +350,9 @@ def assume_role_from_cli(config: dict, arguments: dict, profiles: dict):
     return role_session
 
 
-def get_assume_role_credentials(config: dict, arguments: argparse.Namespace, profiles: dict, target_profile: dict):
+def get_assume_role_credentials(config: dict, arguments: argparse.Namespace, profiles: dict, target_profile: dict, role_duration: int):
     region = profile_lib.get_region(profiles, arguments, config)
     external_id = profile_lib.get_external_id(arguments, target_profile)
-    role_duration = profile_lib.get_role_duration(config, arguments, target_profile)
     source_profile = profile_lib.get_source_profile(profiles, arguments.target_profile_name)
     source_credentials = profile_lib.profile_to_credentials(source_profile)
     role_session = aws_lib.assume_role(
@@ -366,7 +366,7 @@ def get_assume_role_credentials(config: dict, arguments: argparse.Namespace, pro
     return role_session
 
 
-def get_assume_role_credentials_mfa_required(config: dict, arguments: argparse.Namespace, profiles: dict, target_profile: dict):
+def get_assume_role_credentials_mfa_required(config: dict, arguments: argparse.Namespace, profiles: dict, target_profile: dict, role_duration: int):
     region = profile_lib.get_region(profiles, arguments, config)
     mfa_serial = profile_lib.get_mfa_serial(profiles, arguments.target_profile_name)
     external_id = profile_lib.get_external_id(arguments, target_profile)
@@ -381,6 +381,7 @@ def get_assume_role_credentials_mfa_required(config: dict, arguments: argparse.N
             mfa_serial=mfa_serial,
             mfa_token=arguments.mfa_token,
             ignore_cache=arguments.force_refresh,
+            duration_seconds=config.get('debug', {}).get('session_token_duration'),
         )
     elif target_profile.get('credential_source') == 'Environment':
         logger.debug('Using current environment to assume role')
@@ -396,6 +397,7 @@ def get_assume_role_credentials_mfa_required(config: dict, arguments: argparse.N
         arguments.session_name or arguments.target_profile_name,
         region=region,
         external_id=external_id,
+        role_duration=role_duration,
     )
     if arguments.auto_refresh:
         create_autoawsume_profile(config, arguments, role_session, source_session)
@@ -403,8 +405,8 @@ def get_assume_role_credentials_mfa_required(config: dict, arguments: argparse.N
     return source_session, role_session
 
 
-def get_assume_role_credentials_mfa_required_custom_duration(config: dict, arguments: argparse.Namespace, profiles: dict, target_profile: dict, role_duration: int):
-    if arguments.auto_refresh:
+def get_assume_role_credentials_mfa_required_large_custom_duration(config: dict, arguments: argparse.Namespace, profiles: dict, target_profile: dict, role_duration: int):
+    if arguments.auto_refresh and role_duration > 3600:
         raise exceptions.ValidationException('Cannot use autoawsume with custom role duration')
     logger.debug('Skipping the get_session_token call, temp creds cannot be used for custom role duration')
 
@@ -444,6 +446,7 @@ def get_session_token_credentials(config: dict, arguments: argparse.Namespace, p
         mfa_serial=mfa_serial,
         mfa_token=arguments.mfa_token,
         ignore_cache=arguments.force_refresh,
+        duration_seconds=config.get('debug', {}).get('session_token_duration'),
     )
     return user_session
 
@@ -461,17 +464,17 @@ def get_credentials(config: dict, arguments: argparse.Namespace, profiles: dict)
         profile_lib.validate_profile(config, arguments, profiles, arguments.target_profile_name)
         target_profile = profile_lib.get_profile(config, arguments, profiles, arguments.target_profile_name)
         mfa_serial = profile_lib.get_mfa_serial(profiles, arguments.target_profile_name)
+        role_duration = profile_lib.get_role_duration(config, arguments, target_profile)
 
         if 'role_arn' in target_profile:
             logger.debug('assume_role call needed')
             if mfa_serial:
-                role_duration = profile_lib.get_role_duration(config, arguments, target_profile)
-                if role_duration: # cannot use temp creds with custom role duration
-                    role_session = get_assume_role_credentials_mfa_required_custom_duration(config, arguments, profiles, target_profile, role_duration)
+                if role_duration > 3600: # cannot use temp creds with custom role duration more than an hour
+                    role_session = get_assume_role_credentials_mfa_required_large_custom_duration(config, arguments, profiles, target_profile, role_duration)
                 else:
-                    user_session, role_session = get_assume_role_credentials_mfa_required(config, arguments, profiles, target_profile)
+                    user_session, role_session = get_assume_role_credentials_mfa_required(config, arguments, profiles, target_profile, role_duration)
             else:
-                role_session = get_assume_role_credentials(config, arguments, profiles, target_profile)
+                role_session = get_assume_role_credentials(config, arguments, profiles, target_profile, role_duration)
         else:
             if mfa_serial:
                 user_session = get_session_token_credentials(config, arguments, profiles, target_profile)
