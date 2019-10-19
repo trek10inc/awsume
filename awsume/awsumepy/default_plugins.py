@@ -8,7 +8,7 @@ import colorama
 from . lib import exceptions
 from . hookimpl import hookimpl
 from .. import __data__
-from ..autoawsume.process import kill
+from ..autoawsume.process import kill, kill_autoawsume
 from . lib import aws as aws_lib
 from . lib import aws_files as aws_files_lib
 from . lib.logger import logger
@@ -399,6 +399,7 @@ def get_assume_role_credentials_mfa_required(config: dict, arguments: argparse.N
     )
     if arguments.auto_refresh:
         create_autoawsume_profile(config, arguments, role_session, source_session)
+        kill_autoawsume()
     return source_session, role_session
 
 
