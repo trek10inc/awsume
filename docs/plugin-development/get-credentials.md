@@ -42,7 +42,7 @@ def get_credentials(config: dict, arguments: argparse.Namespace, profiles: dict)
 
 ## `get_credentials_with_saml`
 
-This hook will only be called when awsuem is given the `--with-saml` flag, and will prevent other `get_credentials...` hooks from being called. If there is only one role provided in the assertion, it will be used. If there are multiple and `--role-arn` is provided to awsume, it will use the closest match. If there are multiple and `--role-arn` is not provided, it will prompt the user for which role to use.
+This hook will only be called when awsume is given the `--with-saml` flag, and will prevent other `get_credentials...` hooks from being called. If there is only one role provided in the assertion, it will be used. If there are multiple and `--role-arn` is provided to awsume, it will use the closest match. If there are multiple and `--role-arn` is not provided, it will prompt the user for which role to use.
 
 ### Parameters
 
@@ -72,7 +72,7 @@ def get_credentials_with_saml(config: dict, arguments: argparse.Namespace):
 
 ## `get_credentials_with_web_identity`
 
-This hook will only be called when awsuem is given the `--with-web-identity` flag, and will prevent other `get_credentials...` hooks from being called.
+This hook will only be called when awsume is given the `--with-web-identity` flag, and will prevent other `get_credentials...` hooks from being called.
 
 ### Parameters
 
