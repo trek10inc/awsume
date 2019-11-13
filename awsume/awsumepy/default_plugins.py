@@ -407,7 +407,7 @@ def get_assume_role_credentials_mfa_required(config: dict, arguments: argparse.N
 
 def get_assume_role_credentials_mfa_required_large_custom_duration(config: dict, arguments: argparse.Namespace, profiles: dict, target_profile: dict, role_duration: int):
     if arguments.auto_refresh and role_duration > 3600:
-        raise exceptions.ValidationException('Cannot use autoawsume with custom role duration')
+        raise exceptions.ValidationException('Cannot use autoawsume with custom role duration of more than 1 hour')
     logger.debug('Skipping the get_session_token call, temp creds cannot be used for custom role duration')
 
     region = profile_lib.get_region(profiles, arguments, config)

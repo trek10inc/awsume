@@ -1,6 +1,6 @@
 # Awsume Changelog
 
-## [4.1.10] - WIP - Bug Fixes, Small Improvements
+## [4.1.10] - 2019-11-13 - Bug Fixes, Small Improvements
 
 - Added logging to autoawsume
 - Logger automatically redacts access key id and secret access keys
