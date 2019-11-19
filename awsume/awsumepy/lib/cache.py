@@ -11,6 +11,7 @@ def ensure_cache_dir():
     cache_dir = str(constants.AWSUME_CACHE_DIR)
     if not os.path.exists(cache_dir):
         os.makedirs(cache_dir)
+    os.chmod(cache_dir, 0o700) #ensure directory is secure.
 
 
 def read_aws_cache(cache_file_name: str) -> dict:
@@ -32,6 +33,11 @@ def read_aws_cache(cache_file_name: str) -> dict:
 def write_aws_cache(cache_file_name: str, session: dict) -> dict:
     ensure_cache_dir()
     cache_path = str(constants.AWSUME_CACHE_DIR) + '/' + cache_file_name
+    if os.path.exists(cache_path):
+        os.chmod(cache_path, 0o600)
+    else:
+        open(cache_path, 'a').close()
+        os.chmod(cache_path, 0o600)
     logger.debug('Cache file path: ' + cache_path)
     expiration = session['Expiration'].astimezone(dateutil.tz.tzlocal())
     expiration = expiration.strftime('%Y-%m-%d %H:%M:%S')
