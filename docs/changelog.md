@@ -1,5 +1,9 @@
 # Awsume Changelog
 
+## [4.1.11] - 2019-11-27 - Security Improvement
+
+- [#65](https://github.com/trek10inc/awsume/pull/79) Added chmod to cache file operations
+
 ## [4.1.10] - 2019-11-13 - Bug Fixes, Small Improvements
 
 - Added logging to autoawsume
