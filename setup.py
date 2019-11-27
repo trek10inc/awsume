@@ -18,13 +18,15 @@ setup(
     install_requires=[
         'colorama',
         'boto3',
-        'psutil',
         'pluggy',
         'pyyaml',
-        'xmltodict',
-        'python-levenshtein',
         'argcomplete',
     ],
+    extras_require={
+        'saml': ['xmltodict'],
+        'fuzzy': ['python-levenshtein'],
+        'autoawsume': ['psutil'],
+    },
     scripts=[
         'shell_scripts/awsume',
         'shell_scripts/awsume.ps1',
