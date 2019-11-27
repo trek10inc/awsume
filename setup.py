@@ -23,6 +23,7 @@ setup(
         'pyyaml',
         'xmltodict',
         'python-levenshtein',
+        'argcomplete',
     ],
     scripts=[
         'shell_scripts/awsume',
