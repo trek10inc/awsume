@@ -21,9 +21,11 @@ setup(
         'psutil',
         'pluggy',
         'pyyaml',
-        'xmltodict',
-        'python-levenshtein',
     ],
+    extras_require={
+        'saml': ['xmltodict'],
+        'fuzzy': ['python-levenshtein'],
+    },
     scripts=[
         'shell_scripts/awsume',
         'shell_scripts/awsume.ps1',
