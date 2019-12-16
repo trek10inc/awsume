@@ -10,7 +10,7 @@ This is most likely due to an issue with the alias. You should have an alias `aw
 
 ## I'm getting an installation error, "fatal error: Python.h No such file or directory"
 
-This is an issue with `python-dev` not being installed on your system. Run your package manager to install `python-dev`, and make sure all of your packages are up-to-date before trying to install AWSume again.
+This is an issue with `python-dev` not being installed on your system. Run your package manager to install `python-dev`, and make sure all of your packages are up-to-date before trying to install AWSume again. If you are running Python3, `python3-dev` is required.
 
 ## I'm getting an installation error when pip is trying to uninstall six, I get "Operation not permitted"
 
