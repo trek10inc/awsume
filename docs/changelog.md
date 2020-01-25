@@ -1,8 +1,12 @@
 # Awsume Changelog
 
+## [4.2.0] - 2020-01-24 - Handles having a single role in SAML assertions
+
+- [#86](https://github.com/trek10inc/awsume/pull/86) Handles having a single role in SAML assertions
+
 ## [4.1.11] - 2019-11-27 - Security Improvement
 
-- [#65](https://github.com/trek10inc/awsume/pull/79) Added chmod to cache file operations
+- [#79](https://github.com/trek10inc/awsume/pull/79) Added chmod to cache file operations
 
 ## [4.1.10] - 2019-11-13 - Bug Fixes, Small Improvements
 
