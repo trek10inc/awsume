@@ -22,6 +22,11 @@ def parse_assertion(assertion: str) -> list:
         raise SAMLAssertionParseError()
 
     for attribute in [_ for _ in attributes if _.get('@Name', '') == 'https://aws.amazon.com/SAML/Attributes/Role']:
-        for value in attribute[attribute_value_key]:
+        if isinstance(attribute[attribute_value_key], list):
+            for value in attribute[attribute_value_key]:
+                roles.append(value['#text'])
+        else:
+            value = attribute[attribute_value_key]
             roles.append(value['#text'])
+
     return roles
