@@ -121,9 +121,9 @@ def get_external_id(arguments: argparse.Namespace, target_profile: dict):
 
 def get_role_duration(config: dict, arguments: argparse.Namespace, target_profile: dict):
     if arguments.role_duration:
-        return arguments.role_duration
+        return int(arguments.role_duration)
     if target_profile.get('duration_seconds'):
-        return target_profile.get('duration_seconds')
+        return int(target_profile.get('duration_seconds'))
     if config.get('role-duration'):
         return int(config.get('role-duration'))
     return 0
@@ -247,7 +247,7 @@ def get_profile(config: dict, arguments: argparse.Namespace, profiles: dict, pro
 
 def match_prefix(profile_names: list, profile_name: str) -> str:
     prefix_words = [_ for _ in profile_names if _.startswith(profile_name)]
-    if len(prefix_words) is 1:
+    if len(prefix_words) == 1:
         return prefix_words[0]
     return None
 
@@ -261,7 +261,7 @@ def match_contains(profile_names: list, profile_name: str) -> str:
     matches = {profile: longest_contains(profile_name, profile) for profile in profile_names}
     biggest_match = max(matches.values())
     result = [k for k in matches.keys() if matches[k] == biggest_match]
-    if len(result) is 1:
+    if len(result) == 1:
         return result[0]
     return None
 
@@ -270,6 +270,6 @@ def match_levenshtein(profile_names: list, profile_name: str) -> str:
     matches = {profile: Levenshtein.distance(profile_name, profile) for profile in profile_names}
     closest_match = min(matches.values())
     result = [k for k in matches.keys() if matches[k] == closest_match]
-    if len(result) is 1:
+    if len(result) == 1:
         return result[0]
     return None
