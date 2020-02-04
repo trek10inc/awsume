@@ -1,5 +1,9 @@
 # Awsume Changelog
 
+## [4.2.1] - 2020-02-04 - Bug fixes
+
+- [#88](https://github.com/trek10inc/awsume/issues/88) Fixes duration_seconds comparison
+
 ## [4.2.0] - 2020-01-24 - Handles having a single role in SAML assertions
 
 - [#86](https://github.com/trek10inc/awsume/pull/86) Handles having a single role in SAML assertions
