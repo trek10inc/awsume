@@ -226,7 +226,7 @@ def post_add_arguments(config: dict, arguments: argparse.Namespace, parser: argp
             role_name = parts[2]
         else:
             parser.error('--role-arn must be a valid role arn or follow the format "<partition>:<account_id>:<role_name>"')
-        if not account_id.isnumeric() or len(account_id) is not 12:
+        if not account_id.isnumeric() or len(account_id) != 12:
             parser.error('--role-arn account id must be valid numeric account id of length 12')
         arguments.role_arn = 'arn:{}:iam::{}:role/{}'.format(partition, account_id, role_name)
 
@@ -243,7 +243,7 @@ def post_add_arguments(config: dict, arguments: argparse.Namespace, parser: argp
             provider_name = parts[2]
         else:
             parser.error('--principal-arn must be a valid role arn or follow the format "<partition>:<account_id>:<provider_name>"')
-        if not provider_name.isnumeric() or len(provider_name) is not 12:
+        if not provider_name.isnumeric() or len(provider_name) != 12:
             parser.error('--principal-arn account id must be valid numeric account id of length 12')
         arguments.principal_arn = 'arn:{}:iam::{}:role/{}'.format(partition, account_id, provider_name)
 
