@@ -9,7 +9,7 @@ def awsume(profile_name: str = None, *args: list, **kwargs: dict) -> boto3.Sessi
     for key, value in kwargs.items():
         newkey = '--' + key.replace('_', '-')
         cli_arguments.append(str(newkey))
-        if instance(value) is not bool:
+        if not isinstance(value, bool):
             cli_arguments.append(str(value))
 
     app = Awsume(is_interactive=False)

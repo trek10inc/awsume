@@ -1,5 +1,9 @@
 # Awsume Changelog
 
+## [4.2.3] - 2020-02-10 - Bug fixes
+
+- Fixes non-interactive awsume bug with `isinstance` call
+
 ## [4.2.2] - 2020-02-10 - Bug fixes
 
 - [#91](https://github.com/trek10inc/awsume/issues/91) Fixes autoawsume expired credential period
