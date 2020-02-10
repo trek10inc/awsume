@@ -66,7 +66,7 @@ def main():
         local_expirations = [_.astimezone(dateutil.tz.tzlocal()) for _ in expirations]
         earliest_expiration = min(local_expirations)
         logger.debug('Earliest expiration: {}'.format(earliest_expiration))
-        time_to_sleep = (earliest_expiration - datetime.now().replace(tzinfo=earliest_expiration.tzinfo)).total_seconds() + 60
+        time_to_sleep = (earliest_expiration - datetime.now().replace(tzinfo=earliest_expiration.tzinfo)).total_seconds() - 60
         logger.debug('Time to sleep: {}'.format(time_to_sleep))
         time.sleep(time_to_sleep)
 
