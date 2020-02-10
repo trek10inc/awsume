@@ -1,5 +1,9 @@
 # Awsume Changelog
 
+## [4.2.2] - 2020-02-10 - Bug fixes
+
+- [#91](https://github.com/trek10inc/awsume/issues/91) Fixes autoawsume expired credential period
+
 ## [4.2.1] - 2020-02-04 - Bug fixes
 
 - [#88](https://github.com/trek10inc/awsume/issues/88) Fixes duration_seconds comparison
