@@ -45,8 +45,8 @@ def main():
                     expirations.append(expiration)
             else:
                 logger.debug('Source credentials are not expired')
-                if expiration < datetime.now():
-                    logger.debug('Role credentials are expired')
+                if expiration - timedelta(seconds=60) < datetime.now():
+                    logger.debug('Role credentials are expired or will expire in less than 60s')
                     session = refresh_profile(auto_profile)
                     if session:
                         logger.debug('Received session from awsume call')
@@ -66,7 +66,7 @@ def main():
         local_expirations = [_.astimezone(dateutil.tz.tzlocal()) for _ in expirations]
         earliest_expiration = min(local_expirations)
         logger.debug('Earliest expiration: {}'.format(earliest_expiration))
-        time_to_sleep = (earliest_expiration - datetime.now().replace(tzinfo=earliest_expiration.tzinfo)).total_seconds() - 60
+        time_to_sleep = max(0, (earliest_expiration - datetime.now().replace(tzinfo=earliest_expiration.tzinfo)).total_seconds() - 60)
         logger.debug('Time to sleep: {}'.format(time_to_sleep))
         time.sleep(time_to_sleep)
 
