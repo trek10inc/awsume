@@ -1,5 +1,9 @@
 # Awsume Changelog
 
+## [4.2.4] - 2020-02-19 - Bug fix
+
+- [#94](https://github.com/trek10inc/awsume/pull/94) Refreshes role credentials before they expire
+
 ## [4.2.3] - 2020-02-10 - Bug fixes
 
 - Fixes non-interactive awsume bug with `isinstance` call
