@@ -17,6 +17,7 @@ from . lib import config_management as config_lib
 from . lib import profile as profile_lib
 from . lib import cache as cache_lib
 from . lib.autoawsume import create_autoawsume_profile
+from . lib.profile import VALID_CREDENTIAL_SOURCES
 
 
 def custom_duration_argument_type(string):
@@ -383,7 +384,7 @@ def get_assume_role_credentials_mfa_required(config: dict, arguments: argparse.N
             ignore_cache=arguments.force_refresh,
             duration_seconds=config.get('debug', {}).get('session_token_duration'),
         )
-    elif target_profile.get('credential_source') == 'Environment':
+    elif 'credential_source' in target_profile and target_profile['credential_source'] in VALID_CREDENTIAL_SOURCES:
         logger.debug('Using current environment to assume role')
         source_session = {}
 
