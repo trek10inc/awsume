@@ -14,7 +14,7 @@ from . import aws as aws_lib
 from collections import OrderedDict
 from difflib import SequenceMatcher
 
-VALID_CREDENTIAL_SOURCES = [ None, 'Environment' ]
+VALID_CREDENTIAL_SOURCES = [ None, 'Environment', 'Ec2InstanceMetadata', 'EcsContainer' ]
 
 
 def parse_time(date_time: datetime):

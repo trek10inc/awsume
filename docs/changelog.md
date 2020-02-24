@@ -1,5 +1,9 @@
 # Awsume Changelog
 
+## [4.2.5] - 2020-02-19 - Bug fix
+
+- [#95](https://github.com/trek10inc/awsume/issues/95) Adds support for `credential_source` as `Ec2InstanceMetadata` and `EcsContainer`
+
 ## [4.2.4] - 2020-02-19 - Bug fix
 
 - [#94](https://github.com/trek10inc/awsume/pull/94) Refreshes role credentials before they expire
