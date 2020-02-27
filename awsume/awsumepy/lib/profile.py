@@ -5,7 +5,6 @@ import operator
 from datetime import datetime
 import dateutil
 import colorama
-import Levenshtein
 import difflib
 from . import exceptions
 from . logger import logger
@@ -15,6 +14,10 @@ from collections import OrderedDict
 from difflib import SequenceMatcher
 
 VALID_CREDENTIAL_SOURCES = [ None, 'Environment', 'Ec2InstanceMetadata', 'EcsContainer' ]
+try:
+    import Levenshtein
+except:
+    Levenshtein = False
 
 
 def parse_time(date_time: datetime):
@@ -267,6 +270,9 @@ def match_contains(profile_names: list, profile_name: str) -> str:
 
 
 def match_levenshtein(profile_names: list, profile_name: str) -> str:
+    if not Levenshtein:
+        logger.debug('Levenshtein not installed, try installing awsume[fuzzy]')
+        return None
     matches = {profile: Levenshtein.distance(profile_name, profile) for profile in profile_names}
     closest_match = min(matches.values())
     result = [k for k in matches.keys() if matches[k] == closest_match]
