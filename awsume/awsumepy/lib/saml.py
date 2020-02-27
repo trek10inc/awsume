@@ -1,13 +1,20 @@
 import base64
-import xmltodict
 import json
+
+try:
+    import xmltodict
+except:
+    xmltodict = False
 
 import colorama
 from . safe_print import safe_print
-from . exceptions import SAMLAssertionParseError
+from . exceptions import SAMLAssertionParseError, ValidationException
 
 
 def parse_assertion(assertion: str) -> list:
+    if not xmltodict:
+        raise ValidationException(message='SAML option not installed, try installing awsume[saml]')
+
     roles = []
     response = xmltodict.parse(base64.b64decode(assertion))
 
