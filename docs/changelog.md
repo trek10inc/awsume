@@ -1,5 +1,9 @@
 # Awsume Changelog
 
+## [4.2.6] - 2020-02-26 - Bug fix
+
+- Breaks `xmltodict` and `python-levenshtein` out into extras_require (so you'll have to `pip install awsume[fuzzy]` to get the fuzzy-match featureset which requires `python-levenshtein`. The same applies to `saml` and `xmltodict`)
+
 ## [4.2.5] - 2020-02-19 - Bug fix
 
 - [#95](https://github.com/trek10inc/awsume/issues/95) Adds support for `credential_source` as `Ec2InstanceMetadata` and `EcsContainer`
