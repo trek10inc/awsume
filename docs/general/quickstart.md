@@ -12,6 +12,13 @@ pip install awsume
 Awsume version 4 and up requires Python 3.5+
 :::
 
+### Extra Features
+
+Awsume uses Python's [extras_require](https://setuptools.readthedocs.io/en/latest/setuptools.html#declaring-extras-optional-features-with-their-own-dependencies) to add additional functionality with different dependencies.
+
+- `awsume[saml]` - Install dependencies required to support SAML assertion handling
+- `awsume[fuzzy]` - Install dependencies required to support fuzzy profile name matching
+
 ## Alias Setup
 
 If you're running on a unix-like system, you must have an alias setup for awsume, that may or may not look something like this:
