@@ -23,6 +23,7 @@ colorama = "*"
 coverage = "*"
 pyyaml = "*"
 xmltodict = "*"
+argcomplete = "*"
 
 [scripts]
 test = "pytest test --cov=awsume --cov-report term"
