@@ -9,7 +9,7 @@ FOR %%A IN (%*) DO (
     IF "%%A"=="-s" (set "SHOW=y")
 )
 
-for /f "tokens=1,2,3,4,5,6 delims= " %%a in ("%AWSUME_TEXT%") do (
+for /f "tokens=1,2,3,4,5,6,7 delims= " %%a in ("%AWSUME_TEXT%") do (
     if "%%a" == "Auto" (
         set AWS_SECRET_ACCESS_KEY=
         set AWS_SESSION_TOKEN=
@@ -93,13 +93,15 @@ for /f "tokens=1,2,3,4,5,6 delims= " %%a in ("%AWSUME_TEXT%") do (
         set AWS_DEFAULT_PROFILE=
         set AWSUME_PROFILE=
 
-        set AWS_ACCESS_KEY_ID=%%b
-        set AWS_SECRET_ACCESS_KEY=%%c
+        if "%%b" NEQ "None" (
+            set AWS_ACCESS_KEY_ID=%%b)
+
+        if "%%c" NEQ "None" (
+            set AWS_SECRET_ACCESS_KEY=%%c)
 
         if "%%d" NEQ "None" (
             set AWS_SESSION_TOKEN=%%d
             set AWS_SECURITY_TOKEN=%%d)
-
 
         if "%%e" NEQ "None" (
             set AWS_REGION=%%e
@@ -108,10 +110,16 @@ for /f "tokens=1,2,3,4,5,6 delims= " %%a in ("%AWSUME_TEXT%") do (
         if "%%f" NEQ "None" (
             set AWSUME_PROFILE=%%f)
 
+        if "%%g" NEQ "None" (
+            set AWS_PROFILE=%%g
+            set AWS_DEFAULT_PROFILE=%%g)
+
         IF defined SHOW (
             for /f "tokens=1,2,3,4,5 delims= " %%a in ("%AWSUME_TEXT%") do (
-                echo set AWS_ACCESS_KEY_ID=%%b
-                echo set AWS_SECRET_ACCESS_KEY=%%c
+                if "%%b" NEQ "None" (
+                    echo set AWS_ACCESS_KEY_ID=%%b)
+                if "%%c" NEQ "None" (
+                    echo set AWS_SECRET_ACCESS_KEY=%%c)
 
                 if "%%d" NEQ "None" (
                     echo set AWS_SESSION_TOKEN=%%d
@@ -123,6 +131,10 @@ for /f "tokens=1,2,3,4,5,6 delims= " %%a in ("%AWSUME_TEXT%") do (
 
                 if "%%f" NEQ "None" (
                     echo set AWSUME_PROFILE=%%f)
+
+                if "%%g" NEQ "None" (
+                    echo set AWS_PROFILE=%%g
+                    echo set AWS_DEFAULT_PROFILE=%%g)
             )
         )
     )

@@ -77,12 +77,16 @@ def validate_profile(config: dict, arguments: argparse.Namespace, profiles: dict
     # validate user profile
     if user_profile:
         missing_keys = []
-        if 'aws_access_key_id' not in user_profile:
-            missing_keys.append('aws_access_key_id')
-        if 'aws_secret_access_key' not in user_profile:
-            missing_keys.append('aws_secret_access_key')
+        if 'credential_source' in profile:
+            if profile.get('credential_source') not in VALID_CREDENTIAL_SOURCES:
+                raise exceptions.InvalidProfileError(user_profile_name, message='unsupported awsume credential_source profile option: {}'.format(profile.get('credential_source')))
+        else:
+            if 'aws_access_key_id' not in user_profile:
+                missing_keys.append('aws_access_key_id')
+            if 'aws_secret_access_key' not in user_profile:
+                missing_keys.append('aws_secret_access_key')
         if missing_keys:
-            raise exceptions.InvalidProfileError(user_profile_name, message='Missing keys {}'.format(', '.join(missing_keys)))
+            raise exceptions.InvalidProfileError(user_profile_name, message='Missing keys {}, or credential_source'.format(', '.join(missing_keys)))
 
     # validate arguments with profile
     if 'role_arn' not in profile and arguments.auto_refresh:

@@ -24,7 +24,7 @@ class InvalidProfileError(AwsumeException):
         self.profile_name = profile_name
         self.message = message
     def __str__(self):
-        return 'Invalid profile {} {}'.format(self.profile_name, self.message)
+        return 'Invalid profile [{}]: {}'.format(self.profile_name, self.message)
 
 
 class ValidationException(AwsumeException):

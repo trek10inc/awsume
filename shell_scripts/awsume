@@ -99,8 +99,12 @@ elif [ "$AWSUME_FLAG" = "Awsume" ]; then
   unset AWS_PROFILE
   unset AWS_DEFAULT_PROFILE
   unset AWSUME_PROFILE
-  export AWS_ACCESS_KEY_ID=${AWSUME_1}
-  export AWS_SECRET_ACCESS_KEY=${AWSUME_2}
+  if [ ! "${AWSUME_1}" = "None" ]; then
+    export AWS_ACCESS_KEY_ID=${AWSUME_1}
+  fi
+  if [ ! "${AWSUME_2}" = "None" ]; then
+    export AWS_SECRET_ACCESS_KEY=${AWSUME_2}
+  fi
   if [ ! "${AWSUME_3}" = "None" ]; then
     export AWS_SESSION_TOKEN=${AWSUME_3}
     export AWS_SECURITY_TOKEN=${AWSUME_3}
@@ -112,11 +116,19 @@ elif [ "$AWSUME_FLAG" = "Awsume" ]; then
   if [ ! "${AWSUME_5}" = "None" ]; then
     export AWSUME_PROFILE=${AWSUME_5}
   fi
+  if [ ! "${AWSUME_6}" = "None" ]; then
+    export AWS_PROFILE=${AWSUME_6}
+    export AWS_DEFAULT_PROFILE=${AWSUME_6}
+  fi
   for AWSUME_var in "$@"
   do
     if [[ "$AWSUME_var" == "-s"* ]]; then
-      echo export AWS_ACCESS_KEY_ID=${AWSUME_1}
-      echo export AWS_SECRET_ACCESS_KEY=${AWSUME_2}
+      if [ ! "${AWSUME_1}" = "None" ]; then
+        echo export AWS_ACCESS_KEY_ID=${AWSUME_1}
+      fi
+      if [ ! "${AWSUME_2}" = "None" ]; then
+        echo export AWS_SECRET_ACCESS_KEY=${AWSUME_2}
+      fi
       if [ ! "${AWSUME_3}" = "None" ]; then
         echo export AWS_SESSION_TOKEN=${AWSUME_3}
         echo export AWS_SECURITY_TOKEN=${AWSUME_3}
@@ -127,6 +139,10 @@ elif [ "$AWSUME_FLAG" = "Awsume" ]; then
       fi
       if [ ! "${AWSUME_5}" = "None" ]; then
         echo export AWSUME_PROFILE=${AWSUME_5}
+      fi
+      if [ ! "${AWSUME_6}" = "None" ]; then
+        echo export AWS_PROFILE=${AWSUME_6}
+        echo export AWS_DEFAULT_PROFILE=${AWSUME_6}
       fi
     fi
   done
