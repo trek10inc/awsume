@@ -7,7 +7,6 @@ import logging
 import pluggy
 import colorama
 import boto3
-import argcomplete
 from pathlib import Path
 
 from . lib.profile import aggregate_profiles
@@ -61,7 +60,6 @@ class Awsume(object):
             parser=argument_parser,
         )
         logger.debug('Parsing arguments')
-        argcomplete.autocomplete(argument_parser)
         args = argument_parser.parse_args(system_arguments)
         logger.debug('Handling arguments')
         if args.refresh_autocomplete:
