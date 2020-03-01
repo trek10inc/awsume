@@ -437,6 +437,13 @@ def get_credentials_no_mfa(config: dict, arguments: argparse.Namespace, profiles
     return return_session
 
 
+def get_credentials_from_credential_source(config: dict, arguments: argparse.Namespace, profiles: dict, target_profile: dict):
+    region = profile_lib.get_region(profiles, arguments, config)
+    return_session = {'AwsProfile': arguments.target_profile_name}
+    return_session['Region'] = region
+    return return_session
+
+
 def get_session_token_credentials(config: dict, arguments: argparse.Namespace, profiles: dict, target_profile: dict):
     region = profile_lib.get_region(profiles, arguments, config)
     mfa_serial = profile_lib.get_mfa_serial(profiles, arguments.target_profile_name)
@@ -479,15 +486,15 @@ def get_credentials(config: dict, arguments: argparse.Namespace, profiles: dict)
         else:
             if mfa_serial:
                 user_session = get_session_token_credentials(config, arguments, profiles, target_profile)
+            elif 'credential_source' in target_profile:
+                user_session = get_credentials_from_credential_source(config, arguments, profiles, target_profile)
             else:
                 user_session = get_credentials_no_mfa(config, arguments, profiles, target_profile)
 
     if config.get('is_interactive'):
-        if user_session:
-            if user_session.get('Expiration'):
-                safe_print('Session token will expire at {}'.format(profile_lib.parse_time(user_session['Expiration'])), colorama.Fore.GREEN)
-        if role_session:
-            if role_session.get('Expiration'):
-                safe_print('Role credentials will expire {}'.format(profile_lib.parse_time(role_session['Expiration'])), colorama.Fore.GREEN)
+        if user_session and user_session.get('Expiration'):
+            safe_print('Session token will expire at {}'.format(profile_lib.parse_time(user_session['Expiration'])), colorama.Fore.GREEN)
+        if role_session and role_session.get('Expiration'):
+            safe_print('Role credentials will expire {}'.format(profile_lib.parse_time(role_session['Expiration'])), colorama.Fore.GREEN)
 
     return role_session or user_session

@@ -258,6 +258,7 @@ class Awsume(object):
                     str(credentials.get('SessionToken')),
                     str(credentials.get('Region')),
                     str(args.target_profile_name),
+                    str(credentials.get('AwsProfile')),
                 ])
         except exceptions.EarlyExit:
             logger.debug('', exc_info=True)

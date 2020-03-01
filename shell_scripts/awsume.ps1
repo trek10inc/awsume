@@ -2,7 +2,7 @@
 
 #AWSUME_FLAG - what awsumepy told the shell to do
 #AWSUME_n - the data from awsumepy
-$AWSUME_FLAG, $AWSUME_1, $AWSUME_2, $AWSUME_3, $AWSUME_4, $AWSUME_5 = `
+$AWSUME_FLAG, $AWSUME_1, $AWSUME_2, $AWSUME_3, $AWSUME_4, $AWSUME_5, $AWSUME_6 = `
 $(awsumepy $args) -split '\s+'
 
 #if incorrect flag/help
@@ -108,8 +108,12 @@ elseif ( $AWSUME_FLAG -eq "Awsume") {
     $env:AWS_DEFAULT_PROFILE = ""
     $env:AWSUME_PROFILE = ""
 
-    $env:AWS_ACCESS_KEY_ID = $AWSUME_1
-    $env:AWS_SECRET_ACCESS_KEY = $AWSUME_2
+    if ( $AWSUME_1 -ne "None" ) {
+        $env:AWS_ACCESS_KEY_ID = $AWSUME_1
+    }
+    if ( $AWSUME_2 -ne "None" ) {
+        $env:AWS_SECRET_ACCESS_KEY = $AWSUME_2
+    }
 
     if ( $AWSUME_3 -ne "None" ) {
         $env:AWS_SESSION_TOKEN = $AWSUME_3
@@ -125,10 +129,19 @@ elseif ( $AWSUME_FLAG -eq "Awsume") {
         $env:AWSUME_PROFILE = $AWSUME_5
     }
 
+    if ( $AWSUME_6 -ne "None" ) {
+        $env:AWS_PROFILE = $AWSUME_6
+        $env:AWS_DEFAULT_PROFILE = $AWSUME_6
+    }
+
     #if enabled, show the exact commands to use in order to assume the role we just assumed
     if ($args -like "-s") {
-        Write-Host "`$env:AWS_ACCESS_KEY_ID =" $env:AWS_ACCESS_KEY_ID
-        Write-Host "`$env:AWS_SECRET_ACCESS_KEY =" $env:AWS_SECRET_ACCESS_KEY
+        if ( $AWSUME_1 -ne "None" ) {
+            Write-Host "`$env:AWS_ACCESS_KEY_ID =" $env:AWS_ACCESS_KEY_ID
+        }
+        if ( $AWSUME_2 -ne "None" ) {
+            Write-Host "`$env:AWS_SECRET_ACCESS_KEY =" $env:AWS_SECRET_ACCESS_KEY
+        }
 
         if ( $AWSUME_3 -ne "None" ) {
             Write-Host "`$env:AWS_SESSION_TOKEN =" $env:AWS_SESSION_TOKEN
@@ -142,6 +155,11 @@ elseif ( $AWSUME_FLAG -eq "Awsume") {
 
         if ( $AWSUME_5 -ne "None" ) {
             Write-Host "`$env:AWSUME_PROFILE =" $env:AWSUME_PROFILE
+        }
+
+        if ( $AWSUME_6 -ne "None" ) {
+            Write-Host "`$env:AWS_PROFILE =" $AWSUME_6
+            Write-Host "`$env:AWS_DEFAULT_PROFILE =" $AWSUME_6
         }
     }
 }
