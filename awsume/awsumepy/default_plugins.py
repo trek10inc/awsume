@@ -3,9 +3,10 @@ import configparser
 import json
 import os
 import colorama
-
+from pathlib import Path
 
 from . lib import exceptions
+from . lib.autocomplete import profile_name_completer, region_completer
 from . hookimpl import hookimpl
 from .. import __data__
 from ..autoawsume.process import kill, kill_autoawsume
@@ -40,7 +41,7 @@ def add_arguments(config: dict, parser: argparse.ArgumentParser):
         action='store',
         metavar='profile_name',
         help='The target profile name',
-    )
+    ).completer = profile_name_completer
     parser.add_argument('-r', '--refresh',
         action='store_true',
         dest='force_refresh',
@@ -99,7 +100,7 @@ def add_arguments(config: dict, parser: argparse.ArgumentParser):
         dest='source_profile',
         metavar='source_profile',
         help='source_profile to use (role-arn only)',
-    )
+    ).completer = profile_name_completer
     parser.add_argument('--external-id',
         action='store',
         dest='external_id',
@@ -117,7 +118,7 @@ def add_arguments(config: dict, parser: argparse.ArgumentParser):
         dest='region',
         metavar='region',
         help='The region you want to awsume into',
-    )
+    ).completer = region_completer
     parser.add_argument('--session-name',
         action='store',
         dest='session_name',
