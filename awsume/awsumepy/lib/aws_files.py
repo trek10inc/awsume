@@ -2,6 +2,7 @@ import os
 import argparse
 import configparser
 import colorama
+from datetime import datetime
 from pathlib import Path
 
 from . import constants
@@ -64,3 +65,18 @@ def read_aws_file(file_name: str) -> dict:
     config.read(file_name)
     profiles = {k: dict(v) for k, v in config._sections.items()}
     return profiles
+
+
+def remove_expired_output_profiles(file_name: str) -> dict:
+    config = configparser.ConfigParser()
+    config.read(file_name)
+    for section in config.sections():
+        if config.has_option(section, 'manager') and config.get(section, 'manager') != 'awsume':
+            continue
+        if config.has_option(section, 'autoawsume'):
+            continue
+        if config.has_option(section, 'expiration'):
+            expiration = datetime.strptime(config.get(section, 'expiration'), '%Y-%m-%d %H:%M:%S')
+            if expiration < datetime.now():
+                config.remove_section(section)
+    config.write(open(str(file_name), 'w'))
