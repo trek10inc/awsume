@@ -5,7 +5,7 @@ There's quite a few things awsume can do for you.
 If you run `awsume -h` you can see a sizeable list of options (as of 4.0.0):
 
 ```bash
-usage: awsume [-h] [-v] [-r] [-s] [-u] [-a] [-k] [-l [more]]
+usage: awsume [-h] [-v] [-r] [-s] [-u] [-a] [-k] [-o] [-l [more]]
               [--refresh-autocomplete] [--role-arn role_arn]
               [--source-profile source_profile] [--external-id external_id]
               [--mfa-token mfa_token] [--region region]
@@ -26,10 +26,10 @@ optional arguments:
   -r, --refresh                        Force refresh credentials
   -s, --show-commands                  Show the commands to set the credentials
   -u, --unset                          Unset your aws environment variables
+  -o, --output-profile output_profile  A profile to output credentials to
   -a, --auto-refresh                   Auto refresh credentials
   -k, --kill-refresher                 Kill autoawsume
   -l [more], --list-profiles [more]    List profiles, "more" for detail (slow)
-  --refresh-autocomplete               Refresh all plugin autocomplete profiles
   --role-arn role_arn                  Role ARN to assume
   --source-profile source_profile      source_profile to use (role-arn only)
   --external-id external_id            External ID to pass to the assume_role
@@ -75,6 +75,12 @@ This works on Bash, Zsh, Fish, PowerShell, and Windows Command Prompt.
 ## Unset
 
 The `--unset` flag will clear your current shell's AWS environment variables.
+
+## Output Profile
+
+The `-o`/`--output-profile` flag will tell awsume to write awsume'd credentials to the specified output profile.
+
+_Note: Awsume will not overwrite an existing profile that is not managed by awsume (noted by the `manager = awsume` property)._
 
 ## Auto Refresh
 

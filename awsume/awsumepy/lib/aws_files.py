@@ -39,9 +39,16 @@ def add_section(name: str, section: dict, file_name: str, overwrite: bool = Fals
             return
         config.remove_section(name)
     config.add_section(name)
+    config.set(name, 'manager', 'awsume')
     for key in section:
         config.set(name, key, str(section[key]))
     config.write(open(str(file_name), 'w'))
+
+
+def get_section(name: str, file_name: str):
+    config = configparser.ConfigParser()
+    config.read(file_name)
+    return config._sections.get(name, {})
 
 
 def delete_section(name: str, file_name: str):

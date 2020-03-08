@@ -35,6 +35,12 @@ def add_arguments(config: dict, parser: argparse.ArgumentParser):
         dest='version',
         help='Display the current version of awsume',
     )
+    parser.add_argument('--output-profile', '-o',
+        action='store',
+        dest='output_profile',
+        metavar='output_profile',
+        help='A profile to output credentials to',
+    )
     parser.add_argument('profile_name',
         nargs='?',
         action='store',
@@ -388,7 +394,7 @@ def get_assume_role_credentials_mfa_required(config: dict, arguments: argparse.N
         logger.debug('Using current environment to assume role')
         source_session = {}
 
-    if arguments.auto_refresh and os.environ.get('AWS_PROFILE', '').startswith('autoawsume-'):
+    if arguments.auto_refresh and (os.environ.get('AWS_PROFILE', '').startswith('autoawsume-') or profiles.get(os.getenv('AWS_PROFILE'), {}).get('autoawsume')):
         os.environ.pop('AWS_PROFILE')
         os.environ.pop('AWS_DEFAULT_PROFILE')
 
