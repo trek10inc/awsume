@@ -406,9 +406,12 @@ def get_assume_role_credentials_mfa_required(config: dict, arguments: argparse.N
         external_id=external_id,
         role_duration=role_duration,
     )
+
     if arguments.auto_refresh:
-        create_autoawsume_profile(config, arguments, role_session, source_session)
-        kill_autoawsume()
+        create_autoawsume_profile(config, arguments, profiles, role_session, source_session)
+        if config.get('is_interactive'):
+            logger.debug('Interactive execution, killing existing autoawsume processes')
+            kill_autoawsume()
     return source_session, role_session
 
 
