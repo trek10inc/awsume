@@ -11,6 +11,7 @@ import dateutil
 
 from ..awsumepy.lib.aws_files import get_aws_files, delete_section
 from ..awsumepy.lib.logger import LogFormatter
+from ..awsumepy.lib.logger import logger as awsume_logger
 from ..awsumepy.lib import exceptions
 from .. import awsumepy
 
@@ -83,9 +84,12 @@ def configure_logger():
         open(log_file, 'a').close()
 
     log_handler = logging.FileHandler(log_file)
-    log_handler.setFormatter(LogFormatter('[%(asctime)s] %(filename)s:%(funcName)s : [%(levelname)s] %(message)s'))
+    log_handler.setFormatter(LogFormatter('%(asctime)s | %(name)s | %(filename)s:%(funcName)s | [%(levelname)s] | %(message)s'))
     logger.addHandler(log_handler)
     logger.setLevel(logging.DEBUG)
+    awsume_logger.handlers.clear()
+    awsume_logger.addHandler(log_handler)
+    awsume_logger.setLevel(logging.DEBUG)
 
 
 def redact_profile(profile):
@@ -103,6 +107,7 @@ def refresh_profile(auto_profile):
     logger.debug('Refreshing profile {}'.format(json.dumps(auto_profile, default=str)))
     try:
         session = awsumepy.awsume(*auto_profile.get('awsumepy_command').split(' '))
+        logger.debug('Refreshed profile, returning session')
         return session
     except exceptions.AwsumeException as e:
         logger.debug('There was an issue refreshing the profile, not returning a session: {}'.format(e))
