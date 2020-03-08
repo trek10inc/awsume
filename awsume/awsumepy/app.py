@@ -11,7 +11,8 @@ from pathlib import Path
 
 from . lib.profile import aggregate_profiles
 from . lib.config_management import load_config
-from . lib.aws_files import get_aws_files
+from . lib.aws_files import get_aws_files, add_section, get_section
+from . lib.profile import credentials_to_profile
 from . lib import exceptions
 from . lib.logger import logger
 from . lib.safe_print import safe_print
@@ -224,7 +225,7 @@ class Awsume(object):
         return credentials
 
 
-    def export_data(self, credentials: dict, awsume_flag: str, awsume_list: list):
+    def export_data(self, arguments: argparse.Namespace, profiles: dict, credentials: dict, awsume_flag: str, awsume_list: list):
         logger.debug('Exporting data')
         if self.is_interactive:
             print(awsume_flag, end=' ')
@@ -235,6 +236,17 @@ class Awsume(object):
             aws_session_token=credentials.get('SessionToken'),
             region_name=credentials.get('Region'),
         )
+        if arguments.output_profile and not arguments.auto_refresh:
+            config_file, credentials_file = get_aws_files(arguments, self.config)
+            section = get_section(arguments.output_profile, credentials_file)
+            if not section or section.get('manager') == 'awsume':
+                credentials_section = get_section(arguments.target_profile_name, credentials_file)
+                config_section = get_section(arguments.target_profile_name, config_file)
+                awsumed_profile = {}
+                awsumed_profile.update(credentials_to_profile(credentials))
+                add_section(arguments.output_profile, awsumed_profile, credentials_file, True)
+            else:
+                safe_print('Will not overwrite profiles without manager = awsume', color=colorama.Fore.YELLOW)
         session.awsume_credentials = credentials
         return session
 
@@ -246,13 +258,13 @@ class Awsume(object):
             credentials = self.get_credentials(args, profiles)
 
             if args.auto_refresh:
-                return self.export_data(credentials, 'Auto', [
-                    'autoawsume-{}'.format(args.target_profile_name),
+                return self.export_data(args, profiles, credentials, 'Auto', [
+                    args.output_profile or 'autoawsume-{}'.format(args.target_profile_name),
                     credentials.get('Region'),
                     args.target_profile_name,
                 ])
             else:
-                return self.export_data(credentials, 'Awsume', [
+                return self.export_data(args, profiles, credentials, 'Awsume', [
                     str(credentials.get('AccessKeyId')),
                     str(credentials.get('SecretAccessKey')),
                     str(credentials.get('SessionToken')),
