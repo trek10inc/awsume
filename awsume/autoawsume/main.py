@@ -28,7 +28,7 @@ def main():
         logger.info('Scanning profiles')
         credentials = configparser.ConfigParser()
         credentials.read(credentials_file)
-        auto_profiles = {k: dict(v) for k, v in credentials._sections.items() if k.startswith('autoawsume-')}
+        auto_profiles = {k: dict(v) for k, v in credentials._sections.items() if v.get('autoawsume')}
 
         expirations = []
         for profile_name, auto_profile in auto_profiles.items():
