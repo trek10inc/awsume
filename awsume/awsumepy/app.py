@@ -237,12 +237,13 @@ class Awsume(object):
             region_name=credentials.get('Region'),
         )
         if arguments.output_profile and not arguments.auto_refresh:
-            if is_mutable_profile(profiles, arguments.output_profile):
-                _, credentials_file = get_aws_files(arguments, self.config)
-                awsumed_profile = credentials_to_profile(credentials)
-                add_section(arguments.output_profile, awsumed_profile, credentials_file, True)
-            else:
+            if not is_mutable_profile(profiles, arguments.output_profile):
                 raise exceptions.ImmutableProfileError(arguments.output_profile, 'not awsume-managed')
+            _, credentials_file = get_aws_files(arguments, self.config)
+            awsumed_profile = credentials_to_profile(credentials)
+            if 'Expiration' in credentials:
+                awsumed_profile['expiration'] = credentials['Expiration'].strftime('%Y-%m-%d %H:%M:%S')
+            add_section(arguments.output_profile, awsumed_profile, credentials_file, True)
         session.awsume_credentials = credentials
         return session
 

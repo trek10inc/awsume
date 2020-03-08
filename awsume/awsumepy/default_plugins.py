@@ -35,11 +35,16 @@ def add_arguments(config: dict, parser: argparse.ArgumentParser):
         dest='version',
         help='Display the current version of awsume',
     )
-    parser.add_argument('--output-profile', '-o',
+    parser.add_argument('-o', '--output-profile',
         action='store',
         dest='output_profile',
         metavar='output_profile',
         help='A profile to output credentials to',
+    )
+    parser.add_argument('--clean',
+        action='store_true',
+        dest='clean',
+        help='Clean expired output profiles',
     )
     parser.add_argument('profile_name',
         nargs='?',
@@ -199,6 +204,10 @@ def post_add_arguments(config: dict, arguments: argparse.Namespace, parser: argp
             raise exceptions.ValidationException('Cannot use autoawsume with a given role_arn')
         if arguments.json:
             raise exceptions.ValidationException('Cannot use autoawsume with json')
+    if arguments.clean:
+        _, credentials_file = aws_files_lib.get_aws_files(arguments, config)
+        aws_files_lib.remove_expired_output_profiles(credentials_file)
+        raise exceptions.EarlyExit()
     if arguments.version:
         logger.debug('Logging version')
         safe_print(__data__.version)
