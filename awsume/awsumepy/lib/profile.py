@@ -52,6 +52,8 @@ def credentials_to_profile(credentials: dict) -> dict:
 def validate_profile(config: dict, arguments: argparse.Namespace, profiles: dict, target_profile_name: str) -> bool:
     logger.debug('Validating profile')
     profile = get_profile(config, arguments, profiles, target_profile_name)
+    if arguments.output_profile and not is_mutable_profile(profiles, arguments.output_profile):
+        raise exceptions.ImmutableProfileError(arguments.output_profile, 'not awsume-managed')
     if not profile:
         raise exceptions.ProfileNotFoundError(profile_name=target_profile_name)
 
@@ -92,6 +94,24 @@ def validate_profile(config: dict, arguments: argparse.Namespace, profiles: dict
     if 'role_arn' not in profile and arguments.auto_refresh:
         raise exceptions.ValidationException('Cannot use autoawsume with non-role profile')
     return True
+
+
+def is_mutable_profile(profiles: dict, profile_name: str) -> dict:
+    profile = profiles.get(profile_name)
+    if not profile:
+        return True
+    if profile.get('manager') == 'awsume':
+        return True
+    return False
+
+
+# def get_autoawsume_profile_name(config: dict, arguments: argparse.Namespace, profiles: dict, profile_name: str) -> dict:
+#     profile = profiles.get(profile_name)
+#     if not profile:
+#         return True
+#     if profile.get('manager') == 'awsume':
+#         return True
+#     return False
 
 
 def get_source_profile(profiles: dict, target_profile_name: str) -> dict:

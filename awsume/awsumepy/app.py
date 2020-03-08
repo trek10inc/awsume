@@ -12,7 +12,7 @@ from pathlib import Path
 from . lib.profile import aggregate_profiles
 from . lib.config_management import load_config
 from . lib.aws_files import get_aws_files, add_section, get_section
-from . lib.profile import credentials_to_profile
+from . lib.profile import credentials_to_profile, is_mutable_profile
 from . lib import exceptions
 from . lib.logger import logger
 from . lib.safe_print import safe_print
@@ -237,16 +237,12 @@ class Awsume(object):
             region_name=credentials.get('Region'),
         )
         if arguments.output_profile and not arguments.auto_refresh:
-            config_file, credentials_file = get_aws_files(arguments, self.config)
-            section = get_section(arguments.output_profile, credentials_file)
-            if not section or section.get('manager') == 'awsume':
-                credentials_section = get_section(arguments.target_profile_name, credentials_file)
-                config_section = get_section(arguments.target_profile_name, config_file)
-                awsumed_profile = {}
-                awsumed_profile.update(credentials_to_profile(credentials))
+            if is_mutable_profile(profiles, arguments.output_profile):
+                _, credentials_file = get_aws_files(arguments, self.config)
+                awsumed_profile = credentials_to_profile(credentials)
                 add_section(arguments.output_profile, awsumed_profile, credentials_file, True)
             else:
-                safe_print('Will not overwrite profiles without manager = awsume', color=colorama.Fore.YELLOW)
+                raise exceptions.ImmutableProfileError(arguments.output_profile, 'not awsume-managed')
         session.awsume_credentials = credentials
         return session
 
