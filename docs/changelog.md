@@ -1,6 +1,12 @@
 # Awsume Changelog
 
-## [4.2.7] - 2020-02-26 - Bug fix
+## [4.3.0] - WIP - Output profile support
+
+- Supports exporting awsume'd credentials to the profile specified by the `-o`/`--output-profile` command-line flag
+- Works closely with autoawsume
+  - If specifying `-a` and `-o` in the same command, the created autoawsume profile will be under the output profile name from the `-o` flag
+
+## [4.2.7] - 2020-03-07 - Bug fix
 
 - Will export AWS_PROFILE when awsuming a profile with `credential_source` set to `Environment`, `Ec2InstanceMetadata`, or `EcsContainer`
 
