@@ -1,5 +1,9 @@
 # Awsume Changelog
 
+## [4.2.7] - 2020-02-26 - Bug fix
+
+- Will export AWS_PROFILE when awsuming a profile with `credential_source` set to `Environment`, `Ec2InstanceMetadata`, or `EcsContainer`
+
 ## [4.2.6] - 2020-02-26 - Bug fix
 
 - Breaks `xmltodict` and `python-levenshtein` out into extras_require (so you'll have to `pip install awsume[fuzzy]` to get the fuzzy-match featureset which requires `python-levenshtein`. The same applies to `saml` and `xmltodict`)
