@@ -108,6 +108,7 @@ elseif ( $AWSUME_FLAG -eq "Awsume") {
     $env:AWS_DEFAULT_PROFILE = ""
     $env:AWSUME_PROFILE = ""
 
+    $env:AWSUME_COMMAND=$args
     if ( $AWSUME_1 -ne "None" ) {
         $env:AWS_ACCESS_KEY_ID = $AWSUME_1
     }

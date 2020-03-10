@@ -93,6 +93,7 @@ for /f "tokens=1,2,3,4,5,6,7 delims= " %%a in ("%AWSUME_TEXT%") do (
         set AWS_DEFAULT_PROFILE=
         set AWSUME_PROFILE=
 
+        set AWSUME_COMMAND=%*
         if "%%b" NEQ "None" (
             set AWS_ACCESS_KEY_ID=%%b)
 

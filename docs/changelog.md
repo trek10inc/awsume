@@ -6,6 +6,7 @@
 - Works closely with autoawsume
   - If specifying `-a` and `-o` in the same command, the created autoawsume profile will be under the output profile name from the `-o` flag
 - Adds a `--clean` flag to clean up expired output profiles
+- Exports `AWSUME_COMMAND` with arguments passed to awsume command on a successful execution
 
 ## [4.2.7] - 2020-03-07 - Bug fix
 
