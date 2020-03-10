@@ -99,6 +99,8 @@ elif [ "$AWSUME_FLAG" = "Awsume" ]; then
   unset AWS_PROFILE
   unset AWS_DEFAULT_PROFILE
   unset AWSUME_PROFILE
+
+  export AWSUME_COMMAND="$@"
   if [ ! "${AWSUME_1}" = "None" ]; then
     export AWS_ACCESS_KEY_ID=${AWSUME_1}
   fi
