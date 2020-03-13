@@ -1,4 +1,4 @@
-version = '4.3.0'
+version = '4.4.0a1'
 
 name = 'awsume'
 author = 'Trek10, Inc'
