@@ -8,7 +8,7 @@ import colorama
 from . lib import exceptions
 from . hookimpl import hookimpl
 from .. import __data__
-from ..autoawsume.process import kill, kill_autoawsume
+from ..autoawsume.process import kill
 from . lib import aws as aws_lib
 from . lib import aws_files as aws_files_lib
 from . lib.logger import logger
@@ -16,7 +16,6 @@ from . lib.safe_print import safe_print
 from . lib import config_management as config_lib
 from . lib import profile as profile_lib
 from . lib import cache as cache_lib
-from . lib.autoawsume import create_autoawsume_profile
 from . lib.profile import VALID_CREDENTIAL_SOURCES
 
 
@@ -291,7 +290,7 @@ def collect_aws_profiles(config: dict, arguments: argparse.Namespace, credential
 
 @hookimpl(tryfirst=True)
 def post_collect_aws_profiles(config: dict, arguments: argparse.Namespace, profiles: dict):
-    logger.debug('Post collect AWS profiles')
+    logger.info('Post collect AWS profiles')
     if arguments.list_profiles:
         logger.debug('Listing profiles')
         profile_lib.list_profile_data(profiles, arguments.list_profiles == 'more')
@@ -366,31 +365,38 @@ def assume_role_from_cli(config: dict, arguments: dict, profiles: dict):
     return role_session
 
 
-def get_assume_role_credentials(config: dict, arguments: argparse.Namespace, profiles: dict, target_profile: dict, role_duration: int):
+def get_assume_role_credentials(config: dict, arguments: argparse.Namespace, profiles: dict, target_profile: dict, role_duration: int, source_credentials: dict, target_profile_name: str):
+    logger.info('Getting assume role credentials')
     region = profile_lib.get_region(profiles, arguments, config)
     external_id = profile_lib.get_external_id(arguments, target_profile)
-    source_profile = profile_lib.get_source_profile(profiles, arguments.target_profile_name)
-    source_credentials = profile_lib.profile_to_credentials(source_profile)
+    if not source_credentials:
+        source_profile = profile_lib.get_source_profile(profiles, target_profile_name)
+        source_credentials = profile_lib.profile_to_credentials(source_profile)
     role_session = aws_lib.assume_role(
         source_credentials,
         target_profile.get('role_arn'),
-        arguments.session_name or arguments.target_profile_name,
+        arguments.session_name or target_profile_name,
         region=region,
         external_id=external_id,
         role_duration=role_duration,
     )
+    if 'SourceExpiration' in source_credentials:
+        role_session['SourceExpiration'] = source_credentials['SourceExpiration']
+    elif 'Expiration' in source_credentials:
+        role_session['SourceExpiration'] = source_credentials['Expiration']
     return role_session
 
 
-def get_assume_role_credentials_mfa_required(config: dict, arguments: argparse.Namespace, profiles: dict, target_profile: dict, role_duration: int):
+def get_assume_role_credentials_mfa_required(config: dict, arguments: argparse.Namespace, profiles: dict, target_profile: dict, role_duration: int, source_credentials: dict, target_profile_name: str):
+    logger.info('Getting assume role credentials MFA required')
     region = profile_lib.get_region(profiles, arguments, config)
-    mfa_serial = profile_lib.get_mfa_serial(profiles, arguments.target_profile_name)
+    mfa_serial = profile_lib.get_mfa_serial(profiles, target_profile_name)
     external_id = profile_lib.get_external_id(arguments, target_profile)
-
-    source_profile = profile_lib.get_source_profile(profiles, arguments.target_profile_name)
+    source_profile = profile_lib.get_source_profile(profiles, target_profile_name)
     if source_profile:
         logger.debug('Calling get_session_token to assume role with')
-        source_credentials = profile_lib.profile_to_credentials(source_profile)
+        if not source_credentials:
+            source_credentials = profile_lib.profile_to_credentials(source_profile)
         source_session = aws_lib.get_session_token(
             source_credentials,
             region=region,
@@ -410,35 +416,36 @@ def get_assume_role_credentials_mfa_required(config: dict, arguments: argparse.N
     role_session = aws_lib.assume_role(
         source_session,
         target_profile.get('role_arn'),
-        arguments.session_name or arguments.target_profile_name,
+        arguments.session_name or target_profile_name,
         region=region,
         external_id=external_id,
         role_duration=role_duration,
     )
 
-    if arguments.auto_refresh:
-        create_autoawsume_profile(config, arguments, profiles, role_session, source_session)
-        if config.get('is_interactive'):
-            logger.debug('Interactive execution, killing existing autoawsume processes')
-            kill_autoawsume()
+    if 'SourceExpiration' in source_session:
+        role_session['SourceExpiration'] = source_session['SourceExpiration']
+    elif 'Expiration' in source_session:
+        role_session['SourceExpiration'] = source_session['Expiration']
+
     return source_session, role_session
 
 
-def get_assume_role_credentials_mfa_required_large_custom_duration(config: dict, arguments: argparse.Namespace, profiles: dict, target_profile: dict, role_duration: int):
+def get_assume_role_credentials_mfa_required_large_custom_duration(config: dict, arguments: argparse.Namespace, profiles: dict, target_profile: dict, role_duration: int, target_profile_name: str):
+    logger.info('Getting assume role credentials MFA required, large custom duration')
     if arguments.auto_refresh and role_duration > 3600:
         raise exceptions.ValidationException('Cannot use autoawsume with custom role duration of more than 1 hour')
     logger.debug('Skipping the get_session_token call, temp creds cannot be used for custom role duration')
 
     region = profile_lib.get_region(profiles, arguments, config)
-    mfa_serial = profile_lib.get_mfa_serial(profiles, arguments.target_profile_name)
+    mfa_serial = profile_lib.get_mfa_serial(profiles, target_profile_name)
     external_id = profile_lib.get_external_id(arguments, target_profile)
-    source_profile = profile_lib.get_source_profile(profiles, arguments.target_profile_name)
+    source_profile = profile_lib.get_source_profile(profiles, target_profile_name)
     source_session = profile_lib.profile_to_credentials(source_profile)
 
     role_session = aws_lib.assume_role(
         source_session,
         target_profile.get('role_arn'),
-        arguments.session_name or arguments.target_profile_name,
+        arguments.session_name or target_profile_name,
         region=region,
         external_id=external_id,
         role_duration=role_duration,
@@ -449,22 +456,25 @@ def get_assume_role_credentials_mfa_required_large_custom_duration(config: dict,
 
 
 def get_credentials_no_mfa(config: dict, arguments: argparse.Namespace, profiles: dict, target_profile: dict):
+    logger.info('Getting credentials MFA not required')
     region = profile_lib.get_region(profiles, arguments, config)
     return_session = profile_lib.profile_to_credentials(target_profile)
     return_session['Region'] = region
     return return_session
 
 
-def get_credentials_from_credential_source(config: dict, arguments: argparse.Namespace, profiles: dict, target_profile: dict):
+def get_credentials_from_credential_source(config: dict, arguments: argparse.Namespace, profiles: dict, target_profile: dict, target_profile_name: str):
+    logger.info('Getting credentials from credential_source')
     region = profile_lib.get_region(profiles, arguments, config)
-    return_session = {'AwsProfile': arguments.target_profile_name}
+    return_session = {'AwsProfile': target_profile_name}
     return_session['Region'] = region
     return return_session
 
 
-def get_session_token_credentials(config: dict, arguments: argparse.Namespace, profiles: dict, target_profile: dict):
+def get_session_token_credentials(config: dict, arguments: argparse.Namespace, profiles: dict, target_profile: dict, target_profile_name: str):
+    logger.info('Getting session token credentials')
     region = profile_lib.get_region(profiles, arguments, config)
-    mfa_serial = profile_lib.get_mfa_serial(profiles, arguments.target_profile_name)
+    mfa_serial = profile_lib.get_mfa_serial(profiles, target_profile_name)
     source_credentials = profile_lib.profile_to_credentials(target_profile)
     user_session = aws_lib.get_session_token(
         source_credentials,
@@ -478,7 +488,8 @@ def get_session_token_credentials(config: dict, arguments: argparse.Namespace, p
 
 
 @hookimpl(tryfirst=True)
-def get_credentials(config: dict, arguments: argparse.Namespace, profiles: dict) -> dict:
+def get_credentials(config: dict, arguments: argparse.Namespace, profiles: dict, profile_name: str, credentials: dict) -> dict:
+    credentials = credentials if credentials else {}
     logger.info('Getting credentials')
 
     user_session = None
@@ -487,25 +498,25 @@ def get_credentials(config: dict, arguments: argparse.Namespace, profiles: dict)
     if arguments.role_arn:
         role_session = assume_role_from_cli(config, arguments, profiles)
     else:
-        profile_lib.validate_profile(config, arguments, profiles, arguments.target_profile_name)
-        target_profile = profile_lib.get_profile(config, arguments, profiles, arguments.target_profile_name)
-        mfa_serial = profile_lib.get_mfa_serial(profiles, arguments.target_profile_name)
+        profile_lib.validate_profile(config, arguments, profiles, profile_name)
+        target_profile = profile_lib.get_profile(config, arguments, profiles, profile_name)
+        mfa_serial = profile_lib.get_mfa_serial(profiles, profile_name)
         role_duration = profile_lib.get_role_duration(config, arguments, target_profile)
 
         if 'role_arn' in target_profile:
             logger.debug('assume_role call needed')
             if mfa_serial:
                 if role_duration > 3600: # cannot use temp creds with custom role duration more than an hour
-                    role_session = get_assume_role_credentials_mfa_required_large_custom_duration(config, arguments, profiles, target_profile, role_duration)
+                    role_session = get_assume_role_credentials_mfa_required_large_custom_duration(config, arguments, profiles, target_profile, role_duration, profile_name)
                 else:
-                    user_session, role_session = get_assume_role_credentials_mfa_required(config, arguments, profiles, target_profile, role_duration)
+                    user_session, role_session = get_assume_role_credentials_mfa_required(config, arguments, profiles, target_profile, role_duration, credentials, profile_name)
             else:
-                role_session = get_assume_role_credentials(config, arguments, profiles, target_profile, role_duration)
+                role_session = get_assume_role_credentials(config, arguments, profiles, target_profile, role_duration, credentials, profile_name)
         else:
             if mfa_serial:
-                user_session = get_session_token_credentials(config, arguments, profiles, target_profile)
+                user_session = get_session_token_credentials(config, arguments, profiles, target_profile, profile_name)
             elif 'credential_source' in target_profile:
-                user_session = get_credentials_from_credential_source(config, arguments, profiles, target_profile)
+                user_session = get_credentials_from_credential_source(config, arguments, profiles, target_profile, profile_name)
             else:
                 user_session = get_credentials_no_mfa(config, arguments, profiles, target_profile)
 
@@ -513,6 +524,6 @@ def get_credentials(config: dict, arguments: argparse.Namespace, profiles: dict)
         if user_session and user_session.get('Expiration'):
             safe_print('Session token will expire at {}'.format(profile_lib.parse_time(user_session['Expiration'])), colorama.Fore.GREEN)
         if role_session and role_session.get('Expiration'):
-            safe_print('Role credentials will expire {}'.format(profile_lib.parse_time(role_session['Expiration'])), colorama.Fore.GREEN)
+            safe_print('[{}] Role credentials will expire {}'.format(profile_name, profile_lib.parse_time(role_session['Expiration'])), colorama.Fore.GREEN)
 
     return role_session or user_session

@@ -11,6 +11,7 @@ With awsume, you can get credentials for any profile located in your [config and
 Awsume works by setting a number of environment variables in your shell. These are the credentials awsume will manage:
 
 - `AWSUME_PROFILE`
+- `AWSUME_COMMAND`
 - `AWS_PROFILE`
 - `AWS_DEFAULT_PROFILE`
 - `AWS_ACCESS_KEY_ID`
@@ -19,6 +20,25 @@ Awsume works by setting a number of environment variables in your shell. These a
 - `AWS_SESSION_TOKEN`
 - `AWS_REGION`
 - `AWS_DEFAULT_REGION`
+
+## Features
+
+- Reads your credentials from `~/.aws/config` and `~/.aws/credentials`
+- Extensible - add custom hooks to make awsume do whatever you need it to (SAML provider, profile provider, etc.)
+- Set your environment variables to your AWS credentials so any cli/api call you make uses those credentials
+- Use MFA-authenticated credentials on the command-line
+- Use assume-role credentials to your on the command-line
+- Cache MFA-authenticated credentials for up to 12 hours
+- Role-chain as many role assumptions as you need
+- Show the commands you need to export environment variables in another terminal (`awsume -s`)
+- Export awsume'd credentials into a profile in the `~/.aws/config` and `~/.aws/credentials` files (`awsume -o`)
+- Auto-refresh assume-role credentials as long as source credentials are valid, up to 12 hours (`awsume -a`)
+- Get a pretty listing of your awsume-able profiles (`awsume -l`)
+- Autocomplete your awsume-able profiles
+- Assume arbitrary role-arns from the command-line, using full role arn or short-hand syntax (with optional partition defaulting to `aws`, `awsume --role-arn [partition]:{account_id}:{role_name}`)
+- Set a custom session name for assume-role credentials (`awsume --session-name`)
+- Assume a role for a custom duration for up to 12 hours or whatever the role's maximum is configured as (`awsume --role-duration`)
+- Use separate config/credentials files, also supports the appropriate environment variables (`awsume --config-file ... --credentials-file ...`)
 
 ## Terminology
 
