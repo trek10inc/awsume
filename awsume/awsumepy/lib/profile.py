@@ -70,8 +70,13 @@ def validate_profile(config: dict, arguments: argparse.Namespace, profiles: dict
         source_profile_name = profile.get('source_profile')
         if source_profile_name and not profiles.get(source_profile_name):
             raise exceptions.ProfileNotFoundError(profile_name=source_profile_name)
-        user_profile = get_source_profile(profiles, target_profile_name)
-        user_profile_name = source_profile_name
+        source_profile = get_source_profile(profiles, target_profile_name)
+        if not source_profile.get('role_arn'):
+            user_profile = source_profile
+            user_profile_name = source_profile_name
+        else:
+            user_profile = None
+            user_profile_name = None
     else:
         user_profile = profile
         user_profile_name = target_profile_name
@@ -120,6 +125,21 @@ def get_source_profile(profiles: dict, target_profile_name: str) -> dict:
         source_profile_name = target_profile.get('source_profile', 'default')
         return profiles.get(source_profile_name)
     return None
+
+
+def get_role_chain(profiles: dict, target_profile_name: str) -> list:
+    target_profile = profiles.get(target_profile_name)
+    if not target_profile.get('role_arn'):
+        return [target_profile_name]
+
+    role_chain = []
+    while target_profile:
+        if target_profile.get('role_arn'):
+            role_chain.append(target_profile_name)
+        target_profile_name = target_profile.get('source_profile')
+        target_profile = profiles.get(target_profile_name)
+    role_chain.reverse()
+    return role_chain
 
 
 def get_region(profiles: dict, arguments: argparse.Namespace, config: dict, ignore_config: bool = False, ignore_default: bool = False) -> str:

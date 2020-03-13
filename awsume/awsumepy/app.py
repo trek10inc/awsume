@@ -9,7 +9,9 @@ import colorama
 import boto3
 from pathlib import Path
 
-from . lib.profile import aggregate_profiles
+from . lib.autoawsume import create_autoawsume_profile
+from ..autoawsume.process import kill, kill_autoawsume
+from . lib.profile import aggregate_profiles, get_role_chain
 from . lib.config_management import load_config
 from . lib.aws_files import get_aws_files, add_section, get_section
 from . lib.profile import credentials_to_profile, is_mutable_profile
@@ -186,11 +188,9 @@ class Awsume(object):
                 credentials = json.loads(args.json)
                 if 'Credentials' in credentials:
                     credentials = credentials['Credentials']
-                credentials = [credentials]
             elif args.with_saml:
                 logger.debug('Pulling credentials from saml')
                 credentials = self.get_saml_credentials(args, profiles)
-                credentials = [credentials]
             elif args.with_web_identity:
                 logger.debug('Pulling credentials from web identity')
                 credentials = self.plugin_manager.hook.get_credentials_with_web_identity(
@@ -199,7 +199,16 @@ class Awsume(object):
                 )
             else:
                 logger.debug('Pulling credentials from default awsume flow')
-                credentials = self.plugin_manager.hook.get_credentials(config=self.config, arguments=args, profiles=profiles)
+                role_chain = get_role_chain(profiles, args.target_profile_name)
+                credentials = None
+                for profile_name in role_chain:
+                    credentials = self.plugin_manager.hook.get_credentials(config=self.config, arguments=args, profiles=profiles, profile_name=profile_name, credentials=credentials)
+                    credentials = next((_ for _ in credentials if _), {})
+                if args.auto_refresh:
+                    create_autoawsume_profile(self.config, args, profiles, credentials)
+                    if self.config.get('is_interactive'):
+                        logger.debug('Interactive execution, killing existing autoawsume processes')
+                        kill_autoawsume()
         except exceptions.ProfileNotFoundError as e:
             self.plugin_manager.hook.catch_profile_not_found_exception(config=self.config, arguments=args, profiles=profiles, error=e)
             raise
@@ -212,7 +221,8 @@ class Awsume(object):
         except exceptions.RoleAuthenticationError as e:
             self.plugin_manager.hook.catch_role_authentication_error(config=self.config, arguments=args, profiles=profiles, error=e)
             raise
-        credentials = next((_ for _ in credentials if _), {}) # pragma: no cover
+        if type(credentials) == list: # pragma: no cover
+            credentials = next((_ for _ in credentials if _), {}) # pragma: no cover
         self.plugin_manager.hook.post_get_credentials(
             config=self.config,
             arguments=args,
@@ -234,6 +244,7 @@ class Awsume(object):
             aws_access_key_id=credentials.get('AccessKeyId'),
             aws_secret_access_key=credentials.get('SecretAccessKey'),
             aws_session_token=credentials.get('SessionToken'),
+            profile_name=credentials.get('AwsProfile'),
             region_name=credentials.get('Region'),
         )
         if arguments.output_profile and not arguments.auto_refresh:
