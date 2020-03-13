@@ -110,15 +110,6 @@ def is_mutable_profile(profiles: dict, profile_name: str) -> dict:
     return False
 
 
-# def get_autoawsume_profile_name(config: dict, arguments: argparse.Namespace, profiles: dict, profile_name: str) -> dict:
-#     profile = profiles.get(profile_name)
-#     if not profile:
-#         return True
-#     if profile.get('manager') == 'awsume':
-#         return True
-#     return False
-
-
 def get_source_profile(profiles: dict, target_profile_name: str) -> dict:
     target_profile = profiles.get(target_profile_name)
     if target_profile:
