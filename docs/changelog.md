@@ -1,6 +1,6 @@
 # Awsume Changelog
 
-## [4.3.0] - WIP - Output profile support
+## [4.3.0] - 2020-03-13 - Output profile support
 
 - Supports exporting awsume'd credentials to the profile specified by the `-o`/`--output-profile` command-line flag
 - Works closely with autoawsume
