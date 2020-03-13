@@ -1,5 +1,9 @@
 # Awsume Changelog
 
+## [4.4.0] - WIP - Role chain support
+
+- Supports awsuming role profiles who's `source_profile` reference another role profile, infinitely
+
 ## [4.3.0] - 2020-03-13 - Output profile support
 
 - Supports exporting awsume'd credentials to the profile specified by the `-o`/`--output-profile` command-line flag
