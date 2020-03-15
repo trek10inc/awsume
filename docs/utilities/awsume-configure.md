@@ -23,7 +23,7 @@ Depending on your shell, there are a few things you'll need.
 
 ## Alias
 
-The alias is required for unix-like systems and shells, including Bash and Zsh. It is not required for Windows-like shells such as PowerShell or Windows Command Prompt.
+The alias is required for unix-like systems and shells, including Bash and Zsh. It is not required for Windows-like shells such as PowerShell or Windows Command Prompt if you are not using pyenv.
 
 The alias should be defined in your shell's login file, so it gets loaded on every shell session. It should look something like this:
 
@@ -33,8 +33,16 @@ alias awsume=". awsume"
 
 If you are using awsume through a [pyenv](https://github.com/pyenv/pyenv) environment, your alias should look like this:
 
+For unix-like systems and shells:
 ```bash
 alias awsume=". $(pyenv which awsume)"
+```
+
+For Powershell:
+```powershell
+# "pyenv which" for pyenv-win is not implemented for now.(https://github.com/pyenv-win/pyenv-win/issues/76)
+# This is not required if you are not using pyenv
+Set-Alias awsume ~/pyenv/versions/<VERSION>/bin/awsume.ps1
 ```
 
 However, if you use pyenv and also have installed awsume with [pipx](https://github.com/pipxproject/pipx), you will need the original alias.
