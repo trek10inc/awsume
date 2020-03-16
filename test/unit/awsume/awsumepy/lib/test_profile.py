@@ -1,14 +1,18 @@
 import argparse
+from datetime import datetime
+
 import pytest
+import dateutil
 from unittest.mock import patch, MagicMock
 
 from awsume.awsumepy.lib.exceptions import ProfileNotFoundError, InvalidProfileError, UserAuthenticationError, RoleAuthenticationError
 from awsume.awsumepy.lib import profile
 
 
-def test_is_role():
-    assert profile.is_role({}) is False
-    assert profile.is_role({'role_arn': 'arn:aws:iam:XXX:role/role_name'}) is True
+def test_parse_time():
+    now = datetime.now()
+    result = profile.parse_time(now)
+    assert result == now.astimezone(dateutil.tz.tzlocal()).strftime('%Y-%m-%d %H:%M:%S')
 
 
 def test_profile_to_credentials():
@@ -44,6 +48,8 @@ def test_credentials_to_profile_missing_keys():
 
 
 def test_validate_profile():
+    config = {}
+    arguments = argparse.Namespace(output_profile=None, auto_refresh=False)
     profiles = {
         'myuser': {
             'aws_access_key_id': 'AKIA...',
@@ -54,10 +60,12 @@ def test_validate_profile():
             'source_profile': 'myuser',
         },
     }
-    profile.validate_profile(profiles, 'myrole')
+    profile.validate_profile(config, arguments, profiles, 'myrole')
 
 
 def test_validate_profile_no_profile():
+    config = {}
+    arguments = argparse.Namespace(output_profile=None, auto_refresh=False)
     profiles = {
         'myuser': {
             'aws_access_key_id': 'AKIA...',
@@ -69,10 +77,12 @@ def test_validate_profile_no_profile():
         },
     }
     with pytest.raises(ProfileNotFoundError):
-        profile.validate_profile(profiles, 'admin')
+        profile.validate_profile(config, arguments, profiles, 'admin')
 
 
 def test_validate_profile_no_source_profile():
+    config = {}
+    arguments = argparse.Namespace(output_profile=None, auto_refresh=False)
     profiles = {
         'myuser': {
             'aws_access_key_id': 'AKIA...',
@@ -84,10 +94,12 @@ def test_validate_profile_no_source_profile():
         },
     }
     with pytest.raises(ProfileNotFoundError):
-        profile.validate_profile(profiles, 'myrole')
+        profile.validate_profile(config, arguments, profiles, 'myrole')
 
 
 def test_validate_profile_no_source_profile_default():
+    config = {}
+    arguments = argparse.Namespace(output_profile=None, auto_refresh=False)
     profiles = {
         'myuser': {
             'aws_access_key_id': 'AKIA...',
@@ -97,11 +109,13 @@ def test_validate_profile_no_source_profile_default():
             'role_arn': 'arn:aws:iam:XXX:role/role_name',
         },
     }
-    with pytest.raises(ProfileNotFoundError):
-        profile.validate_profile(profiles, 'myrole')
+    with pytest.raises(InvalidProfileError):
+        profile.validate_profile(config, arguments, profiles, 'myrole')
 
 
 def test_validate_profile_user():
+    config = {}
+    arguments = argparse.Namespace(output_profile=None, auto_refresh=False)
     profiles = {
         'myuser': {
             'aws_access_key_id': 'AKIA...',
@@ -112,10 +126,12 @@ def test_validate_profile_user():
             'source_profile': 'admin',
         },
     }
-    profile.validate_profile(profiles, 'myuser')
+    profile.validate_profile(config, arguments, profiles, 'myuser')
 
 
 def test_validate_profile_user_missing_access_key_id():
+    config = {}
+    arguments = argparse.Namespace(output_profile=None, auto_refresh=False)
     profiles = {
         'myuser': {
             'aws_secret_access_key': 'SECRET',
@@ -126,10 +142,12 @@ def test_validate_profile_user_missing_access_key_id():
         },
     }
     with pytest.raises(InvalidProfileError):
-        profile.validate_profile(profiles, 'myuser')
+        profile.validate_profile(config, arguments, profiles, 'myuser')
 
 
 def test_validate_profile_user_missing_secret_access_key():
+    config = {}
+    arguments = argparse.Namespace(output_profile=None, auto_refresh=False)
     profiles = {
         'myuser': {
             'aws_access_key_id': 'AKIA...',
@@ -140,7 +158,7 @@ def test_validate_profile_user_missing_secret_access_key():
         },
     }
     with pytest.raises(InvalidProfileError):
-        profile.validate_profile(profiles, 'myuser')
+        profile.validate_profile(config, arguments, profiles, 'myuser')
 
 
 def test_get_source_profile():
@@ -189,6 +207,8 @@ def test_get_source_profile_return_default():
 
 
 def test_get_region():
+    arguments = argparse.Namespace(region=None, role_arn=None, source_profile=None, target_profile_name='myrole')
+    config = {}
     profiles = {
         'default': {
             'aws_access_key_id': 'AKIA...',
@@ -205,10 +225,12 @@ def test_get_region():
             'region': 'myrole-region',
         },
     }
-    assert profile.get_region(profiles, argparse.Namespace(region=None, role_arn=None, source_profile=None, target_profile_name='myrole')) == profiles['myrole']['region']
+    assert profile.get_region(profiles, arguments, config) == profiles['myrole']['region']
 
 
 def test_get_region_arguments():
+    arguments = argparse.Namespace(region='arguments-region', role_arn=None, source_profile=None, target_profile_name='myrole')
+    config = {}
     profiles = {
         'default': {
             'aws_access_key_id': 'AKIA...',
@@ -225,10 +247,12 @@ def test_get_region_arguments():
             'region': 'myrole-region',
         },
     }
-    assert profile.get_region(profiles, argparse.Namespace(region='arguments-region', role_arn=None, source_profile=None, target_profile_name='myrole')) == 'arguments-region'
+    assert profile.get_region(profiles, arguments, config) == 'arguments-region'
 
 
 def test_get_region_cli_role_arn_and_source_profile():
+    arguments = argparse.Namespace(region=None, role_arn='role-arn', source_profile='myuser', target_profile_name=None)
+    config = {}
     profiles = {
         'default': {
             'aws_access_key_id': 'AKIA...',
@@ -245,10 +269,12 @@ def test_get_region_cli_role_arn_and_source_profile():
             'region': 'myrole-region',
         },
     }
-    assert profile.get_region(profiles, argparse.Namespace(region=None, role_arn='role-arn', source_profile='myuser', target_profile_name=None)) == profiles['myuser']['region']
+    assert profile.get_region(profiles, arguments, config) == profiles['myuser']['region']
 
 
 def test_get_region_default_region():
+    arguments = argparse.Namespace(region=None, role_arn=None, source_profile=None, target_profile_name='myrole')
+    config = {}
     profiles = {
         'default': {
             'aws_access_key_id': 'AKIA...',
@@ -263,10 +289,12 @@ def test_get_region_default_region():
             'role_arn': 'arn:aws:iam:XXX:role/role_name',
         },
     }
-    assert profile.get_region(profiles, argparse.Namespace(region=None, role_arn=None, source_profile=None, target_profile_name='myrole')) == profiles['default']['region']
+    assert profile.get_region(profiles, arguments, config) == profiles['default']['region']
 
 
 def test_get_region_no_region():
+    arguments = argparse.Namespace(region=None, role_arn=None, source_profile=None, target_profile_name='myrole')
+    config = {}
     profiles = {
         'default': {
             'aws_access_key_id': 'AKIA...',
@@ -280,7 +308,7 @@ def test_get_region_no_region():
             'role_arn': 'arn:aws:iam:XXX:role/role_name',
         },
     }
-    assert profile.get_region(profiles, argparse.Namespace(region=None, role_arn=None, source_profile=None, target_profile_name='myrole')) == None
+    assert profile.get_region(profiles, arguments, config) == None
 
 
 def test_get_mfa_serial():

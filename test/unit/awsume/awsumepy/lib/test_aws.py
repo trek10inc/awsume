@@ -6,12 +6,6 @@ from awsume.awsumepy.lib import aws, constants
 from awsume.awsumepy.lib.exceptions import RoleAuthenticationError, UserAuthenticationError
 
 
-def test_parse_time():
-    now = datetime.now()
-    result = aws.parse_time(now)
-    assert result == now.astimezone(dateutil.tz.tzlocal()).strftime('%Y-%m-%d %H:%M:%S')
-
-
 @patch.object(aws, 'safe_print')
 @patch('boto3.session.Session')
 def test_assume_role(Session: MagicMock, safe_print: MagicMock):
@@ -57,7 +51,7 @@ def test_assume_role(Session: MagicMock, safe_print: MagicMock):
         SerialNumber='mymfaserial',
         TokenCode='123123',
     )
-    result.get('Expiration').astimezone.assert_called_with(dateutil.tz.tzlocal())
+    expiration.astimezone.assert_called_with(dateutil.tz.tzlocal())
 
 
 @patch.object(aws, 'safe_print')
@@ -90,13 +84,13 @@ def test_assume_role_minimal_parameters(Session: MagicMock, safe_print: MagicMoc
         aws_access_key_id=source_credentials.get('AccessKeyId'),
         aws_secret_access_key=source_credentials.get('SecretAccessKey'),
         aws_session_token=source_credentials.get('SessionToken'),
-        region_name='us-east-1',
+        region_name=None,
     )
     client.assume_role.assert_called_with(
         RoleSessionName='mysessionname',
         RoleArn='myrolearn',
     )
-    result.get('Expiration').astimezone.assert_called_with(dateutil.tz.tzlocal())
+    expiration.astimezone.assert_called_with(dateutil.tz.tzlocal())
 
 
 
@@ -163,7 +157,7 @@ def test_get_session_token(Session: MagicMock, safe_print: MagicMock, read_aws_c
         SerialNumber='mymfaserial',
         TokenCode='123123',
     )
-    result.get('Expiration').astimezone.assert_called_with(dateutil.tz.tzlocal())
+    expiration.astimezone.assert_called_with(dateutil.tz.tzlocal())
     write_aws_cache.assert_called()
 
 

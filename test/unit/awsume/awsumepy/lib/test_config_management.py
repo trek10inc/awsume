@@ -4,7 +4,7 @@ import pytest
 from unittest.mock import patch, MagicMock
 
 import yaml
-from awsume.awsumepy.lib import config_management
+from awsume.awsumepy.lib import config_management, exceptions
 
 
 @patch('yaml.safe_load')
@@ -71,7 +71,7 @@ def test_load_config_yaml_error(exists: MagicMock, isfile: MagicMock, makedirs: 
     isfile.return_value = True
     yaml_load.side_effect = yaml.error.YAMLError()
 
-    with pytest.raises(SystemExit):
+    with pytest.raises(exceptions.ConfigParseException):
         config_management.load_config()
 
     makedirs.assert_not_called()
@@ -145,55 +145,3 @@ def test_write_config_catches_exception(exists: MagicMock, isfile: MagicMock, ma
     makedirs.assert_not_called()
     safe_print.assert_called()
     assert open.call_count == 2
-
-
-@patch.object(config_management, 'safe_print')
-@patch.object(config_management, 'load_config')
-@patch.object(config_management, 'write_config')
-def test_update_config_set(write_config: MagicMock, load_config: MagicMock, safe_print: MagicMock):
-    load_config.return_value = {'key': 'value'}
-
-    config_management.update_config(['set', 'x', 'y'])
-
-    load_config.assert_called()
-    write_config.assert_called_with({'key': 'value', 'x': 'y'})
-
-
-@patch.object(config_management, 'defaults', {'key': 'default-value'})
-@patch.object(config_management, 'safe_print')
-@patch.object(config_management, 'load_config')
-@patch.object(config_management, 'write_config')
-def test_update_config_reset(write_config: MagicMock, load_config: MagicMock, safe_print: MagicMock):
-    load_config.return_value = {'key': 'value'}
-
-    config_management.update_config(['reset', 'key'])
-
-    load_config.assert_called()
-    write_config.assert_called_with({'key': 'default-value'})
-
-
-@patch.object(config_management, 'defaults', {'key': 'default-value'})
-@patch.object(config_management, 'safe_print')
-@patch.object(config_management, 'load_config')
-@patch.object(config_management, 'write_config')
-def test_update_config_clear(write_config: MagicMock, load_config: MagicMock, safe_print: MagicMock):
-    load_config.return_value = {'key': 'value'}
-
-    config_management.update_config(['clear', 'key'])
-
-    load_config.assert_called()
-    write_config.assert_called_with({})
-
-
-@patch.object(config_management, 'defaults', {'key': 'default-value'})
-@patch.object(config_management, 'safe_print')
-@patch.object(config_management, 'load_config')
-@patch.object(config_management, 'write_config')
-def test_update_config_reset_no_key(write_config: MagicMock, load_config: MagicMock, safe_print: MagicMock):
-    load_config.return_value = {'key': 'value'}
-
-    config_management.update_config(['reset', 'no-key'])
-
-    load_config.assert_called()
-    write_config.assert_called_with({'key': 'value'})
-    safe_print.assert_called_once()
