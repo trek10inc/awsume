@@ -13,7 +13,7 @@ def test_profile_not_found_error_prioritize_message():
 
 def test_invalid_profile_error():
     err = exceptions.InvalidProfileError('admin', 'it is wack')
-    assert str(err) == 'Invalid profile admin it is wack'
+    assert str(err) == 'Invalid profile [admin] it is wack'
 
 
 def test_user_authentication_error():

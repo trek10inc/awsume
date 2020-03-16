@@ -3,7 +3,7 @@ import pytest
 from io import StringIO
 from unittest.mock import MagicMock, patch
 from awsume.awsumepy import default_plugins
-from awsume.awsumepy.lib import exceptions
+from awsume.awsumepy.lib import exceptions, autoawsume
 
 
 def test_custom_duration_argument_type():
@@ -32,9 +32,11 @@ def test_post_add_arguments_role_arn_no_auto_refresh(safe_print: MagicMock):
         config=False,
         kill=False,
         profile_name=None,
+        clean=False,
+        output_profile=None,
     )
     parser = argparse.ArgumentParser()
-    with pytest.raises(SystemExit):
+    with pytest.raises(exceptions.ValidationException):
         default_plugins.post_add_arguments(config, arguments, parser)
 
 
@@ -51,9 +53,11 @@ def test_post_add_arguments_version(safe_print: MagicMock, stdout: MagicMock, st
         config=False,
         kill=False,
         profile_name=None,
+        clean=False,
+        output_profile=None,
     )
     parser = argparse.ArgumentParser()
-    with pytest.raises(SystemExit):
+    with pytest.raises(exceptions.EarlyExit):
         default_plugins.post_add_arguments(config, arguments, parser)
 
 
@@ -70,9 +74,11 @@ def test_post_add_arguments_unset_variables(safe_print: MagicMock, stdout: Magic
         config=False,
         kill=False,
         profile_name=None,
+        clean=False,
+        output_profile=None,
     )
     parser = argparse.ArgumentParser()
-    with pytest.raises(SystemExit):
+    with pytest.raises(exceptions.EarlyExit):
         default_plugins.post_add_arguments(config, arguments, parser)
 
 
@@ -90,11 +96,13 @@ def test_post_add_arguments_config(safe_print: MagicMock, config_lib: MagicMock,
         config=['clear', 'role-duration'],
         kill=False,
         profile_name=None,
+        clean=False,
+        output_profile=None,
     )
     parser = argparse.ArgumentParser()
-    with pytest.raises(SystemExit):
+    with pytest.raises(exceptions.EarlyExit):
         default_plugins.post_add_arguments(config, arguments, parser)
-    config_lib.update_config.assert_called_with(arguments.config)
+    config_lib.handle_config.assert_called_with(arguments.config)
 
 
 @patch('sys.stderr', new_callable=StringIO)
@@ -111,9 +119,11 @@ def test_post_add_arguments_kill(safe_print: MagicMock, kill: MagicMock, stdout:
         config=None,
         kill=True,
         profile_name=None,
+        clean=False,
+        output_profile=None,
     )
     parser = argparse.ArgumentParser()
-    with pytest.raises(SystemExit):
+    with pytest.raises(exceptions.EarlyExit):
         default_plugins.post_add_arguments(config, arguments, parser)
     kill.assert_called_with(arguments)
 
@@ -129,6 +139,10 @@ def test_post_add_arguments_role_arn_short(safe_print: MagicMock):
         config=None,
         kill=False,
         profile_name=None,
+        clean=False,
+        output_profile=None,
+        with_saml=False,
+        principal_arn=None,
     )
     parser = argparse.ArgumentParser()
     default_plugins.post_add_arguments(config, arguments, parser)
@@ -148,6 +162,10 @@ def test_post_add_arguments_role_arn_short_bad_id(safe_print: MagicMock, stdout:
         config=None,
         kill=False,
         profile_name=None,
+        clean=False,
+        output_profile=None,
+        with_saml=False,
+        principal_arn=None,
     )
     parser = argparse.ArgumentParser()
     with pytest.raises(SystemExit):
@@ -167,6 +185,10 @@ def test_post_add_arguments_role_arn_short_bad_number_parts(safe_print: MagicMoc
         config=None,
         kill=False,
         profile_name=None,
+        clean=False,
+        output_profile=None,
+        with_saml=False,
+        principal_arn=None,
     )
     parser = argparse.ArgumentParser()
     with pytest.raises(SystemExit):
@@ -184,6 +206,10 @@ def test_post_add_arguments_role_arn_explicit(safe_print: MagicMock):
         config=None,
         kill=False,
         profile_name=None,
+        clean=False,
+        output_profile=None,
+        with_saml=False,
+        principal_arn=None,
     )
     parser = argparse.ArgumentParser()
     default_plugins.post_add_arguments(config, arguments, parser)
@@ -200,6 +226,10 @@ def test_post_add_arguments_set_target_profile_name(safe_print: MagicMock):
         config=None,
         kill=False,
         profile_name='profile',
+        clean=False,
+        output_profile=None,
+        with_saml=False,
+        principal_arn=None,
     )
     parser = argparse.ArgumentParser()
     default_plugins.post_add_arguments(config, arguments, parser)
@@ -217,6 +247,10 @@ def test_post_add_arguments_set_target_profile_name_default(safe_print: MagicMoc
         config=None,
         kill=False,
         profile_name=None,
+        clean=False,
+        output_profile=None,
+        with_saml=False,
+        principal_arn=None,
     )
     parser = argparse.ArgumentParser()
     default_plugins.post_add_arguments(config, arguments, parser)
@@ -234,6 +268,10 @@ def test_post_add_arguments_set_target_profile_name_role_arn(safe_print: MagicMo
         config=None,
         kill=False,
         profile_name=None,
+        clean=False,
+        output_profile=None,
+        with_saml=False,
+        principal_arn=None,
     )
     parser = argparse.ArgumentParser()
     default_plugins.post_add_arguments(config, arguments, parser)
@@ -282,7 +320,7 @@ def test_post_collect_aws_profiles(profile_lib: MagicMock):
     }
     args = argparse.Namespace(list_profiles='list')
     config = {}
-    with pytest.raises(SystemExit):
+    with pytest.raises(exceptions.EarlyExit):
         default_plugins.post_collect_aws_profiles(config, args, profiles)
     profile_lib.list_profile_data.assert_called_with(profiles, False)
 
@@ -297,7 +335,7 @@ def test_post_collect_aws_profiles_list_more(profile_lib: MagicMock):
     }
     args = argparse.Namespace(list_profiles='more')
     config = {}
-    with pytest.raises(SystemExit):
+    with pytest.raises(exceptions.EarlyExit):
         default_plugins.post_collect_aws_profiles(config, args, profiles)
     profile_lib.list_profile_data.assert_called_with(profiles, True)
 
@@ -330,10 +368,10 @@ def test_assume_role_from_cli(aws_lib: MagicMock, profile_lib: MagicMock):
         force_refresh=False,
     )
     profiles = {}
-    default_plugins.assume_role_from_cli(config, arguments, profiles, 'us-east-1')
+    default_plugins.assume_role_from_cli(config, arguments, profiles)
     aws_lib.assume_role.assert_called_with(
         {}, arguments.role_arn, 'awsume-cli-role',
-        region='us-east-1',
+        region=profile_lib.get_region.return_value,
         external_id=arguments.external_id,
         role_duration=0,
     )
@@ -363,13 +401,13 @@ def test_assume_role_from_cli_source_profile(aws_lib: MagicMock, profile_lib: Ma
         'AccessKeyId': 'AKIA...',
         'SecretAccessKey': 'SECRET',
     }
-    default_plugins.assume_role_from_cli(config, arguments, profiles, 'us-east-1')
-    aws_lib.get_session_token.assert_called_with(profile_lib.profile_to_credentials.return_value, region=profile_lib.get_region.return_value, mfa_serial='mymfaserial', mfa_token='123123', ignore_cache=False)
+    default_plugins.assume_role_from_cli(config, arguments, profiles)
+    aws_lib.get_session_token.assert_called_with(profile_lib.profile_to_credentials.return_value, region=profile_lib.get_region.return_value, mfa_serial='mymfaserial', mfa_token='123123', ignore_cache=False, duration_seconds=None)
     aws_lib.assume_role.assert_called_with(
         aws_lib.get_session_token.return_value,
         arguments.role_arn,
         'awsume-cli-role',
-        region='us-east-1',
+        region=profile_lib.get_region.return_value,
         external_id=arguments.external_id,
         role_duration=0,
     )
@@ -399,13 +437,13 @@ def test_assume_role_from_cli_source_profile_role_duration_mfa(aws_lib: MagicMoc
         'AccessKeyId': 'AKIA...',
         'SecretAccessKey': 'SECRET',
     }
-    default_plugins.assume_role_from_cli(config, arguments, profiles, 'us-east-1')
+    default_plugins.assume_role_from_cli(config, arguments, profiles)
     aws_lib.get_session_token.assert_not_called()
     aws_lib.assume_role.assert_called_with(
         profile_lib.profile_to_credentials.return_value,
         arguments.role_arn,
         'awsume-cli-role',
-        region='us-east-1',
+        region=profile_lib.get_region.return_value,
         external_id=arguments.external_id,
         role_duration='43200',
         mfa_serial='mymfaserial',
@@ -436,13 +474,13 @@ def test_assume_role_from_cli_source_profile_role_duration_no_mfa(aws_lib: Magic
         'AccessKeyId': 'AKIA...',
         'SecretAccessKey': 'SECRET',
     }
-    default_plugins.assume_role_from_cli(config, arguments, profiles, 'us-east-1')
+    default_plugins.assume_role_from_cli(config, arguments, profiles)
     aws_lib.get_session_token.assert_not_called()
     aws_lib.assume_role.assert_called_with(
         profile_lib.profile_to_credentials.return_value,
         arguments.role_arn,
         'awsume-cli-role',
-        region='us-east-1',
+        region=profile_lib.get_region.return_value,
         external_id=arguments.external_id,
         role_duration='43200',
     )
@@ -472,19 +510,20 @@ def test_assume_role_from_cli_source_profile_no_role_duration_mfa(aws_lib: Magic
         'AccessKeyId': 'AKIA...',
         'SecretAccessKey': 'SECRET',
     }
-    default_plugins.assume_role_from_cli(config, arguments, profiles, 'us-east-1')
+    default_plugins.assume_role_from_cli(config, arguments, profiles)
     aws_lib.get_session_token.assert_called_with(
         { 'AccessKeyId': 'AKIA...', 'SecretAccessKey': 'SECRET' },
         region=profile_lib.get_region.return_value,
         mfa_serial='mymfaserial',
         mfa_token='123123',
         ignore_cache=False,
+        duration_seconds=None,
     )
     aws_lib.assume_role.assert_called_with(
         aws_lib.get_session_token.return_value,
         arguments.role_arn,
         'awsume-cli-role',
-        region='us-east-1',
+        region=profile_lib.get_region.return_value,
         external_id=arguments.external_id,
         role_duration=0,
     )
@@ -513,13 +552,13 @@ def test_assume_role_from_cli_source_profile_no_role_duration_no_mfa(aws_lib: Ma
         'AccessKeyId': 'AKIA...',
         'SecretAccessKey': 'SECRET',
     }
-    default_plugins.assume_role_from_cli(config, arguments, profiles, 'us-east-1')
+    default_plugins.assume_role_from_cli(config, arguments, profiles)
     aws_lib.get_session_token.assert_not_called()
     aws_lib.assume_role.assert_called_with(
         profile_lib.profile_to_credentials.return_value,
         arguments.role_arn,
         'awsume-cli-role',
-        region='us-east-1',
+        region=profile_lib.get_region.return_value,
         external_id=arguments.external_id,
         role_duration=0,
     )
@@ -546,10 +585,10 @@ def test_assume_role_from_cli_source_profile_not_found(aws_lib: MagicMock, profi
         },
     }
     with pytest.raises(exceptions.ProfileNotFoundError):
-        default_plugins.assume_role_from_cli(config, arguments, profiles, 'us-east-1')
+        default_plugins.assume_role_from_cli(config, arguments, profiles)
 
 
-@patch.object(default_plugins, 'create_autoawsume_profile')
+@patch.object(autoawsume, 'create_autoawsume_profile')
 @patch.object(default_plugins, 'aws_lib')
 def test_get_credentials(aws_lib: MagicMock, create_autoawsume_profile: MagicMock):
     config = {}
@@ -563,6 +602,7 @@ def test_get_credentials(aws_lib: MagicMock, create_autoawsume_profile: MagicMoc
         force_refresh=True,
         auto_refresh=False,
         region=None,
+        output_profile=None,
     )
     profiles = {
         'role': {
@@ -576,13 +616,14 @@ def test_get_credentials(aws_lib: MagicMock, create_autoawsume_profile: MagicMoc
         },
     }
 
-    result = default_plugins.get_credentials(config, arguments, profiles)
+    result = default_plugins.get_credentials(config, arguments, profiles, arguments.target_profile_name, None)
     aws_lib.get_session_token.assert_called_with(
         { 'AccessKeyId': 'AKIA...', 'SecretAccessKey': 'SECRET', 'SessionToken': None, 'Region': None },
         region=None,
         mfa_serial='mymfaserial',
         mfa_token='123123',
         ignore_cache=True,
+        duration_seconds=None,
     )
     aws_lib.assume_role.assert_called_with(
         aws_lib.get_session_token.return_value,
@@ -595,7 +636,7 @@ def test_get_credentials(aws_lib: MagicMock, create_autoawsume_profile: MagicMoc
     assert result == aws_lib.assume_role.return_value
 
 
-@patch.object(default_plugins, 'create_autoawsume_profile')
+@patch.object(autoawsume, 'create_autoawsume_profile')
 @patch.object(default_plugins, 'aws_lib')
 def test_get_credentials_auto_refresh(aws_lib: MagicMock, create_autoawsume_profile: MagicMock):
     config = {}
@@ -609,6 +650,7 @@ def test_get_credentials_auto_refresh(aws_lib: MagicMock, create_autoawsume_prof
         force_refresh=True,
         auto_refresh=True,
         region=None,
+        output_profile=None,
     )
     profiles = {
         'role': {
@@ -622,13 +664,14 @@ def test_get_credentials_auto_refresh(aws_lib: MagicMock, create_autoawsume_prof
         },
     }
 
-    result = default_plugins.get_credentials(config, arguments, profiles)
+    result = default_plugins.get_credentials(config, arguments, profiles, arguments.target_profile_name, None)
     aws_lib.get_session_token.assert_called_with(
         { 'AccessKeyId': 'AKIA...', 'SecretAccessKey': 'SECRET', 'SessionToken': None, 'Region': None },
         region=None,
         mfa_serial='mymfaserial',
         mfa_token='123123',
         ignore_cache=True,
+        duration_seconds=None,
     )
     aws_lib.assume_role.assert_called_with(
         aws_lib.get_session_token.return_value,
@@ -639,10 +682,9 @@ def test_get_credentials_auto_refresh(aws_lib: MagicMock, create_autoawsume_prof
         role_duration=0,
     )
     assert result == aws_lib.assume_role.return_value
-    create_autoawsume_profile.assert_called()
 
 
-@patch.object(default_plugins, 'create_autoawsume_profile')
+@patch.object(autoawsume, 'create_autoawsume_profile')
 @patch.object(default_plugins, 'aws_lib')
 def test_get_credentials_role_duration(aws_lib: MagicMock, create_autoawsume_profile: MagicMock):
     config = {}
@@ -656,6 +698,7 @@ def test_get_credentials_role_duration(aws_lib: MagicMock, create_autoawsume_pro
         force_refresh=True,
         auto_refresh=False,
         region=None,
+        output_profile=None,
     )
     profiles = {
         'role': {
@@ -669,7 +712,7 @@ def test_get_credentials_role_duration(aws_lib: MagicMock, create_autoawsume_pro
         },
     }
 
-    result = default_plugins.get_credentials(config, arguments, profiles)
+    result = default_plugins.get_credentials(config, arguments, profiles, arguments.target_profile_name, None)
     aws_lib.get_session_token.assert_not_called()
     aws_lib.assume_role.assert_called_with(
         { 'AccessKeyId': 'AKIA...', 'SecretAccessKey': 'SECRET', 'SessionToken': None, 'Region': None },
@@ -677,17 +720,16 @@ def test_get_credentials_role_duration(aws_lib: MagicMock, create_autoawsume_pro
         'mysessionname',
         region=None,
         external_id='myexternalid',
-        role_duration='43200',
+        role_duration=43200,
         mfa_serial='mymfaserial',
         mfa_token='123123',
     )
     assert result == aws_lib.assume_role.return_value
 
 
-@patch.object(default_plugins, 'safe_print')
-@patch.object(default_plugins, 'create_autoawsume_profile')
+@patch.object(autoawsume, 'create_autoawsume_profile')
 @patch.object(default_plugins, 'aws_lib')
-def test_get_credentials_role_duration_auto_refresh_exit(aws_lib: MagicMock, create_autoawsume_profile: MagicMock, safe_print: MagicMock):
+def test_get_credentials_role_duration_auto_refresh_exit(aws_lib: MagicMock, create_autoawsume_profile: MagicMock):
     config = {}
     arguments = argparse.Namespace(
         target_profile_name='role',
@@ -699,6 +741,7 @@ def test_get_credentials_role_duration_auto_refresh_exit(aws_lib: MagicMock, cre
         force_refresh=True,
         auto_refresh=True,
         region=None,
+        output_profile=None,
     )
     profiles = {
         'role': {
@@ -711,12 +754,11 @@ def test_get_credentials_role_duration_auto_refresh_exit(aws_lib: MagicMock, cre
             'mfa_serial': 'mymfaserial',
         },
     }
-    with pytest.raises(SystemExit):
-        default_plugins.get_credentials(config, arguments, profiles)
-    safe_print.assert_called()
+    with pytest.raises(exceptions.ValidationException):
+        default_plugins.get_credentials(config, arguments, profiles, arguments.target_profile_name, None)
 
 
-@patch.object(default_plugins, 'create_autoawsume_profile')
+@patch.object(autoawsume, 'create_autoawsume_profile')
 @patch.object(default_plugins, 'aws_lib')
 def test_get_credentials_user(aws_lib: MagicMock, create_autoawsume_profile: MagicMock):
     config = {}
@@ -730,6 +772,7 @@ def test_get_credentials_user(aws_lib: MagicMock, create_autoawsume_profile: Mag
         force_refresh=True,
         auto_refresh=False,
         region=None,
+        output_profile=None,
     )
     profiles = {
         'role': {
@@ -743,18 +786,19 @@ def test_get_credentials_user(aws_lib: MagicMock, create_autoawsume_profile: Mag
         },
     }
 
-    result = default_plugins.get_credentials(config, arguments, profiles)
+    result = default_plugins.get_credentials(config, arguments, profiles, arguments.target_profile_name, None)
     aws_lib.get_session_token.assert_called_with(
         { 'AccessKeyId': 'AKIA...', 'SecretAccessKey': 'SECRET', 'SessionToken': None, 'Region': None },
         region=None,
         mfa_serial='mymfaserial',
         mfa_token='123123',
         ignore_cache=True,
+        duration_seconds=None,
     )
     assert result == aws_lib.get_session_token.return_value
 
 
-@patch.object(default_plugins, 'create_autoawsume_profile')
+@patch.object(autoawsume, 'create_autoawsume_profile')
 @patch.object(default_plugins, 'aws_lib')
 def test_get_credentials_no_mfa_role(aws_lib: MagicMock, create_autoawsume_profile: MagicMock):
     config = {}
@@ -768,6 +812,7 @@ def test_get_credentials_no_mfa_role(aws_lib: MagicMock, create_autoawsume_profi
         force_refresh=True,
         auto_refresh=False,
         region=None,
+        output_profile=None,
     )
     profiles = {
         'role': {
@@ -780,7 +825,7 @@ def test_get_credentials_no_mfa_role(aws_lib: MagicMock, create_autoawsume_profi
         },
     }
 
-    result = default_plugins.get_credentials(config, arguments, profiles)
+    result = default_plugins.get_credentials(config, arguments, profiles, arguments.target_profile_name, None)
     aws_lib.get_session_token.assert_not_called()
     aws_lib.assume_role.assert_called_with(
         { 'AccessKeyId': 'AKIA...', 'SecretAccessKey': 'SECRET', 'SessionToken': None, 'Region': None },
@@ -793,7 +838,7 @@ def test_get_credentials_no_mfa_role(aws_lib: MagicMock, create_autoawsume_profi
     assert result == aws_lib.assume_role.return_value
 
 
-@patch.object(default_plugins, 'create_autoawsume_profile')
+@patch.object(autoawsume, 'create_autoawsume_profile')
 @patch.object(default_plugins, 'aws_lib')
 def test_get_credentials_no_mfa_user(aws_lib: MagicMock, create_autoawsume_profile: MagicMock):
     config = {}
@@ -807,6 +852,7 @@ def test_get_credentials_no_mfa_user(aws_lib: MagicMock, create_autoawsume_profi
         force_refresh=True,
         auto_refresh=False,
         region=None,
+        output_profile=None,
     )
     profiles = {
         'role': {
@@ -819,7 +865,7 @@ def test_get_credentials_no_mfa_user(aws_lib: MagicMock, create_autoawsume_profi
         },
     }
 
-    result = default_plugins.get_credentials(config, arguments, profiles)
+    result = default_plugins.get_credentials(config, arguments, profiles, arguments.target_profile_name, None)
     aws_lib.get_session_token.assert_not_called()
     aws_lib.assume_role.assert_not_called()
     assert result == {
@@ -831,7 +877,7 @@ def test_get_credentials_no_mfa_user(aws_lib: MagicMock, create_autoawsume_profi
 
 
 @patch.object(default_plugins, 'assume_role_from_cli')
-@patch.object(default_plugins, 'create_autoawsume_profile')
+@patch.object(autoawsume, 'create_autoawsume_profile')
 @patch.object(default_plugins, 'aws_lib')
 def test_get_credentials_role_from_cli(aws_lib: MagicMock, create_autoawsume_profile: MagicMock, assume_role_from_cli: MagicMock):
     config = {}
@@ -846,6 +892,7 @@ def test_get_credentials_role_from_cli(aws_lib: MagicMock, create_autoawsume_pro
         force_refresh=True,
         auto_refresh=False,
         region=None,
+        output_profile=None,
     )
     profiles = {
         'role': {
@@ -858,5 +905,5 @@ def test_get_credentials_role_from_cli(aws_lib: MagicMock, create_autoawsume_pro
         },
     }
 
-    result = default_plugins.get_credentials(config, arguments, profiles)
+    result = default_plugins.get_credentials(config, arguments, profiles, arguments.target_profile_name, None)
     assert result == assume_role_from_cli.return_value

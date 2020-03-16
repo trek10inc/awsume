@@ -4,7 +4,7 @@ import pytest
 from datetime import datetime, timedelta
 from unittest.mock import patch, MagicMock
 
-from awsume.awsumepy.lib import cache
+from awsume.awsumepy.lib import cache, constants
 
 
 @patch('os.makedirs')
@@ -99,9 +99,10 @@ def test_read_aws_cache_catch_exception(ensure_cache_dir: MagicMock, is_file: Ma
 
 @patch('builtins.open')
 @patch('json.dump')
+@patch('os.chmod')
 @patch('os.path.isfile')
 @patch.object(cache, 'ensure_cache_dir')
-def test_write_aws_cache(ensure_cache_dir: MagicMock, is_file: MagicMock, json_dump: MagicMock, open: MagicMock):
+def test_write_aws_cache(ensure_cache_dir: MagicMock, is_file: MagicMock, chmod: MagicMock, json_dump: MagicMock, open: MagicMock):
     is_file.return_value = True
     session = {
         'AccessKeyId': 'AKIA...',
@@ -113,6 +114,7 @@ def test_write_aws_cache(ensure_cache_dir: MagicMock, is_file: MagicMock, json_d
 
     ensure_cache_dir.assert_called()
     open.assert_called()
+    chmod.assert_called_with(str(constants.AWSUME_CACHE_DIR) + '/cache-file', 0o600)
     json_dump.assert_called()
     written_session = json_dump.call_args[0][0]
     assert type(written_session.get('Expiration')) is str
@@ -121,9 +123,10 @@ def test_write_aws_cache(ensure_cache_dir: MagicMock, is_file: MagicMock, json_d
 
 @patch('builtins.open')
 @patch('json.dump')
+@patch('os.chmod')
 @patch('os.path.isfile')
 @patch.object(cache, 'ensure_cache_dir')
-def test_write_aws_cache_catch_exception(ensure_cache_dir: MagicMock, is_file: MagicMock, json_dump: MagicMock, open: MagicMock):
+def test_write_aws_cache_catch_exception(ensure_cache_dir: MagicMock, is_file: MagicMock, chmod: MagicMock, json_dump: MagicMock, open: MagicMock):
     is_file.return_value = True
     json_dump.side_effect = Exception('Some Exception')
     session = {
@@ -133,6 +136,7 @@ def test_write_aws_cache_catch_exception(ensure_cache_dir: MagicMock, is_file: M
         'Expiration': datetime.now(),
     }
     cache.write_aws_cache('cache-file', session)
+    chmod.assert_called_with(str(constants.AWSUME_CACHE_DIR) + '/cache-file', 0o600)
 
 
 

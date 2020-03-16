@@ -6,7 +6,7 @@ import pytest
 from io import StringIO
 from awsume.awsumepy import app
 from awsume.awsumepy.lib.config_management import load_config
-from awsume.awsumepy.lib.exceptions import ProfileNotFoundError, InvalidProfileError, UserAuthenticationError, RoleAuthenticationError
+from awsume.awsumepy.lib import exceptions
 from unittest.mock import patch, MagicMock, mock_open
 from awsume.awsumepy import hookspec
 
@@ -47,7 +47,7 @@ def test_get_plugin_manager(__init__: MagicMock, PluginManager: MagicMock):
 def test_parse_args(__init__: MagicMock, ArgumentParser: MagicMock):
     __init__.return_value = None
     parser = MagicMock()
-    parser.parse_args.return_value = argparse.Namespace(refresh_autocomplete=False)
+    parser.parse_args.return_value = argparse.Namespace(refresh_autocomplete=False, list_plugins=False)
     ArgumentParser.return_value = parser
     obj = app.Awsume()
     obj.config = {}
@@ -68,14 +68,14 @@ def test_parse_args(__init__: MagicMock, ArgumentParser: MagicMock):
 def test_parse_args_refresh_autocomplete(__init__: MagicMock, ArgumentParser: MagicMock, open: MagicMock, json_dump: MagicMock):
     __init__.return_value = None
     parser = MagicMock()
-    parser.parse_args.return_value = argparse.Namespace(refresh_autocomplete=True)
+    parser.parse_args.return_value = argparse.Namespace(refresh_autocomplete=True, list_plugins=False)
     ArgumentParser.return_value = parser
     obj = app.Awsume()
     obj.config = {}
     obj.plugin_manager = MagicMock()
     obj.plugin_manager.hook.get_profile_names.return_value = [['profile1', 'profile2', 'profile3'], ['pluginProfile']]
 
-    with pytest.raises(SystemExit):
+    with pytest.raises(exceptions.EarlyExit):
         obj.parse_args([])
 
     json_dump.assert_called_with({'profile-names': ['profile1', 'profile2', 'profile3', 'pluginProfile']}, open.return_value)
@@ -103,106 +103,123 @@ def test_get_profiles(__init__: MagicMock, get_aws_files: MagicMock, aggregate_p
     assert result == aggregate_profiles.return_value
 
 
+@patch.object(app, 'get_role_chain')
 @patch.object(sys.stdin, 'isatty')
 @patch.object(app.Awsume, '__init__')
-def test_get_credentials(__init__: MagicMock, isatty: MagicMock):
+def test_get_credentials(__init__: MagicMock, isatty: MagicMock, get_role_chain: MagicMock):
     __init__.return_value = None
-    args = argparse.Namespace(json=None, with_saml=False, with_web_identity=False)
+    args = argparse.Namespace(json=None, with_saml=False, with_web_identity=False, auto_refresh=False, target_profile_name='profilename')
     profiles = {}
     obj = app.Awsume()
     obj.config = {}
     obj.plugin_manager = MagicMock()
     isatty.return_value = True
     obj.plugin_manager.hook.get_credentials.return_value = [{'AccessKeyId': 'AKIA...', 'SecretAccessKey': 'SECRET', 'SessionToken': 'LONGSECRET', 'Region': 'us-east-1'}]
+    get_role_chain.return_value = ['profilename']
 
     result = obj.get_credentials(args, profiles)
 
-    obj.plugin_manager.hook.get_credentials.assert_called_with(config=obj.config, arguments=args, profiles=profiles)
+    obj.plugin_manager.hook.get_credentials.assert_called_with(config=obj.config, arguments=args, profiles=profiles, profile_name='profilename', credentials=None)
     assert result == {'AccessKeyId': 'AKIA...', 'SecretAccessKey': 'SECRET', 'SessionToken': 'LONGSECRET', 'Region': 'us-east-1'}
 
 
+@patch.object(app, 'get_role_chain')
 @patch.object(sys.stdin, 'isatty')
 @patch.object(app, 'safe_print')
 @patch.object(app.Awsume, '__init__')
-def test_get_credentials_profile_not_found_error(__init__: MagicMock, safe_print: MagicMock, isatty: MagicMock):
+def test_get_credentials_profile_not_found_error(__init__: MagicMock, safe_print: MagicMock, isatty: MagicMock, get_role_chain: MagicMock):
     __init__.return_value = None
-    args = argparse.Namespace(json=None, with_saml=False, with_web_identity=False)
+    args = argparse.Namespace(json=None, with_saml=False, with_web_identity=False, auto_refresh=False, target_profile_name='profilename')
     profiles = {}
     obj = app.Awsume()
     obj.config = {}
     obj.plugin_manager = MagicMock()
     isatty.return_value = True
+    get_role_chain.return_value = ['profilename']
 
-    obj.plugin_manager.hook.get_credentials.side_effect = ProfileNotFoundError()
-    with pytest.raises(SystemExit):
+    obj.plugin_manager.hook.get_credentials.side_effect = exceptions.ProfileNotFoundError()
+    with pytest.raises(exceptions.ProfileNotFoundError):
         obj.get_credentials(args, profiles)
     obj.plugin_manager.hook.catch_profile_not_found_exception.assert_called_with(config=obj.config, arguments=args, error=obj.plugin_manager.hook.get_credentials.side_effect, profiles=profiles)
 
 
+@patch.object(app, 'get_role_chain')
 @patch.object(sys.stdin, 'isatty')
 @patch.object(app, 'safe_print')
 @patch.object(app.Awsume, '__init__')
-def test_get_credentials_invalid_profile_error(__init__: MagicMock, safe_print: MagicMock, isatty: MagicMock):
+def test_get_credentials_invalid_profile_error(__init__: MagicMock, safe_print: MagicMock, isatty: MagicMock, get_role_chain: MagicMock):
     __init__.return_value = None
-    args = argparse.Namespace(json=None, with_saml=False, with_web_identity=False)
+    args = argparse.Namespace(json=None, with_saml=False, with_web_identity=False, auto_refresh=False, target_profile_name='profilename')
     profiles = {}
     obj = app.Awsume()
     obj.config = {}
     obj.plugin_manager = MagicMock()
     isatty.return_value = True
+    get_role_chain.return_value = ['profilename']
 
-    obj.plugin_manager.hook.get_credentials.side_effect = InvalidProfileError(profile_name='profile')
-    with pytest.raises(SystemExit):
+    obj.plugin_manager.hook.get_credentials.side_effect = exceptions.InvalidProfileError(profile_name='profile')
+    with pytest.raises(exceptions.InvalidProfileError):
         obj.get_credentials(args, profiles)
     obj.plugin_manager.hook.catch_invalid_profile_exception.assert_called_with(config=obj.config, arguments=args, error=obj.plugin_manager.hook.get_credentials.side_effect, profiles=profiles)
 
 
+@patch.object(app, 'get_role_chain')
 @patch.object(sys.stdin, 'isatty')
 @patch.object(app, 'safe_print')
 @patch.object(app.Awsume, '__init__')
-def test_get_credentials_user_authentication_error(__init__: MagicMock, safe_print: MagicMock, isatty: MagicMock):
+def test_get_credentials_user_authentication_error(__init__: MagicMock, safe_print: MagicMock, isatty: MagicMock, get_role_chain: MagicMock):
     __init__.return_value = None
-    args = argparse.Namespace(json=None, with_saml=False, with_web_identity=False)
+    args = argparse.Namespace(json=None, with_saml=False, with_web_identity=False, auto_refresh=False, target_profile_name='profilename')
     profiles = {}
     obj = app.Awsume()
     obj.config = {}
     obj.plugin_manager = MagicMock()
     isatty.return_value = True
+    get_role_chain.return_value = ['profilename']
 
-    obj.plugin_manager.hook.get_credentials.side_effect = UserAuthenticationError()
-    with pytest.raises(SystemExit):
+    obj.plugin_manager.hook.get_credentials.side_effect = exceptions.UserAuthenticationError()
+    with pytest.raises(exceptions.UserAuthenticationError):
         obj.get_credentials(args, profiles)
     obj.plugin_manager.hook.catch_user_authentication_error.assert_called_with(config=obj.config, arguments=args, error=obj.plugin_manager.hook.get_credentials.side_effect, profiles=profiles)
 
 
+@patch.object(app, 'get_role_chain')
 @patch.object(sys.stdin, 'isatty')
 @patch.object(app, 'safe_print')
 @patch.object(app.Awsume, '__init__')
-def test_get_credentials_role_authentication_error(__init__: MagicMock, safe_print: MagicMock, isatty: MagicMock):
+def test_get_credentials_role_authentication_error(__init__: MagicMock, safe_print: MagicMock, isatty: MagicMock, get_role_chain: MagicMock):
     __init__.return_value = None
-    args = argparse.Namespace(json=None, with_saml=False, with_web_identity=False)
+    args = argparse.Namespace(json=None, with_saml=False, with_web_identity=False, auto_refresh=False, target_profile_name='profilename')
     profiles = {}
     obj = app.Awsume()
     obj.config = {}
     obj.plugin_manager = MagicMock()
     isatty.return_value = True
+    get_role_chain.return_value = ['profilename']
 
-    obj.plugin_manager.hook.get_credentials.side_effect = RoleAuthenticationError()
-    with pytest.raises(SystemExit):
+    obj.plugin_manager.hook.get_credentials.side_effect = exceptions.RoleAuthenticationError()
+    with pytest.raises(exceptions.RoleAuthenticationError):
         obj.get_credentials(args, profiles)
     obj.plugin_manager.hook.catch_role_authentication_error.assert_called_with(config=obj.config, arguments=args, error=obj.plugin_manager.hook.get_credentials.side_effect, profiles=profiles)
 
 
+@patch.object(app, 'is_mutable_profile')
 @patch('sys.stdout', new_callable=StringIO)
 @patch.object(app.Awsume, '__init__')
-def test_export_data(__init__: MagicMock, stdout: MagicMock):
+def test_export_data(__init__: MagicMock, stdout: MagicMock, is_mutable_profile: MagicMock):
     __init__.return_value = None
     obj = app.Awsume()
     awsume_list = ['data1', 'data2', 'data3']
     awsume_flag = 'flag'
-    obj.export_data(awsume_flag, awsume_list)
+    obj.is_interactive = True
+    is_mutable_profile.return_value = True
+    arguments = argparse.Namespace(output_profile=None, auto_refresh=False)
+    profiles = {}
+    credentials = {}
 
-    assert stdout.getvalue() == 'flag\ndata1 data2 data3\n'
+    obj.export_data(arguments, profiles, credentials, awsume_flag, awsume_list)
+
+    assert stdout.getvalue() == 'flag data1 data2 data3\n'
 
 
 @patch.object(sys.stdin, 'isatty')
@@ -222,8 +239,8 @@ def test_run(__init__: MagicMock, isatty: MagicMock):
 
     obj.run([])
 
-    obj.export_data.assert_called_with('Awsume', [
-        'AKIA...', 'SECRET', 'LONGSECRET', 'us-east-1', 'default'
+    obj.export_data.assert_called_with(obj.parse_args.return_value, obj.get_profiles.return_value, obj.get_credentials.return_value, 'Awsume', [
+        'AKIA...', 'SECRET', 'LONGSECRET', 'us-east-1', 'default', 'None',
     ])
 
 
@@ -238,78 +255,12 @@ def test_run_auto_refresh(__init__: MagicMock, isatty: MagicMock):
     obj.get_profiles = MagicMock()
     obj.export_data = MagicMock()
     obj.get_credentials = MagicMock()
-    obj.parse_args.return_value = argparse.Namespace(with_saml=False, with_web_identity=False, auto_refresh=True, target_profile_name='default', json=None)
+    obj.parse_args.return_value = argparse.Namespace(with_saml=False, with_web_identity=False, auto_refresh=True, target_profile_name='default', json=None, output_profile=None)
     obj.get_credentials.return_value = {'AccessKeyId': 'AKIA...', 'SecretAccessKey': 'SECRET', 'SessionToken': 'LONGSECRET', 'Region': 'us-east-1'}
     isatty.return_value = True
 
     obj.run([])
 
-    obj.export_data.assert_called_with('Auto', [
-        'autoawsume-default', 'us-east-1', 'default'
+    obj.export_data.assert_called_with(obj.parse_args.return_value, obj.get_profiles.return_value, obj.get_credentials.return_value, 'Auto', [
+        'autoawsume-default', 'us-east-1', 'default',
     ])
-
-
-# TODO: This belongs in the test_get_credentials section
-# @patch.object(sys.stdin, 'isatty')
-# @patch.object(app.Awsume, '__init__')
-# def test_run_with_saml(__init__: MagicMock, isatty: MagicMock):
-#     __init__.return_value = None
-#     obj = app.Awsume()
-#     obj.config = {}
-#     obj.plugin_manager = MagicMock()
-#     obj.parse_args = MagicMock()
-#     obj.get_profiles = MagicMock()
-#     obj.export_data = MagicMock()
-#     obj.get_credentials = MagicMock()
-#     obj.parse_args.return_value = argparse.Namespace(with_saml=True, with_web_identity=False, auto_refresh=False, target_profile_name='default', json=None)
-#     obj.plugin_manager.hook.get_credentials_with_saml.return_value = [{'AccessKeyId': 'AKIA...', 'SecretAccessKey': 'SECRET', 'SessionToken': 'LONGSECRET', 'Region': 'us-east-1'}]
-#     isatty.return_value = True
-
-#     obj.run([])
-
-#     obj.export_data.assert_called_with('Awsume', [
-#         'AKIA...', 'SECRET', 'LONGSECRET', 'us-east-1', 'default'
-#     ])
-
-
-# @patch.object(sys.stdin, 'isatty')
-# @patch.object(app.Awsume, '__init__')
-# def test_run_with_web_identity(__init__: MagicMock, isatty: MagicMock):
-#     __init__.return_value = None
-#     obj = app.Awsume()
-#     obj.config = {}
-#     obj.plugin_manager = MagicMock()
-#     obj.parse_args = MagicMock()
-#     obj.get_profiles = MagicMock()
-#     obj.export_data = MagicMock()
-#     obj.get_credentials = MagicMock()
-#     obj.parse_args.return_value = argparse.Namespace(with_saml=False, with_web_identity=True, auto_refresh=False, target_profile_name='default', json=None)
-#     obj.plugin_manager.hook.get_credentials_with_web_identity.return_value = [{'AccessKeyId': 'AKIA...', 'SecretAccessKey': 'SECRET', 'SessionToken': 'LONGSECRET', 'Region': 'us-east-1'}]
-#     isatty.return_value = True
-
-#     obj.run([])
-
-#     obj.export_data.assert_called_with('Awsume', [
-#         'AKIA...', 'SECRET', 'LONGSECRET', 'us-east-1', 'default'
-#     ])
-
-
-
-# @patch.object(sys.stdin, 'isatty')
-# @patch.object(app, 'safe_print')
-# @patch.object(app.Awsume, '__init__')
-# def test_run_no_credentials(__init__: MagicMock, safe_print: MagicMock, isatty: MagicMock):
-#     __init__.return_value = None
-#     obj = app.Awsume()
-#     obj.config = {}
-#     obj.plugin_manager = MagicMock()
-#     obj.parse_args = MagicMock()
-#     obj.get_profiles = MagicMock()
-#     obj.export_data = MagicMock()
-#     obj.get_credentials = MagicMock()
-#     obj.parse_args.return_value = argparse.Namespace(with_saml=False, with_web_identity=False, auto_refresh=False, target_profile_name='default', json=None)
-#     obj.get_credentials.return_value = []
-#     isatty.return_value = True
-
-#     with pytest.raises(SystemExit):
-#         obj.run([])

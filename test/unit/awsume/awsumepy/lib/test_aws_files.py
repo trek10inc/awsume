@@ -67,7 +67,8 @@ def test_add_section(ConfigParser: MagicMock, open: MagicMock):
     parser.read.assert_called_once_with('file-name')
     parser.remove_section.assert_called_once_with('section-name')
     parser.add_section.assert_called_once_with('section-name')
-    assert parser.set.call_count == 2
+    assert parser.set.call_count == 3
+    parser.set.assert_any_call('section-name', 'manager', 'awsume')
     parser.write.assert_called_once()
     open.assert_called_once()
 
@@ -102,7 +103,8 @@ def test_add_section_new_section(ConfigParser: MagicMock, open: MagicMock, safe_
     parser.read.assert_called_once_with('file-name')
     parser.remove_section.assert_not_called()
     parser.add_section.assert_called_once_with('section-name')
-    assert parser.set.call_count == 2
+    assert parser.set.call_count == 3
+    parser.set.assert_any_call('section-name', 'manager', 'awsume')
     parser.write.assert_called_once()
     open.assert_called_once()
 
