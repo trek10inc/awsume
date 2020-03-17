@@ -3,7 +3,7 @@ name: Run tests
 on: push
 
 jobs:
-  deploy:
+  test:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -17,5 +17,5 @@ jobs:
           pip install pipenv
       - name: Test
         run: |
-          pipenv install --dev
+          PIPENV_NOSPIN=true pipenv install --dev
           pipenv run test

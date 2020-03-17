@@ -7,9 +7,10 @@ from unittest.mock import patch, MagicMock
 from awsume.awsumepy.lib import cache, constants
 
 
+@patch('os.chmod')
 @patch('os.makedirs')
 @patch('os.path.exists')
-def test_ensure_cache_dir(exists: MagicMock, makedirs: MagicMock):
+def test_ensure_cache_dir(exists: MagicMock, makedirs: MagicMock, chmod: MagicMock):
     exists.return_value = False
 
     cache.ensure_cache_dir()
@@ -17,9 +18,10 @@ def test_ensure_cache_dir(exists: MagicMock, makedirs: MagicMock):
     makedirs.assert_called()
 
 
+@patch('os.chmod')
 @patch('os.makedirs')
 @patch('os.path.exists')
-def test_ensure_cache_dir_already_exists(exists: MagicMock, makedirs: MagicMock):
+def test_ensure_cache_dir_already_exists(exists: MagicMock, makedirs: MagicMock, chmod: MagicMock):
     exists.return_value = True
 
     cache.ensure_cache_dir()
