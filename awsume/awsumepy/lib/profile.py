@@ -68,10 +68,10 @@ def validate_profile(config: dict, arguments: argparse.Namespace, profiles: dict
         if profile.get('credential_source') not in VALID_CREDENTIAL_SOURCES:
             raise exceptions.InvalidProfileError(target_profile_name, message='unsupported awsume credential_source profile option: {}'.format(profile.get('credential_source')))
         source_profile_name = profile.get('source_profile')
-        if source_profile_name and not profiles.get(source_profile_name):
-            raise exceptions.ProfileNotFoundError(profile_name=source_profile_name)
         source_profile = get_source_profile(profiles, target_profile_name)
-        if not source_profile.get('role_arn'):
+        if source_profile_name and not source_profile:
+            raise exceptions.ProfileNotFoundError(profile_name=source_profile_name)
+        if source_profile and not source_profile.get('role_arn'):
             user_profile = source_profile
             user_profile_name = source_profile_name
         else:
@@ -120,7 +120,7 @@ def get_source_profile(profiles: dict, target_profile_name: str) -> dict:
 
 def get_role_chain(profiles: dict, target_profile_name: str) -> list:
     target_profile = profiles.get(target_profile_name)
-    if not target_profile.get('role_arn'):
+    if not target_profile or not target_profile.get('role_arn'):
         return [target_profile_name]
 
     role_chain = []
