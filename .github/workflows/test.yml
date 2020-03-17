@@ -17,5 +17,6 @@ jobs:
           pip install pipenv
       - name: Test
         run: |
+          echo "Installing pipenv dependencies"
           PIPENV_NOSPIN=true pipenv install --dev
           pipenv run test
