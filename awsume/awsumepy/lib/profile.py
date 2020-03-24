@@ -51,7 +51,7 @@ def credentials_to_profile(credentials: dict) -> dict:
 
 def validate_profile(config: dict, arguments: argparse.Namespace, profiles: dict, target_profile_name: str) -> bool:
     logger.debug('Validating profile')
-    profile = get_profile(config, arguments, profiles, target_profile_name)
+    profile = profiles.get(target_profile_name)
     if arguments.output_profile and not is_mutable_profile(profiles, arguments.output_profile):
         raise exceptions.ImmutableProfileError(arguments.output_profile, 'not awsume-managed')
     if not profile:
@@ -257,32 +257,30 @@ def get_account_id(profile: dict, call_aws: bool = False) -> str:
     return 'Unavailable'
 
 
-def get_profile(config: dict, arguments: argparse.Namespace, profiles: dict, profile_name: str) -> dict:
-    if profile_name in profiles or not config.get('fuzzy-match'):
-        return profiles.get(profile_name)
-
+def get_profile_name(config: dict, profiles: dict, target_profile_name: str, log=True) -> str:
+    if target_profile_name in profiles or not config.get('fuzzy-match'):
+        return target_profile_name
     profile_names = list(profiles.keys())
 
-    matched_prefix_profile = match_prefix(profile_names, profile_name)
+    matched_prefix_profile = match_prefix(profile_names, target_profile_name)
     if matched_prefix_profile:
-        safe_print('Using profile ' + matched_prefix_profile, color=colorama.Fore.YELLOW)
-        arguments.target_profile_name = matched_prefix_profile
-        return profiles.get(matched_prefix_profile)
+        if log:
+            safe_print('Using profile ' + matched_prefix_profile, color=colorama.Fore.YELLOW)
+        return matched_prefix_profile
 
-    matched_contains_profile = match_contains(profile_names, profile_name)
+    matched_contains_profile = match_contains(profile_names, target_profile_name)
     if matched_contains_profile:
-        safe_print('Using profile ' + matched_contains_profile, color=colorama.Fore.YELLOW)
-        arguments.target_profile_name = matched_contains_profile
-        return profiles.get(matched_contains_profile)
+        if log:
+            safe_print('Using profile ' + matched_contains_profile, color=colorama.Fore.YELLOW)
+        return matched_contains_profile
 
-    matched_levenshtein_profile = match_levenshtein(profile_names, profile_name)
+    matched_levenshtein_profile = match_levenshtein(profile_names, target_profile_name)
     if matched_levenshtein_profile:
-        safe_print('Using profile ' + matched_levenshtein_profile, color=colorama.Fore.YELLOW)
-        arguments.target_profile_name = matched_levenshtein_profile
-        return profiles.get(matched_levenshtein_profile)
+        if log:
+            safe_print('Using profile ' + matched_levenshtein_profile, color=colorama.Fore.YELLOW)
+        return matched_levenshtein_profile
 
-    profile = profiles.get(profile_name)
-    return profile
+    return target_profile_name
 
 
 def match_prefix(profile_names: list, profile_name: str) -> str:

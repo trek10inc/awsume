@@ -11,7 +11,7 @@ from pathlib import Path
 
 from . lib.autoawsume import create_autoawsume_profile
 from ..autoawsume.process import kill, kill_autoawsume
-from . lib.profile import aggregate_profiles, get_role_chain
+from . lib.profile import aggregate_profiles, get_role_chain, get_profile_name
 from . lib.config_management import load_config
 from . lib.aws_files import get_aws_files, add_section, get_section
 from . lib.profile import credentials_to_profile, is_mutable_profile
@@ -199,7 +199,8 @@ class Awsume(object):
                 )
             else:
                 logger.debug('Pulling credentials from default awsume flow')
-                role_chain = get_role_chain(profiles, args.target_profile_name)
+                target_profile_name = get_profile_name(self.config, profiles, args.target_profile_name)
+                role_chain = get_role_chain(profiles, target_profile_name)
                 credentials = None
                 for profile_name in role_chain:
                     credentials = self.plugin_manager.hook.get_credentials(config=self.config, arguments=args, profiles=profiles, profile_name=profile_name, credentials=credentials)

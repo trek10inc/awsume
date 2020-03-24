@@ -2,7 +2,7 @@
 
 ## [4.4.0] - WIP - Role chain support
 
-- Supports awsuming role profiles who's `source_profile` reference another role profile, infinitely
+- Supports awsuming role profiles who's `source_profile` reference another role profile, repeatedly
 
 ## [4.3.0] - 2020-03-13 - Output profile support
 
