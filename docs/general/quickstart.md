@@ -35,7 +35,7 @@ If this automatic installation is causing you problems, you can disable it throu
 AWSUME_SKIP_ALIAS_SETUP=true pip install awsume
 ```
 
-Sometimes, however, things (such as file permission issues) can prevent awsume from injecting the alias. If this is the case, we provided a utility to setup the alias after the fact, so check out the `awsume-configure` guide [here](./awsume-configure.md).
+Sometimes, however, things (such as file permission issues) can prevent awsume from injecting the alias. If this is the case, we provided a utility to setup the alias after the fact, so check out the `awsume-configure` guide [here](../utilities/awsume-configure.md).
 
 For debug purposes, in order to get output from the post_install setup, you must use pip's `-v` flag like this:
 
