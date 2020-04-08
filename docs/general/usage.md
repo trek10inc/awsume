@@ -66,6 +66,7 @@ export AWS_SECURITY_TOKEN=<SECRET>
 export AWS_REGION=<REGION>
 export AWS_DEFAULT_REGION=<REGION>
 export AWSUME_PROFILE=my-admin
+export AWSUME_EXPIRATION=<YYYY-mm-ddTHH:MM:SS>
 ```
 
 This way you can easily get credentials to another shell session, for instance through ssh.
