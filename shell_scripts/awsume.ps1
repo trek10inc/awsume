@@ -2,7 +2,7 @@
 
 #AWSUME_FLAG - what awsumepy told the shell to do
 #AWSUME_n - the data from awsumepy
-$AWSUME_FLAG, $AWSUME_1, $AWSUME_2, $AWSUME_3, $AWSUME_4, $AWSUME_5, $AWSUME_6 = `
+$AWSUME_FLAG, $AWSUME_1, $AWSUME_2, $AWSUME_3, $AWSUME_4, $AWSUME_5, $AWSUME_6, $AWSUME_7 = `
 $(awsumepy $args) -split '\s+'
 
 #if incorrect flag/help
@@ -30,6 +30,7 @@ elseif ( $AWSUME_FLAG -eq "Auto" ) {
     $env:AWS_PROFILE = ""
     $env:AWS_DEFAULT_PROFILE = ""
     $env:AWSUME_PROFILE = ""
+    $env:AWSUME_EXPIRATION = ""
 
     #set the profile that will contain the session credentials
     $env:AWS_PROFILE = $AWSUME_1
@@ -59,6 +60,7 @@ elseif ( $AWSUME_FLAG -eq "Unset" ) {
     $env:AWS_PROFILE = ""
     $env:AWS_DEFAULT_PROFILE = ""
     $env:AWSUME_PROFILE = ""
+    $env:AWSUME_EXPIRATION = ""
 
     #show the commands to unset these environment variables
     if ($args -like "-s") {
@@ -71,6 +73,7 @@ elseif ( $AWSUME_FLAG -eq "Unset" ) {
         Write-Host "`$env:AWS_PROFILE = `"`""
         Write-Host "`$env:AWS_DEFAULT_PROFILE = `"`""
         Write-Host "`$env:AWSUME_PROFILE = `"`""
+        Write-Host "`$env:AWSUME_EXPIRATION = `"`""
     }
     exit
 }
@@ -85,6 +88,7 @@ elseif ( $AWSUME_FLAG -eq "Kill" ) {
     $env:AWS_PROFILE = ""
     $env:AWS_DEFAULT_PROFILE = ""
     $env:AWSUME_PROFILE = ""
+    $env:AWSUME_EXPIRATION = ""
     exit
 }
 elseif ( $AWSUME_FLAG -eq "Stop" ) {
@@ -107,6 +111,7 @@ elseif ( $AWSUME_FLAG -eq "Awsume") {
     $env:AWS_PROFILE = ""
     $env:AWS_DEFAULT_PROFILE = ""
     $env:AWSUME_PROFILE = ""
+    $env:AWSUME_EXPIRATION = ""
 
     $env:AWSUME_COMMAND=$args
     if ( $AWSUME_1 -ne "None" ) {
@@ -135,6 +140,10 @@ elseif ( $AWSUME_FLAG -eq "Awsume") {
         $env:AWS_DEFAULT_PROFILE = $AWSUME_6
     }
 
+    if ( $AWSUME_7 -ne "None" ) {
+        $env:AWSUME_EXPIRATION = $AWSUME_7
+    }
+
     #if enabled, show the exact commands to use in order to assume the role we just assumed
     if ($args -like "-s") {
         if ( $AWSUME_1 -ne "None" ) {
@@ -161,6 +170,10 @@ elseif ( $AWSUME_FLAG -eq "Awsume") {
         if ( $AWSUME_6 -ne "None" ) {
             Write-Host "`$env:AWS_PROFILE =" $AWSUME_6
             Write-Host "`$env:AWS_DEFAULT_PROFILE =" $AWSUME_6
+        }
+
+        if ( $AWSUME_7 -ne "None" ) {
+            Write-Host "`$env:AWSUME_EXPIRATION = $AWSUME_7"
         }
     }
 }

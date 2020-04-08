@@ -1,6 +1,7 @@
 import sys
 import argparse
 import colorama
+import datetime
 import pluggy
 import pytest
 from io import StringIO
@@ -234,13 +235,13 @@ def test_run(__init__: MagicMock, isatty: MagicMock):
     obj.export_data = MagicMock()
     obj.get_credentials = MagicMock()
     obj.parse_args.return_value = argparse.Namespace(with_saml=False, with_web_identity=False, auto_refresh=False, target_profile_name='default', json=None)
-    obj.get_credentials.return_value = {'AccessKeyId': 'AKIA...', 'SecretAccessKey': 'SECRET', 'SessionToken': 'LONGSECRET', 'Region': 'us-east-1'}
+    obj.get_credentials.return_value = {'AccessKeyId': 'AKIA...', 'SecretAccessKey': 'SECRET', 'SessionToken': 'LONGSECRET', 'Region': 'us-east-1', 'Expiration': datetime.datetime.now()}
     isatty.return_value = True
 
     obj.run([])
 
     obj.export_data.assert_called_with(obj.parse_args.return_value, obj.get_profiles.return_value, obj.get_credentials.return_value, 'Awsume', [
-        'AKIA...', 'SECRET', 'LONGSECRET', 'us-east-1', 'default', 'None',
+        'AKIA...', 'SECRET', 'LONGSECRET', 'us-east-1', 'default', 'None', datetime.datetime.now().strftime('%Y-%m-%dT%H:%M:%S'),
     ])
 
 
@@ -256,7 +257,7 @@ def test_run_auto_refresh(__init__: MagicMock, isatty: MagicMock):
     obj.export_data = MagicMock()
     obj.get_credentials = MagicMock()
     obj.parse_args.return_value = argparse.Namespace(with_saml=False, with_web_identity=False, auto_refresh=True, target_profile_name='default', json=None, output_profile=None)
-    obj.get_credentials.return_value = {'AccessKeyId': 'AKIA...', 'SecretAccessKey': 'SECRET', 'SessionToken': 'LONGSECRET', 'Region': 'us-east-1'}
+    obj.get_credentials.return_value = {'AccessKeyId': 'AKIA...', 'SecretAccessKey': 'SECRET', 'SessionToken': 'LONGSECRET', 'Region': 'us-east-1', 'Expiration': datetime.datetime.now()}
     isatty.return_value = True
 
     obj.run([])

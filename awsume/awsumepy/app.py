@@ -280,6 +280,7 @@ class Awsume(object):
                     str(credentials.get('Region')),
                     str(args.target_profile_name),
                     str(credentials.get('AwsProfile')),
+                    str(credentials.get('Expiration').strftime('%Y-%m-%dT%H:%M:%S')),
                 ])
         except exceptions.EarlyExit:
             logger.debug('', exc_info=True)
