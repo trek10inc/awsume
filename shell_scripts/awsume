@@ -154,7 +154,7 @@ elif [ "$AWSUME_FLAG" = "Awsume" ]; then
         echo export AWS_PROFILE=${AWSUME_6}
         echo export AWS_DEFAULT_PROFILE=${AWSUME_6}
       fi
-      if [ ! "${AWSUME_6}" = "None" ]; then
+      if [ ! "${AWSUME_7}" = "None" ]; then
         echo export AWSUME_EXPIRATION=${AWSUME_7}
       fi
     fi
