@@ -119,7 +119,7 @@ def test_get_credentials(__init__: MagicMock, isatty: MagicMock, get_role_chain:
 
     result = obj.get_credentials(args, profiles)
 
-    obj.plugin_manager.hook.get_credentials.assert_called_with(config=obj.config, arguments=args, profiles=profiles, profile_name='profilename', credentials=None)
+    obj.plugin_manager.hook.get_credentials.assert_called_with(config=obj.config, arguments=args, profiles=profiles)
     assert result == {'AccessKeyId': 'AKIA...', 'SecretAccessKey': 'SECRET', 'SessionToken': 'LONGSECRET', 'Region': 'us-east-1'}
 
 

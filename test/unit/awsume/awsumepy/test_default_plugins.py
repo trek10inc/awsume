@@ -616,7 +616,7 @@ def test_get_credentials(aws_lib: MagicMock, create_autoawsume_profile: MagicMoc
         },
     }
 
-    result = default_plugins.get_credentials(config, arguments, profiles, arguments.target_profile_name, None)
+    result = default_plugins.get_credentials(config, arguments, profiles)
     aws_lib.get_session_token.assert_called_with(
         { 'AccessKeyId': 'AKIA...', 'SecretAccessKey': 'SECRET', 'SessionToken': None, 'Region': None },
         region=None,
@@ -664,7 +664,7 @@ def test_get_credentials_auto_refresh(aws_lib: MagicMock, create_autoawsume_prof
         },
     }
 
-    result = default_plugins.get_credentials(config, arguments, profiles, arguments.target_profile_name, None)
+    result = default_plugins.get_credentials(config, arguments, profiles)
     aws_lib.get_session_token.assert_called_with(
         { 'AccessKeyId': 'AKIA...', 'SecretAccessKey': 'SECRET', 'SessionToken': None, 'Region': None },
         region=None,
@@ -712,7 +712,7 @@ def test_get_credentials_role_duration(aws_lib: MagicMock, create_autoawsume_pro
         },
     }
 
-    result = default_plugins.get_credentials(config, arguments, profiles, arguments.target_profile_name, None)
+    result = default_plugins.get_credentials(config, arguments, profiles)
     aws_lib.get_session_token.assert_not_called()
     aws_lib.assume_role.assert_called_with(
         { 'AccessKeyId': 'AKIA...', 'SecretAccessKey': 'SECRET', 'SessionToken': None, 'Region': None },
@@ -755,7 +755,7 @@ def test_get_credentials_role_duration_auto_refresh_exit(aws_lib: MagicMock, cre
         },
     }
     with pytest.raises(exceptions.ValidationException):
-        default_plugins.get_credentials(config, arguments, profiles, arguments.target_profile_name, None)
+        default_plugins.get_credentials(config, arguments, profiles)
 
 
 @patch.object(autoawsume, 'create_autoawsume_profile')
@@ -786,7 +786,7 @@ def test_get_credentials_user(aws_lib: MagicMock, create_autoawsume_profile: Mag
         },
     }
 
-    result = default_plugins.get_credentials(config, arguments, profiles, arguments.target_profile_name, None)
+    result = default_plugins.get_credentials(config, arguments, profiles)
     aws_lib.get_session_token.assert_called_with(
         { 'AccessKeyId': 'AKIA...', 'SecretAccessKey': 'SECRET', 'SessionToken': None, 'Region': None },
         region=None,
@@ -825,7 +825,7 @@ def test_get_credentials_no_mfa_role(aws_lib: MagicMock, create_autoawsume_profi
         },
     }
 
-    result = default_plugins.get_credentials(config, arguments, profiles, arguments.target_profile_name, None)
+    result = default_plugins.get_credentials(config, arguments, profiles)
     aws_lib.get_session_token.assert_not_called()
     aws_lib.assume_role.assert_called_with(
         { 'AccessKeyId': 'AKIA...', 'SecretAccessKey': 'SECRET', 'SessionToken': None, 'Region': None },
@@ -865,7 +865,7 @@ def test_get_credentials_no_mfa_user(aws_lib: MagicMock, create_autoawsume_profi
         },
     }
 
-    result = default_plugins.get_credentials(config, arguments, profiles, arguments.target_profile_name, None)
+    result = default_plugins.get_credentials(config, arguments, profiles)
     aws_lib.get_session_token.assert_not_called()
     aws_lib.assume_role.assert_not_called()
     assert result == {
@@ -905,5 +905,5 @@ def test_get_credentials_role_from_cli(aws_lib: MagicMock, create_autoawsume_pro
         },
     }
 
-    result = default_plugins.get_credentials(config, arguments, profiles, arguments.target_profile_name, None)
+    result = default_plugins.get_credentials(config, arguments, profiles)
     assert result == assume_role_from_cli.return_value
