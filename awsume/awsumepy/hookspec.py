@@ -37,11 +37,11 @@ def pre_get_credentials(config: dict, arguments: argparse.Namespace, profiles: d
     """"""
 
 @hookspec
-def get_credentials(config: dict, arguments: argparse.Namespace, profiles: dict, profile_name: str, credentials: dict):
+def get_credentials(config: dict, arguments: argparse.Namespace, profiles: dict):
     """"""
 
 @hookspec
-def get_credentials_with_saml(config: dict, arguments: argparse.Namespace, profile_name: str, credentials: dict):
+def get_credentials_with_saml(config: dict, arguments: argparse.Namespace):
     """"""
 
 @hookspec

@@ -17,6 +17,7 @@ from . lib import config_management as config_lib
 from . lib import profile as profile_lib
 from . lib import cache as cache_lib
 from . lib.profile import VALID_CREDENTIAL_SOURCES
+from . lib.profile import get_role_chain, get_profile_name
 
 
 def custom_duration_argument_type(string):
@@ -394,17 +395,20 @@ def get_assume_role_credentials_mfa_required(config: dict, arguments: argparse.N
     external_id = profile_lib.get_external_id(arguments, target_profile)
     source_profile = profile_lib.get_source_profile(profiles, target_profile_name)
     if source_profile:
-        logger.debug('Calling get_session_token to assume role with')
-        if not source_credentials:
-            source_credentials = profile_lib.profile_to_credentials(source_profile)
-        source_session = aws_lib.get_session_token(
-            source_credentials,
-            region=region,
-            mfa_serial=mfa_serial,
-            mfa_token=arguments.mfa_token,
-            ignore_cache=arguments.force_refresh,
-            duration_seconds=config.get('debug', {}).get('session_token_duration'),
-        )
+        if 'role_arn' not in source_profile:
+            logger.debug('Calling get_session_token to assume role with')
+            if not source_credentials:
+                source_credentials = profile_lib.profile_to_credentials(source_profile)
+            source_session = aws_lib.get_session_token(
+                source_credentials,
+                region=region,
+                mfa_serial=mfa_serial,
+                mfa_token=arguments.mfa_token,
+                ignore_cache=arguments.force_refresh,
+                duration_seconds=config.get('debug', {}).get('session_token_duration'),
+            )
+        else:
+            source_session = source_credentials
     elif 'credential_source' in target_profile and target_profile['credential_source'] in VALID_CREDENTIAL_SOURCES:
         logger.debug('Using current environment to assume role')
         source_session = {}
@@ -487,8 +491,7 @@ def get_session_token_credentials(config: dict, arguments: argparse.Namespace, p
     return user_session
 
 
-@hookimpl(tryfirst=True)
-def get_credentials(config: dict, arguments: argparse.Namespace, profiles: dict, profile_name: str, credentials: dict) -> dict:
+def get_credentials_handler(config: dict, arguments: argparse.Namespace, profiles: dict, profile_name: str, credentials: dict) -> dict:
     credentials = credentials if credentials else {}
     logger.info('Getting credentials')
 
@@ -505,7 +508,7 @@ def get_credentials(config: dict, arguments: argparse.Namespace, profiles: dict,
 
         if 'role_arn' in target_profile:
             logger.debug('assume_role call needed')
-            if mfa_serial:
+            if mfa_serial and not credentials: # if using specific credentials, no mfa needed
                 if role_duration > 3600: # cannot use temp creds with custom role duration more than an hour
                     role_session = get_assume_role_credentials_mfa_required_large_custom_duration(config, arguments, profiles, target_profile, role_duration, profile_name)
                 else:
@@ -527,3 +530,13 @@ def get_credentials(config: dict, arguments: argparse.Namespace, profiles: dict,
             safe_print('[{}] Role credentials will expire {}'.format(profile_name, profile_lib.parse_time(role_session['Expiration'])), colorama.Fore.GREEN)
 
     return role_session or user_session
+
+
+@hookimpl(tryfirst=True)
+def get_credentials(config: dict, arguments: argparse.Namespace, profiles: dict) -> dict:
+    target_profile_name = get_profile_name(config, profiles, arguments.target_profile_name) if arguments.target_profile_name else None
+    role_chain = get_role_chain(profiles, target_profile_name)
+    credentials = None
+    for profile_name in role_chain:
+        credentials = get_credentials_handler(config=config, arguments=arguments, profiles=profiles, profile_name=profile_name, credentials=credentials)
+    return credentials

@@ -199,12 +199,8 @@ class Awsume(object):
                 )
             else:
                 logger.debug('Pulling credentials from default awsume flow')
-                target_profile_name = get_profile_name(self.config, profiles, args.target_profile_name)
-                role_chain = get_role_chain(profiles, target_profile_name)
-                credentials = None
-                for profile_name in role_chain:
-                    credentials = self.plugin_manager.hook.get_credentials(config=self.config, arguments=args, profiles=profiles, profile_name=profile_name, credentials=credentials)
-                    credentials = next((_ for _ in credentials if _), {})
+                credentials = self.plugin_manager.hook.get_credentials(config=self.config, arguments=args, profiles=profiles)
+                credentials = next((_ for _ in credentials if _), {})
                 if args.auto_refresh:
                     create_autoawsume_profile(self.config, args, profiles, credentials)
                     if self.config.get('is_interactive'):

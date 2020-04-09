@@ -9,8 +9,6 @@ Get credentials
 - `config` - a `dict` of awsume's configuration
 - `arguments` - an `argparse.Namespace` object containing awsume's arguments
 - `profiles` - the collected aws profiles
-- `profile_name`: a `str` which contains the target profile name
-- `credentials` - a `dict` of the current credentials to use or `None`. This is mainly used for the role-chaining feature, where it will be `None` on the first assumption in the chain
 
 ### Returns
 
@@ -34,7 +32,7 @@ import argparse
 from awsume.awsumepy import hookimpl
 
 @hookimpl
-def get_credentials(config: dict, arguments: argparse.Namespace, profiles: dict, profile_name: str, credentials: dict):
+def get_credentials(config: dict, arguments: argparse.Namespace, profiles: dict):
     # ... handle getting credentials
     return {
         'AccessKeyId': 'AKIA...',
@@ -146,8 +144,6 @@ def pre_get_credentials(config: dict, arguments: argparse.Namespace, credentials
 - `arguments` - an `argparse.Namespace` object containing awsume's arguments
 - `profiles` - the collected aws profiles
 - `credentials` - the returned aws credentials
-- `profile_name`: a `str` which contains the target profile name
-- `credentials` - a `dict` of the current credentials to use or `None`. This is mainly used for the role-chaining feature, where it will be `None` on the first assumption in the chain
 
 ### Returns
 
@@ -160,6 +156,6 @@ import argparse
 from awsume.awsumepy import hookimpl, safe_print
 
 @hookimpl
-def post_get_credentials(config: dict, arguments: argparse.Namespace, profiles: dict, credentials: dict, profile_name: str, credentials: dict):
+def post_get_credentials(config: dict, arguments: argparse.Namespace, profiles: dict, credentials: dict):
     safe_print('After collecting aws profiles')
 ```
