@@ -9,7 +9,7 @@ FOR %%A IN (%*) DO (
     IF "%%A"=="-s" (set "SHOW=y")
 )
 
-for /f "tokens=1,2,3,4,5,6,7 delims= " %%a in ("%AWSUME_TEXT%") do (
+for /f "tokens=1,2,3,4,5,6,7,8 delims= " %%a in ("%AWSUME_TEXT%") do (
     if "%%a" == "Auto" (
         set AWS_SECRET_ACCESS_KEY=
         set AWS_SESSION_TOKEN=
@@ -20,6 +20,7 @@ for /f "tokens=1,2,3,4,5,6,7 delims= " %%a in ("%AWSUME_TEXT%") do (
         set AWS_PROFILE=
         set AWS_DEFAULT_PROFILE=
         set AWSUME_PROFILE=
+        set AWSUME_EXPIRATION=
 
         set AWS_PROFILE=%%b
         set AWS_DEFAULT_PROFILE=%%b
@@ -53,6 +54,7 @@ for /f "tokens=1,2,3,4,5,6,7 delims= " %%a in ("%AWSUME_TEXT%") do (
         set AWS_PROFILE=
         set AWS_DEFAULT_PROFILE=
         set AWSUME_PROFILE=
+        set AWSUME_EXPIRATION=
 
         IF defined SHOW (
             echo set AWS_ACCESS_KEY_ID=
@@ -62,6 +64,7 @@ for /f "tokens=1,2,3,4,5,6,7 delims= " %%a in ("%AWSUME_TEXT%") do (
             echo set AWS_REGION=
             echo set AWS_DEFAULT_REGION=
             echo set AWSUME_PROFILE=
+            echo set AWSUME_EXPIRATION=
         )
     )
     if "%%a" == "Kill" (
@@ -74,6 +77,7 @@ for /f "tokens=1,2,3,4,5,6,7 delims= " %%a in ("%AWSUME_TEXT%") do (
         set AWS_PROFILE=
         set AWS_DEFAULT_PROFILE=
         set AWSUME_PROFILE=
+        set AWSUME_EXPIRATION=
         taskkill /FI "WindowTitle eq autoawsume" > null 2>&1
     )
     if "%%a" == "Stop" (
@@ -92,6 +96,7 @@ for /f "tokens=1,2,3,4,5,6,7 delims= " %%a in ("%AWSUME_TEXT%") do (
         set AWS_PROFILE=
         set AWS_DEFAULT_PROFILE=
         set AWSUME_PROFILE=
+        set AWSUME_EXPIRATION=
 
         set AWSUME_COMMAND=%*
         if "%%b" NEQ "None" (
@@ -114,6 +119,9 @@ for /f "tokens=1,2,3,4,5,6,7 delims= " %%a in ("%AWSUME_TEXT%") do (
         if "%%g" NEQ "None" (
             set AWS_PROFILE=%%g
             set AWS_DEFAULT_PROFILE=%%g)
+        
+        if "%%h" NEQ "None" (
+            set AWSUME_EXPIRATION=%%h)
 
         IF defined SHOW (
             for /f "tokens=1,2,3,4,5 delims= " %%a in ("%AWSUME_TEXT%") do (
@@ -136,6 +144,9 @@ for /f "tokens=1,2,3,4,5,6,7 delims= " %%a in ("%AWSUME_TEXT%") do (
                 if "%%g" NEQ "None" (
                     echo set AWS_PROFILE=%%g
                     echo set AWS_DEFAULT_PROFILE=%%g)
+                
+                if "%%h" NEQ "None" (
+                    echo set AWSUME_EXPIRATION=%%h)
             )
         )
     )
