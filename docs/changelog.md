@@ -1,6 +1,6 @@
 # Awsume Changelog
 
-## [4.4.0] - WIP - Role chain support
+## [4.4.0] - 2020-04-10 - Role chain support
 
 - Supports awsuming role profiles who's `source_profile` reference another role profile, repeatedly
 - [#98](https://github.com/trek10inc/awsume/pull/98) Exports role credential expiration time to environment variables
