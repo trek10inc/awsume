@@ -1,5 +1,10 @@
 # Quick Start
 
+## Pre-Requisites
+
+- Awsume requires Python 3.5 or greater.
+- Awsume can be installed via pip, so make sure that the location that pip installs binaries is included on your `PATH` environment variable.
+
 ## Installation
 
 Awsume can be installed via the following command:
@@ -7,10 +12,6 @@ Awsume can be installed via the following command:
 ```
 pip install awsume
 ```
-
-::: warning
-Awsume version 4 and up requires Python 3.5+
-:::
 
 ### Extra Features
 
