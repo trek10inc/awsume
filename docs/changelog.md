@@ -1,5 +1,9 @@
 # Awsume Changelog
 
+## [4.4.1] - 2020-04-11 - Bug Fix
+
+- Properly returns None as expiration for credentials without expiration
+
 ## [4.4.0] - 2020-04-10 - Role chain support
 
 - Supports awsuming role profiles who's `source_profile` reference another role profile, repeatedly
