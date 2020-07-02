@@ -59,12 +59,10 @@ def validate_profile(config: dict, arguments: argparse.Namespace, profiles: dict
 
     # validate role profiles
     if 'role_arn' in profile:
-        if profile.get('credential_process'):
-            raise exceptions.InvalidProfileError(target_profile_name, message='awsume does not support the credential_process profile option: {}')
         if profile.get('credential_source') and profile.get('source_profile'):
             raise exceptions.InvalidProfileError(target_profile_name, message='credential_source and source_profile are mutually exclusive profile options')
-        if not profile.get('credential_source') and not profile.get('source_profile') and not profile.get('principal_arn'):
-            raise exceptions.InvalidProfileError(target_profile_name, message='role profiles must contain one of credential_source or source_profile')
+        if not profile.get('credential_source') and not profile.get('credential_process') and not profile.get('source_profile') and not profile.get('principal_arn'):
+            raise exceptions.InvalidProfileError(target_profile_name, message='role profiles must contain one of credential_source or source_profile or credential_process')
         if profile.get('credential_source') not in VALID_CREDENTIAL_SOURCES:
             raise exceptions.InvalidProfileError(target_profile_name, message='unsupported awsume credential_source profile option: {}'.format(profile.get('credential_source')))
         source_profile_name = profile.get('source_profile')
@@ -87,13 +85,13 @@ def validate_profile(config: dict, arguments: argparse.Namespace, profiles: dict
         if 'credential_source' in profile:
             if profile.get('credential_source') not in VALID_CREDENTIAL_SOURCES:
                 raise exceptions.InvalidProfileError(user_profile_name, message='unsupported awsume credential_source profile option: {}'.format(profile.get('credential_source')))
-        else:
+        elif not 'credential_process' in user_profile and not 'credential_process' in profile:
             if 'aws_access_key_id' not in user_profile:
                 missing_keys.append('aws_access_key_id')
             if 'aws_secret_access_key' not in user_profile:
                 missing_keys.append('aws_secret_access_key')
         if missing_keys:
-            raise exceptions.InvalidProfileError(user_profile_name, message='Missing keys {}, or credential_source'.format(', '.join(missing_keys)))
+            raise exceptions.InvalidProfileError(user_profile_name, message='Missing keys {}, or credential_source, or credential_process'.format(', '.join(missing_keys)))
 
     # validate arguments with profile
     if 'role_arn' not in profile and arguments.auto_refresh:
