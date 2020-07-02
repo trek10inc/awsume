@@ -85,7 +85,7 @@ def validate_profile(config: dict, arguments: argparse.Namespace, profiles: dict
         if 'credential_source' in profile:
             if profile.get('credential_source') not in VALID_CREDENTIAL_SOURCES:
                 raise exceptions.InvalidProfileError(user_profile_name, message='unsupported awsume credential_source profile option: {}'.format(profile.get('credential_source')))
-        elif not 'credential_process' in profile:
+        elif not 'credential_process' in user_profile and not 'credential_process' in profile:
             if 'aws_access_key_id' not in user_profile:
                 missing_keys.append('aws_access_key_id')
             if 'aws_secret_access_key' not in user_profile:

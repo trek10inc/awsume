@@ -476,7 +476,7 @@ def get_credentials_from_credential_source(config: dict, arguments: argparse.Nam
     return return_session
 
 def get_credentials_from_credential_process(config: dict, arguments: argparse.Namespace, profiles: dict, target_profile: dict, target_profile_name: str):
-    logger.info('Getting credentials from credential_process')
+    logger.info('Getting credentials from credential_process, profile: %s'% target_profile_name)
     region = profile_lib.get_region(profiles, arguments, config)
     return_session = {}
     result = subprocess.run(target_profile.get('credential_process').split(), capture_output=True)
@@ -534,8 +534,13 @@ def get_credentials_handler(config: dict, arguments: argparse.Namespace, profile
                 else:
                     user_session, role_session = get_assume_role_credentials_mfa_required(config, arguments, profiles, target_profile, role_duration, credentials, profile_name)
             else:
-                if not credentials and 'credential_process' in target_profile:
-                    credentials = get_credentials_from_credential_process(config, arguments, profiles, target_profile, profile_name)
+                source_profile_name = target_profile.get('source_profile')
+                source_profile = profiles.get(source_profile_name)
+                if not credentials:
+                    if 'credential_process' in target_profile:
+                        credentials = get_credentials_from_credential_process(config, arguments, profiles, target_profile, profile_name)
+                    elif source_profile and 'credential_process' in source_profile:
+                        credentials = get_credentials_from_credential_process(config, arguments, profiles, source_profile, source_profile_name)     
                 role_session = get_assume_role_credentials(config, arguments, profiles, target_profile, role_duration, credentials, profile_name)
         else:
             if mfa_serial:
