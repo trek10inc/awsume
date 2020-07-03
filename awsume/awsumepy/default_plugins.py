@@ -479,7 +479,7 @@ def get_credentials_from_credential_process(config: dict, arguments: argparse.Na
     logger.info('Getting credentials from credential_process, profile: %s'% target_profile_name)
     region = profile_lib.get_region(profiles, arguments, config)
     return_session = {}
-    result = subprocess.run(target_profile.get('credential_process').split(), capture_output=True)
+    result = subprocess.run(target_profile.get('credential_process').split(), stdout=subprocess.PIPE)
     if result.returncode:
         logger.debug('No creds returned from credential_process')
         raise exceptions.NoCredentialsError()
