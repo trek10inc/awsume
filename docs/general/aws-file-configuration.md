@@ -65,7 +65,7 @@ mfa_serial = arn:aws:iam::000000000000:mfa/devuser
 [profile myrole]
 region = us-east-1
 source_profile = dev
-mfa_serial = arn:aws:iam::111111111111:role/myrole
+role_arn = arn:aws:iam::111111111111:role/myrole
 ```
 
 ::: tip For more information or other issues
