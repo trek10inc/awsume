@@ -70,4 +70,5 @@ role_arn = arn:aws:iam::111111111111:role/myrole
 
 ::: tip For more information or other issues
 You can read the official documentation for this [here](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-files.html).
+For a more human-friendly write-up, check out [this post](https://medium.com/@ben11kehoe/aws-configuration-files-explained-9a7ea7a5b42e).
 :::
