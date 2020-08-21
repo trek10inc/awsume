@@ -114,7 +114,6 @@ elif [ "$AWSUME_FLAG" = "Awsume" ]; then
   fi
   if [ ! "${AWSUME_3}" = "None" ]; then
     export AWS_SESSION_TOKEN=${AWSUME_3}
-    export AWS_SECURITY_TOKEN=${AWSUME_3}
   fi
   if [ ! "${AWSUME_4}" = "None" ]; then
     export AWS_REGION=${AWSUME_4}
@@ -141,7 +140,6 @@ elif [ "$AWSUME_FLAG" = "Awsume" ]; then
       fi
       if [ ! "${AWSUME_3}" = "None" ]; then
         echo export AWS_SESSION_TOKEN=${AWSUME_3}
-        echo export AWS_SECURITY_TOKEN=${AWSUME_3}
       fi
       if [ ! "${AWSUME_4}" = "None" ]; then
         echo export AWS_REGION=${AWSUME_4}

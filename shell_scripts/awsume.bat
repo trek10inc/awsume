@@ -107,7 +107,6 @@ for /f "tokens=1,2,3,4,5,6,7,8 delims= " %%a in ("%AWSUME_TEXT%") do (
 
         if "%%d" NEQ "None" (
             set AWS_SESSION_TOKEN=%%d
-            set AWS_SECURITY_TOKEN=%%d)
 
         if "%%e" NEQ "None" (
             set AWS_REGION=%%e
@@ -119,7 +118,7 @@ for /f "tokens=1,2,3,4,5,6,7,8 delims= " %%a in ("%AWSUME_TEXT%") do (
         if "%%g" NEQ "None" (
             set AWS_PROFILE=%%g
             set AWS_DEFAULT_PROFILE=%%g)
-        
+
         if "%%h" NEQ "None" (
             set AWSUME_EXPIRATION=%%h)
 
@@ -132,7 +131,6 @@ for /f "tokens=1,2,3,4,5,6,7,8 delims= " %%a in ("%AWSUME_TEXT%") do (
 
                 if "%%d" NEQ "None" (
                     echo set AWS_SESSION_TOKEN=%%d
-                    echo set AWS_SECURITY_TOKEN=%%d)
 
                 if "%%e" NEQ "None" (
                     echo set AWS_REGION=%%e
@@ -144,11 +142,10 @@ for /f "tokens=1,2,3,4,5,6,7,8 delims= " %%a in ("%AWSUME_TEXT%") do (
                 if "%%g" NEQ "None" (
                     echo set AWS_PROFILE=%%g
                     echo set AWS_DEFAULT_PROFILE=%%g)
-                
+
                 if "%%h" NEQ "None" (
                     echo set AWSUME_EXPIRATION=%%h)
             )
         )
     )
 )
-

@@ -123,7 +123,6 @@ elseif ( $AWSUME_FLAG -eq "Awsume") {
 
     if ( $AWSUME_3 -ne "None" ) {
         $env:AWS_SESSION_TOKEN = $AWSUME_3
-        $env:AWS_SECURITY_TOKEN = $AWSUME_3
     }
 
     if ( $AWSUME_4 -ne "None" ) {
@@ -155,7 +154,6 @@ elseif ( $AWSUME_FLAG -eq "Awsume") {
 
         if ( $AWSUME_3 -ne "None" ) {
             Write-Host "`$env:AWS_SESSION_TOKEN =" $env:AWS_SESSION_TOKEN
-            Write-Host "`$env:AWS_SECURITY_TOKEN =" $env:AWS_SECURITY_TOKEN
         }
 
         if ( $AWSUME_4 -ne "None" ) {
