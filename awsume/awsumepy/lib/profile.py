@@ -152,6 +152,19 @@ def get_region(profiles: dict, arguments: argparse.Namespace, config: dict, igno
     return None
 
 
+def get_session_name(config: dict, arguments: argparse.Namespace, profiles: dict, target_profile_name: str) -> dict:
+    target_profile = profiles.get(target_profile_name)
+    if arguments.session_name:
+        return arguments.session_name
+    if target_profile and target_profile.get('role_session_name'):
+        return target_profile['role_session_name']
+    if config.get('role-session-name'):
+        return config['role-session-name']
+    if target_profile_name:
+        return target_profile_name
+    return 'awsume-session'
+
+
 def get_external_id(arguments: argparse.Namespace, target_profile: dict):
     if arguments.external_id:
         return arguments.external_id

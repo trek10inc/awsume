@@ -11,12 +11,14 @@ colors: true
 fuzzy-match: true
 role-duration: 0
 region: us-west-2
+role-session-name: awsume-cli-session
 ```
 
 - **colors** You can enable to disable adding colors to awsume's output. This is disabled on Windows machines.
 - **fuzzy-match** You can enable to disable fuzzy-matching the given profile if the given profile is not found. See more about it [here](../advanced/fuzzy-matching)
 - **role-duration** You can set a default role duration to awsume. _Note: If you specify a role duration that is greater than the maximum configured for that role, awsume will fail to assume the role. See how this impacts awsume [here](../advanced/role-duration)
 - **region** You can specify a default region. See how this impacts awsume [here](../advanced/region)
+- **role-session-name** You can specify a default role session name that will be associated with your credential's session. See how this impacts awsume [here](../advanced/role-session-name)
 
 
 ## Modifying Config

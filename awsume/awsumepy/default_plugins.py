@@ -304,7 +304,7 @@ def assume_role_from_cli(config: dict, arguments: dict, profiles: dict):
     region = profile_lib.get_region(profiles, arguments, config, ignore_config=True, ignore_default=True)
     logger.info('Using role_arn from the CLI')
     role_duration = arguments.role_duration or int(config.get('role-duration', 0))
-    session_name = arguments.session_name or 'awsume-cli-role'
+    session_name = arguments.session_name or config.get('role-session-name') or 'awsume-cli-role'
     logger.debug('Session name: {}'.format(session_name))
     if not arguments.source_profile:
         logger.debug('Using current credentials to assume role')
@@ -378,7 +378,7 @@ def get_assume_role_credentials(config: dict, arguments: argparse.Namespace, pro
     role_session = aws_lib.assume_role(
         source_credentials,
         target_profile.get('role_arn'),
-        arguments.session_name or target_profile_name,
+        profile_lib.get_session_name(config, arguments, profiles, target_profile_name),
         region=region,
         external_id=external_id,
         role_duration=role_duration,
@@ -422,7 +422,7 @@ def get_assume_role_credentials_mfa_required(config: dict, arguments: argparse.N
     role_session = aws_lib.assume_role(
         source_session,
         target_profile.get('role_arn'),
-        arguments.session_name or target_profile_name,
+        profile_lib.get_session_name(config, arguments, profiles, target_profile_name),
         region=region,
         external_id=external_id,
         role_duration=role_duration,
@@ -451,7 +451,7 @@ def get_assume_role_credentials_mfa_required_large_custom_duration(config: dict,
     role_session = aws_lib.assume_role(
         source_session,
         target_profile.get('role_arn'),
-        arguments.session_name or target_profile_name,
+        profile_lib.get_session_name(config, arguments, profiles, target_profile_name),
         region=region,
         external_id=external_id,
         role_duration=role_duration,
