@@ -123,7 +123,7 @@ def get_role_chain(config: dict, arguments: argparse.Namespace, profiles: dict, 
     role_chain = []
     while target_profile:
         logger.debug('target profile: {}'.format(target_profile))
-        if target_profile.get('role_arn') and target_profile_name in role_chain:
+        if target_profile_name in role_chain:
             raise exceptions.InvalidProfileError(','.join(role_chain), 'cannot have circular role-chains')
         role_chain.append(target_profile_name)
         target_profile_name = target_profile.get('source_profile')

@@ -6,6 +6,8 @@
 - [#100](https://github.com/trek10inc/awsume/issues/100) Added support for `role_session_name` to be used in profiles and a global `role-session-name` config property
 - [#105](https://github.com/trek10inc/awsume/issues/105) Deprecated the use of AWS_SECURITY_TOKEN
 - [#119](https://github.com/trek10inc/awsume/issues/119) Fixed issue with `AWS_PROFILE` and `AWS_DEFAULT_PROFILE` environment variables pointing to profiles that no longer exist (autoawsume cleanup) and successive `awsume`s failing
+- [#117](https://github.com/trek10inc/awsume/issues/117) Fixed awsume hanging with infinite role chain
+- Correctly renders sso profiles in `awsume -l` output (account ID and region)
 
 ## [4.4.1] - 2020-04-11 - Bug Fix
 
