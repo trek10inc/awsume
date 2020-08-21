@@ -93,9 +93,6 @@ def validate_profile(config: dict, arguments: argparse.Namespace, profiles: dict
         if missing_keys:
             raise exceptions.InvalidProfileError(user_profile_name, message='Missing keys {}, or credential_source, or credential_process'.format(', '.join(missing_keys)))
 
-    # validate arguments with profile
-    if 'role_arn' not in profile and arguments.auto_refresh:
-        raise exceptions.ValidationException('Cannot use autoawsume with non-role profile')
     return True
 
 
