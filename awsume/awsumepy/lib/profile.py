@@ -117,16 +117,17 @@ def get_source_profile(profiles: dict, target_profile_name: str) -> dict:
 
 
 def get_role_chain(profiles: dict, target_profile_name: str) -> list:
+    logger.debug('Getting role chain for [{}]'.format(target_profile_name))
     target_profile = profiles.get(target_profile_name)
     if not target_profile or not target_profile.get('role_arn'):
         return [target_profile_name]
 
     role_chain = []
     while target_profile:
-        if target_profile.get('role_arn'):
-            if target_profile_name in role_chain:
-                raise exceptions.InvalidProfileError(','.join(role_chain), 'cannot have circular role-chains')
-            role_chain.append(target_profile_name)
+        logger.debug('target profile: {}'.format(target_profile))
+        if target_profile.get('role_arn') and target_profile_name in role_chain:
+            raise exceptions.InvalidProfileError(','.join(role_chain), 'cannot have circular role-chains')
+        role_chain.append(target_profile_name)
         target_profile_name = target_profile.get('source_profile')
         target_profile = profiles.get(target_profile_name)
     role_chain.reverse()

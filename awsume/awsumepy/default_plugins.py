@@ -4,6 +4,7 @@ import json
 import os
 import colorama
 import subprocess
+import dateutil
 
 
 from . lib import exceptions
@@ -475,23 +476,37 @@ def get_credentials_from_credential_source(config: dict, arguments: argparse.Nam
     return_session['Region'] = region
     return return_session
 
+
 def get_credentials_from_credential_process(config: dict, arguments: argparse.Namespace, profiles: dict, target_profile: dict, target_profile_name: str):
     logger.info('Getting credentials from credential_process, profile: %s'% target_profile_name)
     region = profile_lib.get_region(profiles, arguments, config)
     return_session = {}
-    result = subprocess.run(target_profile.get('credential_process').split(), stdout=subprocess.PIPE)
+    result = subprocess.run(target_profile.get('credential_process').split(), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    logger.info('credential_process returncode: {}'.format(result.returncode))
+    logger.debug('credential_process stdout: {}'.format(result.stdout.decode('utf-8')))
+    logger.debug('credential_process stderr: {}'.format(result.stderr.decode('utf-8')))
     if result.returncode:
-        logger.debug('No creds returned from credential_process')
-        raise exceptions.NoCredentialsError()
-    creds = json.loads(result.stdout.decode('utf-8'))
+        logger.debug('No creds returned from credential_process: {}'.format(result))
+        message = result.stderr.decode('utf-8') or result.stdout.decode('utf-8') or 'No output from the process'
+        raise exceptions.NoCredentialsError('credential_process error: {}'.format(message))
+    try:
+        creds = json.loads(result.stdout.decode('utf-8'))
+    except json.JSONDecodeError as err:
+        raise exceptions.ValidationException('Invalid credentials returned from credential_process: {}'.format(err))
     logger.debug('Obtained creds: {}'.format(creds))
-    return_session = {
-        'AccessKeyId': creds.get('AccessKeyId'),
-        'SecretAccessKey': creds.get('SecretAccessKey'),
-        'SessionToken': creds.get('SessionToken'),
-    }
+    if not creds:
+        raise exceptions.NoCredentialsError('credential_process did not return a valid session')
+    return_session = {}
+    if 'AccessKeyId' in creds:
+        return_session['AccessKeyId'] = creds['AccessKeyId']
+    if 'SecretAccessKey' in creds:
+        return_session['SecretAccessKey'] = creds['SecretAccessKey']
+    if 'SessionToken' in creds:
+        return_session['SessionToken'] = creds['SessionToken']
+    if 'Expiration' in creds:
+        return_session['Expiration'] = dateutil.parser.parse(creds['Expiration'])
     return_session['Region'] = region
-    logger.debug("session: {}".format(return_session))
+    logger.debug("credential_process session: {}".format(return_session))
     return return_session
 
 
@@ -513,7 +528,7 @@ def get_session_token_credentials(config: dict, arguments: argparse.Namespace, p
 
 def get_credentials_handler(config: dict, arguments: argparse.Namespace, profiles: dict, profile_name: str, credentials: dict) -> dict:
     credentials = credentials if credentials else {}
-    logger.info('Getting credentials')
+    logger.info('Getting credentials: {}'.format(profile_name))
 
     user_session = None
     role_session = None
@@ -526,7 +541,13 @@ def get_credentials_handler(config: dict, arguments: argparse.Namespace, profile
         mfa_serial = profile_lib.get_mfa_serial(profiles, profile_name)
         role_duration = profile_lib.get_role_duration(config, arguments, target_profile)
 
-        if 'role_arn' in target_profile:
+        if 'credential_process' in target_profile:
+            session = get_credentials_from_credential_process(config, arguments, profiles, target_profile, profile_name)
+            if 'Expiration' in session:
+                role_session = session
+            else:
+                user_session = session
+        elif 'role_arn' in target_profile:
             logger.debug('assume_role call needed')
             if mfa_serial and not credentials: # if using specific credentials, no mfa needed
                 if role_duration > 3600: # cannot use temp creds with custom role duration more than an hour
@@ -534,19 +555,10 @@ def get_credentials_handler(config: dict, arguments: argparse.Namespace, profile
                 else:
                     user_session, role_session = get_assume_role_credentials_mfa_required(config, arguments, profiles, target_profile, role_duration, credentials, profile_name)
             else:
-                source_profile_name = target_profile.get('source_profile')
-                source_profile = profiles.get(source_profile_name)
-                if not credentials:
-                    if 'credential_process' in target_profile:
-                        credentials = get_credentials_from_credential_process(config, arguments, profiles, target_profile, profile_name)
-                    elif source_profile and 'credential_process' in source_profile:
-                        credentials = get_credentials_from_credential_process(config, arguments, profiles, source_profile, source_profile_name)     
                 role_session = get_assume_role_credentials(config, arguments, profiles, target_profile, role_duration, credentials, profile_name)
         else:
             if mfa_serial:
                 user_session = get_session_token_credentials(config, arguments, profiles, target_profile, profile_name)
-            elif 'credential_process' in target_profile:
-                user_session = get_credentials_from_credential_process(config, arguments, profiles, target_profile, profile_name)
             elif 'credential_source' in target_profile:
                 user_session = get_credentials_from_credential_source(config, arguments, profiles, target_profile, profile_name)
             else:
@@ -568,6 +580,7 @@ def get_credentials(config: dict, arguments: argparse.Namespace, profiles: dict)
     else:
         target_profile_name = get_profile_name(config, profiles, arguments.target_profile_name)
     role_chain = get_role_chain(profiles, target_profile_name)
+    logger.debug('Role chain: {}'.format(role_chain))
     credentials = None
     for profile_name in role_chain:
         credentials = get_credentials_handler(config=config, arguments=arguments, profiles=profiles, profile_name=profile_name, credentials=credentials)
