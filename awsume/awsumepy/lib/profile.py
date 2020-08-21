@@ -122,11 +122,14 @@ def get_role_chain(config: dict, arguments: argparse.Namespace, profiles: dict, 
 
     role_chain = []
     while target_profile:
-        logger.debug('target profile: {}'.format(target_profile))
+        logger.debug('target profile: {}'.format(json.dumps(target_profile, default=str)))
         if target_profile_name in role_chain:
             raise exceptions.InvalidProfileError(','.join(role_chain), 'cannot have circular role-chains')
         role_chain.append(target_profile_name)
         target_profile_name = target_profile.get('source_profile')
+        # if mfa required on role arn, get longer 12-hour session credentials first by doing mfa on the source profile
+        if 'role_arn' in target_profile and 'mfa_serial' in target_profile:
+            profiles[target_profile_name]['mfa_serial'] = target_profile['mfa_serial']
         target_profile = profiles.get(target_profile_name)
     role_chain.reverse()
     return role_chain
