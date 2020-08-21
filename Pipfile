@@ -9,6 +9,7 @@ pylint = "*"
 botostubs = "*"
 pytest = "*"
 pytest-cov = "*"
+pytest-pythonpath = "*"
 coverage = "*"
 watchdog = "*"
 
