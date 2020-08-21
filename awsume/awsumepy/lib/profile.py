@@ -224,7 +224,7 @@ def format_aws_profiles(profiles: dict, get_extra_data: bool) -> list: # pragma:
             else:
                 source_profile = 'None'
             mfa_needed = 'Yes' if 'mfa_serial' in profile else 'No'
-            profile_region = str(profile.get('region'))
+            profile_region = str(profile.get('region')) or str(profile.get('sso_region'))
             profile_account_id = get_account_id(profile, get_extra_data)
             list_row = [name, profile_type, source_profile, mfa_needed, profile_region, profile_account_id]
             profile_list.append(list_row)
@@ -247,6 +247,8 @@ def list_profile_data(profiles: dict, get_extra_data: bool): # pragma: no cover
 
 def get_account_id(profile: dict, call_aws: bool = False) -> str:
     logger.info('Getting account ID from profile: %s', json.dumps(profile, indent=2))
+    if profile.get('sso_account_id'):
+        return profile['sso_account_id']
     if profile.get('role_arn'):
         return profile['role_arn'].replace('arn:aws:iam::', '').split(':')[0]
     if profile.get('mfa_serial'):
