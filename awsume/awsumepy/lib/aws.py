@@ -1,6 +1,10 @@
+import os
 import argparse
 import dateutil
+import json
+
 import boto3
+import botocore
 import colorama
 from datetime import datetime
 
@@ -12,6 +16,19 @@ from . safe_print import safe_print
 
 
 DEFAULT_REGION = 'us-east-1'
+
+
+def get_session(*args, **kwargs):
+    """Get a session, ignoring missing profiles from environment variables"""
+    try:
+        boto_session = boto3.session.Session(*args, **kwargs)
+    except botocore.exceptions.ProfileNotFound as err: # catch expired autoawsume profiles
+        if 'AWS_PROFILE' in os.environ:
+            os.environ.pop('AWS_PROFILE')
+        if 'AWS_DEFAULT_PROFILE' in os.environ:
+            os.environ.pop('AWS_DEFAULT_PROFILE')
+        boto_session = boto3.session.Session(*args, **kwargs)
+    return boto_session
 
 
 def assume_role(
@@ -30,7 +47,7 @@ def assume_role(
     logger.debug('Assuming role: {}'.format(role_arn))
     logger.debug('Session name: {}'.format(session_name))
     try:
-        boto_session = boto3.session.Session(
+        boto_session = get_session(
             aws_access_key_id=source_credentials.get('AccessKeyId'),
             aws_secret_access_key=source_credentials.get('SecretAccessKey'),
             aws_session_token=source_credentials.get('SessionToken'),
@@ -74,7 +91,7 @@ def get_session_token(
         user_session = cache_session
     else:
         logger.debug('Getting session token')
-        boto_session = boto3.session.Session(
+        boto_session = get_session(
             aws_access_key_id=source_credentials.get('AccessKeyId'),
             aws_secret_access_key=source_credentials.get('SecretAccessKey'),
             aws_session_token=source_credentials.get('SessionToken'),
@@ -100,7 +117,7 @@ def get_session_token(
 
 def get_account_id(credentials: dict):
     try:
-        sts_client = boto3.session.Session(
+        sts_client = get_session(
             aws_access_key_id=credentials.get('AccessKeyId'),
             aws_secret_access_key=credentials.get('SecretAccessKey'),
             aws_session_token=credentials.get('SessionToken'),
@@ -120,7 +137,7 @@ def assume_role_with_saml(
     role_duration: int = None,
 ) -> dict:
     logger.debug('Assuming role with saml: {}'.format(role_arn))
-    role_sts_client = boto3.session.Session().client('sts') # type: botostubs.STS
+    role_sts_client = get_session().client('sts') # type: botostubs.STS
 
     try:
         kwargs = { 'RoleArn': role_arn, 'PrincipalArn': principal_arn, 'SAMLAssertion': saml_assertion }
