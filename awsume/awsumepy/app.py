@@ -11,7 +11,7 @@ from pathlib import Path
 
 from . lib.autoawsume import create_autoawsume_profile
 from ..autoawsume.process import kill, kill_autoawsume
-from . lib.profile import aggregate_profiles, get_profile_name
+from . lib.profile import aggregate_profiles, get_role_chain, get_profile_name
 from . lib.config_management import load_config
 from . lib.aws_files import get_aws_files, add_section, get_section
 from . lib.profile import credentials_to_profile, is_mutable_profile
