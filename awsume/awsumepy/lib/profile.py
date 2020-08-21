@@ -113,10 +113,11 @@ def get_source_profile(profiles: dict, target_profile_name: str) -> dict:
     return None
 
 
-def get_role_chain(profiles: dict, target_profile_name: str) -> list:
+def get_role_chain(config: dict, arguments: argparse.Namespace, profiles: dict, target_profile_name: str) -> list:
     logger.debug('Getting role chain for [{}]'.format(target_profile_name))
     target_profile = profiles.get(target_profile_name)
-    if not target_profile or not target_profile.get('role_arn'):
+
+    if not target_profile or not target_profile.get('role_arn') or get_role_duration(config, arguments, target_profile):
         return [target_profile_name]
 
     role_chain = []

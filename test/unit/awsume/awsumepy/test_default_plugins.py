@@ -663,6 +663,9 @@ def test_get_credentials_auto_refresh(aws_lib: MagicMock, create_autoawsume_prof
             'mfa_serial': 'mymfaserial',
         },
     }
+    aws_lib.assume_role.return_value = {
+        'SourceExpiration': '2077-10-24',
+    }
 
     result = default_plugins.get_credentials(config, arguments, profiles)
     aws_lib.get_session_token.assert_called_with(
