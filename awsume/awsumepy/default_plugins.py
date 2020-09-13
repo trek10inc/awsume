@@ -584,6 +584,4 @@ def get_credentials(config: dict, arguments: argparse.Namespace, profiles: dict)
     credentials = None
     for profile_name in role_chain:
         credentials = get_credentials_handler(config=config, arguments=arguments, profiles=profiles, profile_name=profile_name, credentials=credentials)
-    if 'SourceExpiration' not in credentials and arguments.auto_refresh:
-        raise exceptions.ValidationException('Cannot use autoawsume, source credentials never expire')
     return credentials

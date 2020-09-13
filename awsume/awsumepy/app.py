@@ -264,9 +264,9 @@ class Awsume(object):
 
             if args.auto_refresh:
                 return self.export_data(args, profiles, credentials, 'Auto', [
-                    args.output_profile or 'autoawsume-{}'.format(args.target_profile_name),
-                    credentials.get('Region'),
-                    args.target_profile_name,
+                    str(args.output_profile or 'autoawsume-{}'.format(args.target_profile_name)),
+                    str(credentials.get('Region')),
+                    str(args.target_profile_name),
                 ])
             else:
                 return self.export_data(args, profiles, credentials, 'Awsume', [

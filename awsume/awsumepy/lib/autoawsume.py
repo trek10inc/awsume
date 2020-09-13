@@ -16,6 +16,7 @@ def create_autoawsume_profile(config: dict, arguments: argparse.Namespace, profi
     profile = profile_lib.credentials_to_profile(role_session)
     profile['autoawsume'] = 'true'
     profile['expiration'] = role_session.get('Expiration').strftime('%Y-%m-%d %H:%M:%S')
-    profile['source_expiration'] = role_session.get('SourceExpiration').strftime('%Y-%m-%d %H:%M:%S')
+    if 'SourceExpiration' in role_session:
+        profile['source_expiration'] = role_session.get('SourceExpiration').strftime('%Y-%m-%d %H:%M:%S')
     profile['awsumepy_command'] = ' '.join(arguments.system_arguments)
     aws_files_lib.add_section(autoawsume_profile_name, profile, credentials_file, True)

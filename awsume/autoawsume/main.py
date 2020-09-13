@@ -35,8 +35,11 @@ def main():
         for profile_name, auto_profile in auto_profiles.items():
             logger.info('Looking at profile [{}]: {}'.format(profile_name, redact_profile(auto_profile)))
             expiration = datetime.strptime(auto_profile['expiration'], '%Y-%m-%d %H:%M:%S')
-            source_expiration = datetime.strptime(auto_profile['source_expiration'], '%Y-%m-%d %H:%M:%S')
-            if source_expiration < datetime.now():
+            if 'source_expiration' in auto_profile:
+                source_expiration = datetime.strptime(auto_profile['source_expiration'], '%Y-%m-%d %H:%M:%S')
+            else:
+                source_expiration = None
+            if source_expiration is not None and source_expiration < datetime.now():
                 logger.debug('Source is expired')
                 if expiration < datetime.now():
                     logger.debug('Role credentials are expired')
@@ -58,7 +61,8 @@ def main():
                 else:
                     logger.debug('Role credentials are not expired')
                     expirations.append(expiration)
-                    expirations.append(source_expiration)
+                    if source_expiration is not None:
+                        expirations.append(source_expiration)
         logger.debug('Collected expirations: {}'.format(json.dumps(expirations, default=str)))
 
         if not expirations:
