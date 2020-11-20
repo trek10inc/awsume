@@ -1,4 +1,4 @@
-# AWS Region
+# AWS Role Session Name
 
 The AWS region can be provided to awsume in a number of ways, following this priority:
 
