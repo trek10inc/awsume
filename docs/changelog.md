@@ -1,6 +1,6 @@
 # Awsume Changelog
 
-## [4.5.0] - WIP - `credential_process` support
+## [4.5.0] - 2020-11-20 - `credential_process` support
 
 - [#111](https://github.com/trek10inc/awsume/pull/111/) Supports profiles with a `credential_process` property
 - [#100](https://github.com/trek10inc/awsume/issues/100) Added support for `role_session_name` to be used in profiles and a global `role-session-name` config property
