@@ -579,6 +579,7 @@ def get_credentials(config: dict, arguments: argparse.Namespace, profiles: dict)
         target_profile_name = arguments.role_arn
     else:
         target_profile_name = get_profile_name(config, profiles, arguments.target_profile_name)
+    arguments.target_profile_name = target_profile_name
     role_chain = get_role_chain(config, arguments, profiles, target_profile_name)
     logger.debug('Role chain: {}'.format(role_chain))
     credentials = None
