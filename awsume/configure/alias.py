@@ -1,12 +1,23 @@
 import os, pathlib
 from distutils.spawn import find_executable
 
-DEFAULT_ALIAS = 'alias awsume=". awsume"'
-PYENV_ALIAS = r'alias awsume=". \$(pyenv which awsume)"'
+DEFAULT_ALIAS = 'alias awsume="source awsume"'
+PYENV_ALIAS = r'alias awsume="source \$(pyenv which awsume)"'
+PYENV_FISH_ALIAS = r'alias awsume="source (pyenv which awsume.fish)"'
+FISH_ALIAS = r'alias awsume="source (which awsume.fish)"'
 
 def main(shell: str, alias_file: str):
     alias_file = str(pathlib.Path(alias_file).expanduser())
-    alias = PYENV_ALIAS if find_executable('pyenv') and not find_executable('pipx') else DEFAULT_ALIAS
+    if shell == 'fish':
+        if find_executable('pyenv'):
+            alias = PYENV_FISH_ALIAS
+        else:
+            alias = FISH_ALIAS
+    else:
+        if find_executable('pyenv'):
+            alias = PYENV_ALIAS
+        else:
+            alias = DEFAULT_ALIAS
 
     basedir = os.path.dirname(alias_file)
     if basedir and not os.path.exists(basedir):

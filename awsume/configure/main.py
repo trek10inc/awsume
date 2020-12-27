@@ -25,6 +25,13 @@ def get_zsh_file() -> str:
     return zsh_file
 
 
+def get_fish_file() -> str:
+    fish_file = str(Path('~/.config/fish/functions/awsume.fish').expanduser())
+    if not os.path.exists(fish_file) or not os.path.isfile(fish_file):
+        open(fish_file, 'w').close()
+    return fish_file
+
+
 def get_powershell_file() -> str:
     (powershell_file, _) = subprocess.Popen(['powershell', 'Write-Host $profile'], stdout=subprocess.PIPE, shell=True).communicate()
     if powershell_file:
@@ -60,6 +67,17 @@ def setup_zsh(alias_file: str, autocomplete_file: str):
     install('zsh', alias_file, autocomplete_file)
 
 
+def setup_fish(alias_file: str, autocomplete_file: str):
+    print('===== Setting up zsh =====')
+    fish_file = get_fish_file()
+    alias_file = alias_file or fish_file
+    autocomplete_file = autocomplete_file or fish_file
+    if not fish_file:
+        print('===== Could not locate zsh file =====')
+    # fish does not support autocomplete yet
+    install('fish', alias_file, None)
+
+
 def setup_powershell(alias_file: str, autocomplete_file: str):
     print('===== Setting up powershell =====')
     powershell_file = get_powershell_file()
@@ -77,7 +95,7 @@ def parse_args(argv: sys.argv) -> argparse.Namespace:
         metavar='shell',
         help='The shell you will use awsume under',
         required=False,
-        choices=['bash', 'zsh', 'powershell']
+        choices=['bash', 'zsh', 'fish', 'powershell']
     )
     parser.add_argument('--autocomplete-file',
         default=None,
@@ -111,12 +129,15 @@ def run(shell: str = None, alias_file: str = None, autocomplete_file: str = None
         'bash': setup_bash,
         'zsh': setup_zsh,
         'powershell': setup_powershell,
+        'fish': setup_fish,
     }
     if not shell:
         if find_executable('bash'):
             setup_functions['bash'](None, None)
         if find_executable('zsh'):
             setup_functions['zsh'](None, None)
+        if find_executable('fish'):
+            setup_functions['fish'](None, None)
         if find_executable('powershell'):
             setup_functions['powershell'](None, None)
     else:

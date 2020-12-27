@@ -30,6 +30,7 @@ setup(
         'shell_scripts/awsume',
         'shell_scripts/awsume.ps1',
         'shell_scripts/awsume.bat',
+        'shell_scripts/awsume.fish',
     ],
     entry_points={
         'console_scripts': [

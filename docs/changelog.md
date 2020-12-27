@@ -1,5 +1,11 @@
 # Awsume Changelog
 
+## [4.5.1] - WIP - Bug fixes
+
+- Fixes profile name environment variable when profile name is fuzzy matched
+- Simplifies post install, breaks default login/config file logic into awsume-configure, allows running `awsume-configure` without any arguments
+- Adds support for fish shell, including custom alias to target `awsume.fish`
+
 ## [4.5.0] - 2020-11-20 - `credential_process` support
 
 - [#111](https://github.com/trek10inc/awsume/pull/111/) Supports profiles with a `credential_process` property
