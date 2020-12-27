@@ -322,7 +322,7 @@ def test_post_collect_aws_profiles(profile_lib: MagicMock):
     config = {}
     with pytest.raises(exceptions.EarlyExit):
         default_plugins.post_collect_aws_profiles(config, args, profiles)
-    profile_lib.list_profile_data.assert_called_with(profiles, False)
+    profile_lib.list_profile_data.assert_called_with(profiles, False, config)
 
 
 @patch.object(default_plugins, 'profile_lib')
@@ -337,7 +337,25 @@ def test_post_collect_aws_profiles_list_more(profile_lib: MagicMock):
     config = {}
     with pytest.raises(exceptions.EarlyExit):
         default_plugins.post_collect_aws_profiles(config, args, profiles)
-    profile_lib.list_profile_data.assert_called_with(profiles, True)
+    profile_lib.list_profile_data.assert_called_with(profiles, True, config)
+
+
+@patch.object(default_plugins, 'profile_lib')
+def test_post_collect_aws_profiles_list_non_interactive(profile_lib: MagicMock):
+    profiles = {
+        'admin': {
+            'aws_access_key_id': 'AKIA...',
+            'aws_secret_access_key': 'SECRET',
+        },
+    }
+    args = argparse.Namespace(list_profiles='list')
+    config = {
+        'is_interactive': False,
+    }
+    with pytest.raises(exceptions.EarlyExit) as early_exit_exception:
+        default_plugins.post_collect_aws_profiles(config, args, profiles)
+    assert early_exit_exception.value.data == {'profiles': profile_lib.list_profile_data.return_value}
+    profile_lib.list_profile_data.assert_called_with(profiles, False, config)
 
 
 @patch.object(default_plugins, 'profile_lib')

@@ -253,10 +253,12 @@ def print_formatted_data(profile_data: list): # pragma: no cover
         print('  '.join((val.ljust(width) for val, width in zip(row, widths))))
 
 
-def list_profile_data(profiles: dict, get_extra_data: bool): # pragma: no cover
+def list_profile_data(profiles: dict, get_extra_data: bool, config: dict): # pragma: no cover
     profiles = {k: v for k, v in profiles.items() if not v.get('autoawsume')}
-    formatted_profiles = format_aws_profiles(profiles, get_extra_data)
-    print_formatted_data(formatted_profiles)
+    if config.get('is_interactive'):
+        formatted_profiles = format_aws_profiles(profiles, get_extra_data)
+        print_formatted_data(formatted_profiles)
+    return profiles
 
 
 def get_account_id(profile: dict, call_aws: bool = False) -> str:

@@ -122,7 +122,7 @@ class NoCredentialsError(AwsumeException):
 
 class EarlyExit(AwsumeException):
     """"""
-    def __init__(self):
-        pass
+    def __init__(self, data: dict = None):
+        self.data = data
     def __str__(self):
         return 'Early exit exception, nothing left to do'

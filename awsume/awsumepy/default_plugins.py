@@ -296,8 +296,8 @@ def post_collect_aws_profiles(config: dict, arguments: argparse.Namespace, profi
     logger.info('Post collect AWS profiles')
     if arguments.list_profiles:
         logger.debug('Listing profiles')
-        profile_lib.list_profile_data(profiles, arguments.list_profiles == 'more')
-        raise exceptions.EarlyExit()
+        profiles = profile_lib.list_profile_data(profiles, arguments.list_profiles == 'more', config)
+        raise exceptions.EarlyExit(data={'profiles': profiles})
 
 
 def assume_role_from_cli(config: dict, arguments: dict, profiles: dict):

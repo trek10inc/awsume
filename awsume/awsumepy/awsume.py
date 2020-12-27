@@ -1,9 +1,9 @@
-import argparse
+from typing import Union
 import boto3
 from . app import Awsume
 
 
-def awsume(profile_name: str = None, *args: list, **kwargs: dict) -> boto3.Session:
+def awsume(profile_name: str = None, *args: list, **kwargs: dict) -> Union[boto3.Session, dict]:
     cli_arguments = list(args) if args is not None else []
 
     for key, value in kwargs.items():

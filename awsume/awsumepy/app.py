@@ -278,9 +278,10 @@ class Awsume(object):
                     str(credentials.get('AwsProfile')),
                     str(credentials['Expiration'].strftime('%Y-%m-%dT%H:%M:%S') if 'Expiration' in credentials else None),
                 ])
-        except exceptions.EarlyExit:
+        except exceptions.EarlyExit as err:
             logger.debug('', exc_info=True)
             logger.debug('EarlyExit exception raised, no more work to do')
+            return err.data
         except exceptions.AwsumeException as e:
             logger.debug('', exc_info=True)
             if self.is_interactive:
