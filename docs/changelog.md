@@ -4,9 +4,9 @@
 
 - Fixes profile name environment variable when profile name is fuzzy matched
 - Simplifies post install, breaks default login/config file logic into awsume-configure, allows running `awsume-configure` without any arguments
-- Adds support for fish shell, including custom alias to target `awsume.fish`
+- [#92](https://github.com/trek10inc/awsume/issues/92) Adds support for fish shell, including custom alias to target `awsume.fish`
 - Adds support for `data` argument in `exceptions.EarlyExit` to return data to non-interactive awsume executions
-- `awsume -l` will not print profiles if awsume is executing non-interactively, instead it will return a dictionary with one key, `profiles`, that maps to another dictionary where each key is a profile name and each value is a dictionary containing that profile's configuration and credentials
+- [#123](https://github.com/trek10inc/awsume/issues/123) `awsume -l` will not print profiles if awsume is executing non-interactively, instead it will return a dictionary with one key, `profiles`, that maps to another dictionary where each key is a profile name and each value is a dictionary containing that profile's configuration and credentials
 
 ## [4.5.0] - 2020-11-20 - `credential_process` support
 
