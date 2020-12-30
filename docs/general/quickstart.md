@@ -1,4 +1,4 @@
-# Quick Start
+# Installation and Quick Start
 
 ## Pre-Requisites
 
@@ -7,9 +7,16 @@
 
 ## Installation
 
-Awsume can be installed via the following command:
+::: warning
+Homebrew is not an officially supported method of installing awsume
+:::
+
+The officially-recommended way to install awsume is via [pipx](https://pipxproject.github.io/pipx/)
+
+Awsume can be installed via one of the following commands:
 
 ```
+pipx install awsume
 pip install awsume
 ```
 

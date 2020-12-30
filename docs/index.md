@@ -13,6 +13,10 @@ For a quick getting started guide, check out the [quick start](./general/quickst
 Check the [changelog](./changelog) for more details.
 
 ::: tip
+4.5.x - profile `credential_process` support
+:::
+
+::: tip
 4.4.x - Infinite role-chainging support
 :::
 
