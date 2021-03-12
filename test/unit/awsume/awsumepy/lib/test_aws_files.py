@@ -10,6 +10,7 @@ from awsume.awsumepy.lib import constants
 from awsume.awsumepy.lib import aws_files
 
 
+@patch.dict('os.environ', {'AWS_CONFIG_FILE': '', 'AWS_SHARED_CREDENTIALS_FILE': ''}, clear=True)
 def test_get_aws_files():
     args = argparse.Namespace(config_file=None, credentials_file=None)
     config = {}
@@ -20,6 +21,7 @@ def test_get_aws_files():
     assert credentials_file == str(Path(constants.DEFAULT_CREDENTIALS_FILE))
 
 
+@patch.dict('os.environ', {'AWS_CONFIG_FILE': '', 'AWS_SHARED_CREDENTIALS_FILE': ''}, clear=True)
 def test_get_aws_files_args():
     args = argparse.Namespace(config_file='my/config/file', credentials_file='my/credentials/file')
     config = {}
@@ -31,6 +33,7 @@ def test_get_aws_files_args():
 
 
 
+@patch.dict('os.environ', {'AWS_CONFIG_FILE': '', 'AWS_SHARED_CREDENTIALS_FILE': ''}, clear=True)
 def test_get_aws_files_config():
     args = argparse.Namespace(config_file=None, credentials_file=None)
     config = {
