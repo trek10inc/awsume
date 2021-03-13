@@ -1,6 +1,8 @@
 # Config
 
-Awsume's configuration file can be found at `~/.awsume/config.yaml`.
+Awsume's configuration file can be found at `~/.config/awsume/config.yaml` by
+default. If the `XDG_CONFIG_HOME` environment variable is set then it can be
+found at: `${XDG_CONFIG_HOME}/awsume/config.yaml`.
 
 ## Properties
 
