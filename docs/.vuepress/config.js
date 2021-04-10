@@ -94,6 +94,17 @@ module.exports = {
           '/changelog',
         ],
       },
+      {
+        title: 'Developer Documentation',
+        collapsable: true,
+        children: [
+          '/developer/introduction',
+          '/developer/awsume',
+          '/developer/awsume_autocomplete',
+          '/developer/shell_scripts',
+          '/developer/test',
+        ],
+      },
     ],
   },
 };
