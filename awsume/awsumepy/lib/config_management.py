@@ -32,6 +32,8 @@ operations:
 def load_config() -> dict:
     if not os.path.exists(str(constants.AWSUME_DIR)):
         os.makedirs(str(constants.AWSUME_DIR))
+    if not os.path.exists(str(constants.AWSUME_CONFIG)):
+        os.makedirs(str(constants.AWSUME_CONFIG.parent))
     if not os.path.isfile(str(constants.AWSUME_CONFIG)):
         open(str(constants.AWSUME_CONFIG), 'a').close()
 

@@ -38,7 +38,7 @@ def test_load_config_no_path(exists: MagicMock, isfile: MagicMock, makedirs: Mag
     assert result == yaml_load.return_value
     makedirs.assert_called()
     open.assert_called_once()
-    makedirs.assert_called_once()
+    assert makedirs.call_count == 2
 
 
 @patch('yaml.safe_load')
