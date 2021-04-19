@@ -66,7 +66,7 @@ There is also a transformation that happens on incoming arguments to make it a l
 
 #### Profile Collection
 
-From this high level app class, gathering profiles is calling the plugin manager hooks and not much else. In case there are multiple plugins returning credentials, the profiles are aggregated together, so if two plugins generate a profile with the same name, they will be merged in the final result.
+From this high level app class, the process of gathering profiles is calling the plugin manager hooks and not much else. In case there are multiple plugins returning credentials the profiles will be aggregated together. So if two plugins generate a profile with the same name they will be merged in the final result.
 
 #### Credential Retrieval
 
@@ -92,7 +92,7 @@ There's a lot of different options for the kinds of profiles you could awsume. Y
 
 On top of this, awsume is designed to help users with MFA by taking advantage of 12 hour long session tokens (get MFA-authenticated user credentials that are valid for 12 hours, use those credentials each hour to assume the role you want, without needing to re-enter MFA every hour).
 
-There's a lot of peripheral `get_credentials_...` functions defined here in an attempt to help make things a little easier to read.
+There are a lot of peripheral `get_credentials_...` functions defined here in an attempt to help make things a little easier to read.
 
 ### lib
 
