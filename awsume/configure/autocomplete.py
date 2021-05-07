@@ -22,6 +22,10 @@ ZSH_AUTOCOMPLETE_FUNCTION = """#compdef awsume
 _arguments "*: :($(awsume-autocomplete))"
 """
 
+FISH_AUTOCOMPLETE_SCRIPT = """
+complete --command awsume --arguments '(awsume-autocomplete)'
+"""
+
 POWERSHELL_AUTOCOMPLETE_SCRIPT = """
 Register-ArgumentCompleter -Native -CommandName awsume -ScriptBlock {
     param($wordToComplete, $commandAst, $cursorPosition)
@@ -38,6 +42,7 @@ SCRIPTS = {
     'bash': BASH_AUTOCOMPLETE_SCRIPT,
     'zsh': ZSH_AUTOCOMPLETE_SCRIPT,
     'powershell': POWERSHELL_AUTOCOMPLETE_SCRIPT,
+    'fish': FISH_AUTOCOMPLETE_SCRIPT,
 }
 
 def main(shell: str, autocomplete_file: str):

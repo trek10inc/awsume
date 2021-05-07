@@ -25,8 +25,21 @@ def get_zsh_file() -> str:
     return zsh_file
 
 
-def get_fish_file() -> str:
-    fish_file = str(Path('~/.config/fish/functions/awsume.fish').expanduser())
+def get_fish_functions_file() -> str:
+    fish_functions = str(Path('~/.config/fish/functions/').expanduser())
+    if not os.path.exists(str(fish_functions)):
+        os.makedirs(str(fish_functions))
+    fish_file = str(Path(fish_functions + '/awsume.fish').expanduser())
+    if not os.path.exists(fish_file) or not os.path.isfile(fish_file):
+        open(fish_file, 'w').close()
+    return fish_file
+
+
+def get_fish_completions_file() -> str:
+    fish_completions = str(Path('~/.config/fish/completions/').expanduser())
+    if not os.path.exists(str(fish_completions)):
+        os.makedirs(str(fish_completions))
+    fish_file = str(Path(fish_completions + '/awsume.fish').expanduser())
     if not os.path.exists(fish_file) or not os.path.isfile(fish_file):
         open(fish_file, 'w').close()
     return fish_file
@@ -68,14 +81,12 @@ def setup_zsh(alias_file: str, autocomplete_file: str):
 
 
 def setup_fish(alias_file: str, autocomplete_file: str):
-    print('===== Setting up zsh =====')
-    fish_file = get_fish_file()
-    alias_file = alias_file or fish_file
-    autocomplete_file = autocomplete_file or fish_file
-    if not fish_file:
-        print('===== Could not locate zsh file =====')
-    # fish does not support autocomplete yet
-    install('fish', alias_file, None)
+    print('===== Setting up fish =====')
+    fish_functions_file = get_fish_functions_file()
+    fish_completions_file = get_fish_completions_file()
+    alias_file = alias_file or fish_functions_file
+    autocomplete_file = autocomplete_file or fish_completions_file
+    install('fish', alias_file, autocomplete_file)
 
 
 def setup_powershell(alias_file: str, autocomplete_file: str):

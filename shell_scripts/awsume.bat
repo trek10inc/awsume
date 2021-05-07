@@ -21,6 +21,7 @@ for /f "tokens=1,2,3,4,5,6,7,8 delims= " %%a in ("%AWSUME_TEXT%") do (
         set AWS_DEFAULT_PROFILE=
         set AWSUME_PROFILE=
         set AWSUME_EXPIRATION=
+        set AWSUME_COMMAND=
 
         set AWS_PROFILE=%%b
         set AWS_DEFAULT_PROFILE=%%b
@@ -55,6 +56,7 @@ for /f "tokens=1,2,3,4,5,6,7,8 delims= " %%a in ("%AWSUME_TEXT%") do (
         set AWS_DEFAULT_PROFILE=
         set AWSUME_PROFILE=
         set AWSUME_EXPIRATION=
+        set AWSUME_COMMAND=
 
         IF defined SHOW (
             echo set AWS_ACCESS_KEY_ID=
@@ -65,6 +67,7 @@ for /f "tokens=1,2,3,4,5,6,7,8 delims= " %%a in ("%AWSUME_TEXT%") do (
             echo set AWS_DEFAULT_REGION=
             echo set AWSUME_PROFILE=
             echo set AWSUME_EXPIRATION=
+            echo set AWSUME_COMMAND=
         )
     )
     if "%%a" == "Kill" (
@@ -78,12 +81,13 @@ for /f "tokens=1,2,3,4,5,6,7,8 delims= " %%a in ("%AWSUME_TEXT%") do (
         set AWS_DEFAULT_PROFILE=
         set AWSUME_PROFILE=
         set AWSUME_EXPIRATION=
+        set AWSUME_COMMAND=
         taskkill /FI "WindowTitle eq autoawsume" > null 2>&1
     )
     if "%%a" == "Stop" (
         if "auto-refresh-%%b" == "%AWS_PROFILE%" (
-        set AWS_PROFILE=
-        set AWS_DEFAULT_PROFILE=
+            set AWS_PROFILE=
+            set AWS_DEFAULT_PROFILE=
         )
     )
     if "%%a" == "Awsume" (
@@ -97,6 +101,7 @@ for /f "tokens=1,2,3,4,5,6,7,8 delims= " %%a in ("%AWSUME_TEXT%") do (
         set AWS_DEFAULT_PROFILE=
         set AWSUME_PROFILE=
         set AWSUME_EXPIRATION=
+        set AWSUME_COMMAND=
 
         set AWSUME_COMMAND=%*
         if "%%b" NEQ "None" (

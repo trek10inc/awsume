@@ -29,6 +29,7 @@ else if test "$AWSUME_FLAG" = "Auto"
   set -e AWS_DEFAULT_PROFILE
   set -e AWSUME_PROFILE
   set -e AWSUME_EXPIRATION
+  set -e AWSUME_COMMAND
   set -gx AWS_PROFILE $AWSUME_1
   set -gx AWS_DEFAULT_PROFILE $AWSUME_1
   if test "$AWSUME_2" != "None"
@@ -53,6 +54,7 @@ else if test "$AWSUME_FLAG" = "Unset"
   set -e AWS_DEFAULT_REGION
   set -e AWSUME_PROFILE
   set -e AWSUME_EXPIRATION
+  set -e AWSUME_COMMAND
 
   if contains -- -s $argv
     echo set -e AWS_PROFILE
@@ -65,6 +67,7 @@ else if test "$AWSUME_FLAG" = "Unset"
     echo set -e AWS_DEFAULT_REGION
     echo set -e AWSUME_PROFILE
     echo set -e AWSUME_EXPIRATION
+    echo set -e AWSUME_COMMAND
   end
   exit 0
 
@@ -79,6 +82,7 @@ else if test "$AWSUME_FLAG" = "Kill"
   set -e AWS_DEFAULT_REGION
   set -e AWSUME_PROFILE
   set -e AWSUME_EXPIRATION
+  set -e AWSUME_COMMAND
   exit 0
 
 
@@ -101,6 +105,7 @@ else if test "$AWSUME_FLAG" = "Awsume"
   set -e AWSUME_EXPIRATION
   set -e AWS_DEFAULT_PROFILE
   set -e AWSUME_PROFILE
+  set -e AWSUME_COMMAND
 
   set -gx AWSUME_COMMAND $argv
   if test "$AWSUME_1" != "None"

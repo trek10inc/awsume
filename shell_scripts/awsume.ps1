@@ -61,6 +61,7 @@ elseif ( $AWSUME_FLAG -eq "Unset" ) {
     $env:AWS_DEFAULT_PROFILE = ""
     $env:AWSUME_PROFILE = ""
     $env:AWSUME_EXPIRATION = ""
+    $env:AWSUME_COMMAND = ""
 
     #show the commands to unset these environment variables
     if ($args -like "-s") {
@@ -74,6 +75,7 @@ elseif ( $AWSUME_FLAG -eq "Unset" ) {
         Write-Host "`$env:AWS_DEFAULT_PROFILE = `"`""
         Write-Host "`$env:AWSUME_PROFILE = `"`""
         Write-Host "`$env:AWSUME_EXPIRATION = `"`""
+        Write-Host "`$env:AWSUME_COMMAND = `"`""
     }
     exit
 }
@@ -89,6 +91,7 @@ elseif ( $AWSUME_FLAG -eq "Kill" ) {
     $env:AWS_DEFAULT_PROFILE = ""
     $env:AWSUME_PROFILE = ""
     $env:AWSUME_EXPIRATION = ""
+    $env:AWSUME_COMMAND = ""
     exit
 }
 elseif ( $AWSUME_FLAG -eq "Stop" ) {
@@ -112,6 +115,7 @@ elseif ( $AWSUME_FLAG -eq "Awsume") {
     $env:AWS_DEFAULT_PROFILE = ""
     $env:AWSUME_PROFILE = ""
     $env:AWSUME_EXPIRATION = ""
+    $env:AWSUME_COMMAND = ""
 
     $env:AWSUME_COMMAND=$args
     if ( $AWSUME_1 -ne "None" ) {
