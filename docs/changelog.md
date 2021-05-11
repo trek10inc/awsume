@@ -1,6 +1,6 @@
 # Awsume Changelog
 
-## [4.5.1] - WIP - Bug fixes
+## [4.5.1] - 2021-05-11 - Bug fixes
 
 - Fixes profile name environment variable when profile name is fuzzy matched
 - Simplifies post install, breaks default login/config file logic into awsume-configure, allows running `awsume-configure` without any arguments
