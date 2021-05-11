@@ -2,8 +2,10 @@
 
 set SHOW=
 
-awsumepy %* > ./temp.txt
-set /p AWSUME_TEXT=<./temp.txt
+awsumepy %* > %TEMP%\temp.txt
+set AWSUME_STATUS=%ERRORLEVEL%
+set /p AWSUME_TEXT=<%TEMP%\temp.txt
+del %TEMP%\temp.txt
 
 FOR %%A IN (%*) DO (
     IF "%%A"=="-s" (set "SHOW=y")
@@ -116,7 +118,7 @@ for /f "tokens=1,2,3,4,5,6,7,8 delims= " %%a in ("%AWSUME_TEXT%") do (
             set AWS_SECRET_ACCESS_KEY=%%c)
 
         if "%%d" NEQ "None" (
-            set AWS_SESSION_TOKEN=%%d
+            set AWS_SESSION_TOKEN=%%d)
 
         if "%%e" NEQ "None" (
             set AWS_REGION=%%e
@@ -140,7 +142,7 @@ for /f "tokens=1,2,3,4,5,6,7,8 delims= " %%a in ("%AWSUME_TEXT%") do (
                     echo set AWS_SECRET_ACCESS_KEY=%%c)
 
                 if "%%d" NEQ "None" (
-                    echo set AWS_SESSION_TOKEN=%%d
+                    echo set AWS_SESSION_TOKEN=%%d)
 
                 if "%%e" NEQ "None" (
                     echo set AWS_REGION=%%e
@@ -159,3 +161,5 @@ for /f "tokens=1,2,3,4,5,6,7,8 delims= " %%a in ("%AWSUME_TEXT%") do (
         )
     )
 )
+
+Exit /b %AWSUME_STATUS%

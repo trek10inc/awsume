@@ -2,7 +2,11 @@
 
 #AWSUME_FLAG - what awsumepy told the shell to do
 #AWSUME_n - the data from awsumepy
-read AWSUME_FLAG AWSUME_1 AWSUME_2 AWSUME_3 AWSUME_4 AWSUME_5 AWSUME_6 AWSUME_7 <<< $(awsumepy "$@")
+
+AWSUME_OUTPUT=$(awsumepy "$@")
+AWSUME_STATUS=$?
+read AWSUME_FLAG AWSUME_1 AWSUME_2 AWSUME_3 AWSUME_4 AWSUME_5 AWSUME_6 AWSUME_7 <<< $(echo $AWSUME_OUTPUT)
+
 # remove carraige return
 AWSUME_FLAG=$(echo "$AWSUME_FLAG" | tr -d '\r')
 
@@ -173,3 +177,5 @@ elif [ "$AWSUME_FLAG" = "Awsume" ]; then
     fi
   done
 fi
+
+return $AWSUME_STATUS

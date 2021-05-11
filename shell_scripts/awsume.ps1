@@ -4,6 +4,7 @@
 #AWSUME_n - the data from awsumepy
 $AWSUME_FLAG, $AWSUME_1, $AWSUME_2, $AWSUME_3, $AWSUME_4, $AWSUME_5, $AWSUME_6, $AWSUME_7 = `
 $(awsumepy $args) -split '\s+'
+$env:AWSUME_STATUS = $LASTEXITCODE
 
 #if incorrect flag/help
 if ( $AWSUME_FLAG -eq "usage:" ) {
@@ -184,3 +185,5 @@ elseif ( $AWSUME_FLAG -eq "Awsume") {
         }
     }
 }
+
+exit $env:AWSUME_STATUS

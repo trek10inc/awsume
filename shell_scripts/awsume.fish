@@ -2,13 +2,16 @@
 
 #AWSUME_FLAG - what awsumepy told the shell to do
 #AWSUME_n - the data from awsumepy
-awsumepy $argv | read AWSUME_FLAG AWSUME_1 AWSUME_2 AWSUME_3 AWSUME_4 AWSUME_5 AWSUME_6 AWSUME_7
+set AWSUME_OUTPUT (awsumepy $argv)
+set AWSUME_STATUS $status
+echo $AWSUME_OUTPUT | read AWSUME_FLAG AWSUME_1 AWSUME_2 AWSUME_3 AWSUME_4 AWSUME_5 AWSUME_6 AWSUME_7
 
 # remove carraige return
 set -gx AWSUME_FLAG (echo $AWSUME_FLAG | tr -d '\r')
 
 if test "$AWSUME_FLAG" = "usage:"
   awsumepy $argv
+
 
 else if test "$AWSUME_FLAG" = "Version"
   awsumepy $argv
@@ -165,3 +168,5 @@ else if test "$AWSUME_FLAG" = "Awsume"
     end
   end
 end
+
+exit $AWSUME_STATUS
