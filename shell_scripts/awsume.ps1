@@ -4,6 +4,7 @@
 #AWSUME_n - the data from awsumepy
 $AWSUME_FLAG, $AWSUME_1, $AWSUME_2, $AWSUME_3, $AWSUME_4, $AWSUME_5, $AWSUME_6, $AWSUME_7 = `
 $(awsumepy $args) -split '\s+'
+$env:AWSUME_STATUS = $LASTEXITCODE
 
 #if incorrect flag/help
 if ( $AWSUME_FLAG -eq "usage:" ) {
@@ -21,17 +22,18 @@ elseif ( $AWSUME_FLAG -eq "Listing..." ) {
 elseif ( $AWSUME_FLAG -eq "Auto" ) {
     #Remove the environment variables associated with the AWS CLI,
     #ensuring all environment variables will be valid
+    $env:AWS_ACCESS_KEY_ID = ""
     $env:AWS_SECRET_ACCESS_KEY = ""
     $env:AWS_SESSION_TOKEN = ""
-    $env:AWS_SECURITY_TOKEN = ""
-    $env:AWS_ACCESS_KEY_ID = ""
     $env:AWS_REGION = ""
     $env:AWS_DEFAULT_REGION = ""
     $env:AWS_PROFILE = ""
     $env:AWS_DEFAULT_PROFILE = ""
-    $env:AWSUME_PROFILE = ""
     $env:AWSUME_EXPIRATION = ""
+    $env:AWSUME_PROFILE = ""
+    $env:AWSUME_COMMAND = ""
 
+    $env:AWSUME_COMMAND=$args
     #set the profile that will contain the session credentials
     $env:AWS_PROFILE = $AWSUME_1
     $env:AWS_DEFAULT_PROFILE = $AWSUME_1
@@ -51,53 +53,58 @@ elseif ( $AWSUME_FLAG -eq "Auto" ) {
 
 #if user sent kill flag
 elseif ( $AWSUME_FLAG -eq "Unset" ) {
+    $env:AWS_ACCESS_KEY_ID = ""
     $env:AWS_SECRET_ACCESS_KEY = ""
     $env:AWS_SESSION_TOKEN = ""
-    $env:AWS_SECURITY_TOKEN = ""
-    $env:AWS_ACCESS_KEY_ID = ""
     $env:AWS_REGION = ""
     $env:AWS_DEFAULT_REGION = ""
     $env:AWS_PROFILE = ""
     $env:AWS_DEFAULT_PROFILE = ""
-    $env:AWSUME_PROFILE = ""
     $env:AWSUME_EXPIRATION = ""
+    $env:AWSUME_PROFILE = ""
     $env:AWSUME_COMMAND = ""
 
     #show the commands to unset these environment variables
     if ($args -like "-s") {
+        Write-Host "`$env:AWS_ACCESS_KEY_ID = `"`""
         Write-Host "`$env:AWS_SECRET_ACCESS_KEY = `"`""
         Write-Host "`$env:AWS_SESSION_TOKEN = `"`""
-        Write-Host "`$env:AWS_SECURITY_TOKEN = `"`""
-        Write-Host "`$env:AWS_ACCESS_KEY_ID = `"`""
         Write-Host "`$env:AWS_REGION = `"`""
         Write-Host "`$env:AWS_DEFAULT_REGION = `"`""
         Write-Host "`$env:AWS_PROFILE = `"`""
         Write-Host "`$env:AWS_DEFAULT_PROFILE = `"`""
-        Write-Host "`$env:AWSUME_PROFILE = `"`""
         Write-Host "`$env:AWSUME_EXPIRATION = `"`""
+        Write-Host "`$env:AWSUME_PROFILE = `"`""
         Write-Host "`$env:AWSUME_COMMAND = `"`""
     }
     exit
 }
 #if user sent kill flag
 elseif ( $AWSUME_FLAG -eq "Kill" ) {
+    $env:AWS_ACCESS_KEY_ID = ""
     $env:AWS_SECRET_ACCESS_KEY = ""
     $env:AWS_SESSION_TOKEN = ""
-    $env:AWS_SECURITY_TOKEN = ""
-    $env:AWS_ACCESS_KEY_ID = ""
     $env:AWS_REGION = ""
     $env:AWS_DEFAULT_REGION = ""
     $env:AWS_PROFILE = ""
     $env:AWS_DEFAULT_PROFILE = ""
-    $env:AWSUME_PROFILE = ""
     $env:AWSUME_EXPIRATION = ""
+    $env:AWSUME_PROFILE = ""
     $env:AWSUME_COMMAND = ""
     exit
 }
 elseif ( $AWSUME_FLAG -eq "Stop" ) {
     if ( "auto-refresh-$AWSUME_1" -eq "$env:AWS_PROFILE" ) {
+        $env:AWS_ACCESS_KEY_ID = ""
+        $env:AWS_SECRET_ACCESS_KEY = ""
+        $env:AWS_SESSION_TOKEN = ""
+        $env:AWS_REGION = ""
+        $env:AWS_DEFAULT_REGION = ""
         $env:AWS_PROFILE = ""
         $env:AWS_DEFAULT_PROFILE = ""
+        $env:AWSUME_EXPIRATION = ""
+        $env:AWSUME_PROFILE = ""
+        $env:AWSUME_COMMAND = ""
     }
 }
 
@@ -105,16 +112,15 @@ elseif ( $AWSUME_FLAG -eq "Stop" ) {
 elseif ( $AWSUME_FLAG -eq "Awsume") {
     #Remove the environment variables associated with the AWS CLI,
     #ensuring all environment variables will be valid
+    $env:AWS_ACCESS_KEY_ID = ""
     $env:AWS_SECRET_ACCESS_KEY = ""
     $env:AWS_SESSION_TOKEN = ""
-    $env:AWS_SECURITY_TOKEN = ""
-    $env:AWS_ACCESS_KEY_ID = ""
     $env:AWS_REGION = ""
     $env:AWS_DEFAULT_REGION = ""
     $env:AWS_PROFILE = ""
     $env:AWS_DEFAULT_PROFILE = ""
-    $env:AWSUME_PROFILE = ""
     $env:AWSUME_EXPIRATION = ""
+    $env:AWSUME_PROFILE = ""
     $env:AWSUME_COMMAND = ""
 
     $env:AWSUME_COMMAND=$args
@@ -179,3 +185,5 @@ elseif ( $AWSUME_FLAG -eq "Awsume") {
         }
     }
 }
+
+exit $env:AWSUME_STATUS

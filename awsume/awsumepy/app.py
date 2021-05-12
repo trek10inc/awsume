@@ -286,5 +286,6 @@ class Awsume(object):
             logger.debug('', exc_info=True)
             if self.is_interactive:
                 safe_print('Awsume error: {}'.format(e), color=colorama.Fore.RED)
+                sys.exit(1)
             else:
                 raise

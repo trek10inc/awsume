@@ -2,7 +2,11 @@
 
 #AWSUME_FLAG - what awsumepy told the shell to do
 #AWSUME_n - the data from awsumepy
-read AWSUME_FLAG AWSUME_1 AWSUME_2 AWSUME_3 AWSUME_4 AWSUME_5 AWSUME_6 AWSUME_7 <<< $(awsumepy "$@")
+
+AWSUME_OUTPUT=$(awsumepy "$@")
+AWSUME_STATUS=$?
+read AWSUME_FLAG AWSUME_1 AWSUME_2 AWSUME_3 AWSUME_4 AWSUME_5 AWSUME_6 AWSUME_7 <<< $(echo $AWSUME_OUTPUT)
+
 # remove carraige return
 AWSUME_FLAG=$(echo "$AWSUME_FLAG" | tr -d '\r')
 
@@ -19,18 +23,21 @@ elif [ "$AWSUME_FLAG" = "Listing..." ]; then
 
 
 elif [ "$AWSUME_FLAG" = "Auto" ]; then
+  unset AWS_ACCESS_KEY_ID
   unset AWS_SECRET_ACCESS_KEY
   unset AWS_SESSION_TOKEN
-  unset AWS_SECURITY_TOKEN
-  unset AWS_ACCESS_KEY_ID
   unset AWS_REGION
   unset AWS_DEFAULT_REGION
   unset AWS_PROFILE
   unset AWS_DEFAULT_PROFILE
-  unset AWSUME_PROFILE
   unset AWSUME_EXPIRATION
+  unset AWSUME_PROFILE
+  unset AWSUME_COMMAND
+
+  export AWSUME_COMMAND="$@"
   export AWS_PROFILE=${AWSUME_1}
   export AWS_DEFAULT_PROFILE=${AWSUME_1}
+
   if [ ! "${AWSUME_2}" = "None" ]; then
     export AWS_REGION=${AWSUME_2}
     export AWS_DEFAULT_REGION=${AWSUME_2}
@@ -38,75 +45,85 @@ elif [ "$AWSUME_FLAG" = "Auto" ]; then
   if [ ! "${AWSUME_3}" = "None" ]; then
     export AWSUME_PROFILE=${AWSUME_3}
   fi
+
   #run the background autoawsume process
   autoawsume & disown
 
 
 elif [ "$AWSUME_FLAG" = "Unset" ]; then
-  unset AWS_PROFILE
-  unset AWS_DEFAULT_PROFILE
+  unset AWS_ACCESS_KEY_ID
   unset AWS_SECRET_ACCESS_KEY
   unset AWS_SESSION_TOKEN
-  unset AWS_SECURITY_TOKEN
-  unset AWS_ACCESS_KEY_ID
   unset AWS_REGION
   unset AWS_DEFAULT_REGION
-  unset AWSUME_PROFILE
+  unset AWS_PROFILE
+  unset AWS_DEFAULT_PROFILE
   unset AWSUME_EXPIRATION
+  unset AWSUME_PROFILE
+  unset AWSUME_COMMAND
+
   for AWSUME_var in "$@"
   do
     if [[ "$AWSUME_var" == "-s"* ]]; then
-      echo unset AWS_PROFILE
-      echo unset AWS_DEFAULT_PROFILE
+      echo unset AWS_ACCESS_KEY_ID
       echo unset AWS_SECRET_ACCESS_KEY
       echo unset AWS_SESSION_TOKEN
-      echo unset AWS_SECURITY_TOKEN
-      echo unset AWS_ACCESS_KEY_ID
       echo unset AWS_REGION
       echo unset AWS_DEFAULT_REGION
-      echo unset AWSUME_PROFILE
+      echo unset AWS_PROFILE
+      echo unset AWS_DEFAULT_PROFILE
       echo unset AWSUME_EXPIRATION
+      echo unset AWSUME_PROFILE
+      echo unset AWSUME_COMMAND
     fi
   done
   return
 
 
 elif [ "$AWSUME_FLAG" = "Kill" ]; then
-  unset AWS_PROFILE
-  unset AWS_DEFAULT_PROFILE
+  unset AWS_ACCESS_KEY_ID
   unset AWS_SECRET_ACCESS_KEY
   unset AWS_SESSION_TOKEN
-  unset AWS_SECURITY_TOKEN
-  unset AWS_ACCESS_KEY_ID
   unset AWS_REGION
   unset AWS_DEFAULT_REGION
-  unset AWSUME_PROFILE
+  unset AWS_PROFILE
+  unset AWS_DEFAULT_PROFILE
   unset AWSUME_EXPIRATION
+  unset AWSUME_PROFILE
+  unset AWSUME_COMMAND
   return
 
 
 elif [ "$AWSUME_FLAG" = "Stop" ]; then
   if [ "auto-refresh-${AWSUME_1}" == "$AWS_PROFILE" ]; then
+    unset AWS_ACCESS_KEY_ID
+    unset AWS_SECRET_ACCESS_KEY
+    unset AWS_SESSION_TOKEN
+    unset AWS_REGION
+    unset AWS_DEFAULT_REGION
     unset AWS_PROFILE
     unset AWS_DEFAULT_PROFILE
+    unset AWSUME_EXPIRATION
+    unset AWSUME_PROFILE
+    unset AWSUME_COMMAND
   fi
   return
 
 
 elif [ "$AWSUME_FLAG" = "Awsume" ]; then
+  unset AWS_ACCESS_KEY_ID
   unset AWS_SECRET_ACCESS_KEY
   unset AWS_SESSION_TOKEN
-  unset AWS_SECURITY_TOKEN
-  unset AWS_ACCESS_KEY_ID
   unset AWS_REGION
   unset AWS_DEFAULT_REGION
   unset AWS_PROFILE
-  unset AWSUME_EXPIRATION
   unset AWS_DEFAULT_PROFILE
+  unset AWSUME_EXPIRATION
   unset AWSUME_PROFILE
   unset AWSUME_COMMAND
 
   export AWSUME_COMMAND="$@"
+
   if [ ! "${AWSUME_1}" = "None" ]; then
     export AWS_ACCESS_KEY_ID=${AWSUME_1}
   fi
@@ -130,6 +147,7 @@ elif [ "$AWSUME_FLAG" = "Awsume" ]; then
   if [ ! "${AWSUME_7}" = "None" ]; then
     export AWSUME_EXPIRATION=${AWSUME_7}
   fi
+
   for AWSUME_var in "$@"
   do
     if [[ "$AWSUME_var" == "-s"* ]]; then
@@ -159,3 +177,5 @@ elif [ "$AWSUME_FLAG" = "Awsume" ]; then
     fi
   done
 fi
+
+return $AWSUME_STATUS
