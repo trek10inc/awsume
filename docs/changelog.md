@@ -1,5 +1,9 @@
 # Awsume Changelog
 
+## [4.5.2] - 2021-05-13 - Adds warning when awsume is not sourced
+
+- Adds a warning to the awsume shell script when it's not sourced, meaning the alias has not been setup yet
+
 ## [4.5.1] - 2021-05-11 - Bug fixes
 
 - Fixes profile name environment variable when profile name is fuzzy matched

@@ -3,6 +3,8 @@
 #AWSUME_FLAG - what awsumepy told the shell to do
 #AWSUME_n - the data from awsumepy
 
+[[ "${BASH_SOURCE[0]}" != "${0}" ]] || >&2 echo "Warning: the awsume shell script is not being sourced, please use awsume-configure to install the alias"
+
 AWSUME_OUTPUT=$(awsumepy "$@")
 AWSUME_STATUS=$?
 read AWSUME_FLAG AWSUME_1 AWSUME_2 AWSUME_3 AWSUME_4 AWSUME_5 AWSUME_6 AWSUME_7 <<< $(echo $AWSUME_OUTPUT)
