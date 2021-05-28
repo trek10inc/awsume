@@ -25,6 +25,7 @@ setup(
     extras_require={
         'saml': ['xmltodict'],
         'fuzzy': ['python-levenshtein'],
+        'console': ['awsume-console-plugin'],
     },
     scripts=[
         'shell_scripts/awsume',

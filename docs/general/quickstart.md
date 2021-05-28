@@ -26,6 +26,7 @@ Awsume uses Python's [extras_require](https://setuptools.readthedocs.io/en/lates
 
 - `awsume[saml]` - Install dependencies required to support SAML assertion handling
 - `awsume[fuzzy]` - Install dependencies required to support fuzzy profile name matching
+- `awsume[console]` - Install the [awsume-console-plugin](https://github.com/trek10inc/awsume-console-plugin) with awsume
 
 ## Alias Setup
 

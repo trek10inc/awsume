@@ -1,5 +1,9 @@
 # Awsume Changelog
 
+## [4.5.3] - 2021-05-28 - Adds `console` extras_require
+
+- Adds `console` extras_require to install the awsume-console-plugin automatically with awsume
+
 ## [4.5.2] - 2021-05-13 - Adds warning when awsume is not sourced
 
 - Adds a warning to the awsume shell script when it's not sourced, meaning the alias has not been setup yet
