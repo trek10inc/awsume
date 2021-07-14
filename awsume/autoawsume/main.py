@@ -89,7 +89,7 @@ def configure_logger():
     log_handler = RotatingFileHandler(
         filename=log_file,
         maxBytes=(
-            10 * # ten
+            5 * # five
             (2 ** 20) # megabytes
         ),
         backupCount=2,
