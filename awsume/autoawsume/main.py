@@ -5,6 +5,7 @@ import time
 import sys
 import os
 import logging
+from logging.handlers import RotatingFileHandler
 from pathlib import Path
 from datetime import datetime, timedelta
 import dateutil
@@ -80,14 +81,19 @@ def main():
 
 def configure_logger():
     log_dir = str(Path('~/.awsume/logs/').expanduser())
-    log_file = str(Path('~/.awsume/logs/autoawsume-{}'.format(datetime.now().strftime('%Y-%m-%d_%H:%M:%S:%f'))).expanduser())
+    log_file = str(Path('~/.awsume/logs/autoawsume.log').expanduser())
 
     if not os.path.exists(log_dir):
         os.makedirs(log_dir)
-    if not os.path.isfile(log_file):
-        open(log_file, 'a').close()
 
-    log_handler = logging.FileHandler(log_file)
+    log_handler = RotatingFileHandler(
+        filename=log_file,
+        maxBytes=(
+            10 * # ten
+            (2 ** 20) # megabytes
+        ),
+        backupCount=2,
+    )
     log_handler.setFormatter(LogFormatter('%(asctime)s | %(name)s | %(filename)s:%(funcName)s | [%(levelname)s] | %(message)s'))
     logger.addHandler(log_handler)
     logger.setLevel(logging.DEBUG)
