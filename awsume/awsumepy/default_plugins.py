@@ -481,7 +481,9 @@ def get_credentials_from_credential_process(config: dict, arguments: argparse.Na
     logger.info('Getting credentials from credential_process, profile: %s'% target_profile_name)
     region = profile_lib.get_region(profiles, arguments, config)
     return_session = {}
-    result = subprocess.run(target_profile.get('credential_process').split(), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    credential_process_env = os.environ.copy()
+    credential_process_env['AWS_PROFILE'] = target_profile_name
+    result = subprocess.run(target_profile.get('credential_process').split(), stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=credential_process_env)
     logger.info('credential_process returncode: {}'.format(result.returncode))
     logger.debug('credential_process stdout: {}'.format(result.stdout.decode('utf-8')))
     logger.debug('credential_process stderr: {}'.format(result.stderr.decode('utf-8')))
