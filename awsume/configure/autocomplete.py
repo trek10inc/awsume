@@ -23,7 +23,7 @@ _arguments "*: :($(awsume-autocomplete))"
 """
 
 FISH_AUTOCOMPLETE_SCRIPT = """
-complete --command awsume --arguments '(awsume-autocomplete)'
+complete -f --command awsume --arguments '(awsume-autocomplete)'
 """
 
 POWERSHELL_AUTOCOMPLETE_SCRIPT = """
