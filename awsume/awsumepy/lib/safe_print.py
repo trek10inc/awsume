@@ -13,6 +13,8 @@ def safe_print(message: str, color: str = '', end: str = None):
     config = yaml.safe_load(open(str(AWSUME_CONFIG), 'r')) or {}
     if not config:
         config = {'colors': True}
+    if config.get('quiet', False):
+        return
     if os.name == 'nt' or config.get('colors') != True:
         color = ''
     print(str(color) + str(message) + colorama.Style.RESET_ALL, end=end, file=sys.stderr)
