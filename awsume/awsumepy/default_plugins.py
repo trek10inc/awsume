@@ -125,6 +125,12 @@ def add_arguments(config: dict, parser: argparse.ArgumentParser):
         metavar='mfa_token',
         help='Your mfa token',
     )
+    parser.add_argument('--mfa-cli',
+        action='store',
+        dest='mfa_cli',
+        metavar='mfa_cli',
+        help='CLI to retrieve MFA code',
+    )
     parser.add_argument('--region',
         action='store',
         dest='region',
@@ -316,6 +322,7 @@ def assume_role_from_cli(config: dict, arguments: dict, profiles: dict):
             raise exceptions.ProfileNotFoundError(profile_name=arguments.source_profile)
         source_credentials = profile_lib.profile_to_credentials(source_profile)
         mfa_serial = source_profile.get('mfa_serial')
+        mfa_cli = profile_lib.get_mfa_cli(config, arguments, profiles, arguments.target_profile_name)
         if role_duration:
             logger.debug('Using custom role duration')
             if mfa_serial:
@@ -331,6 +338,7 @@ def assume_role_from_cli(config: dict, arguments: dict, profiles: dict):
                     role_duration=role_duration,
                     mfa_serial=mfa_serial,
                     mfa_token=arguments.mfa_token,
+                    mfa_cil=mfa_cli,
                 )
             else:
                 logger.debug('MFA not needed, assuming role from with profile creds')
@@ -353,6 +361,7 @@ def assume_role_from_cli(config: dict, arguments: dict, profiles: dict):
                     mfa_token=arguments.mfa_token,
                     ignore_cache=arguments.force_refresh,
                     duration_seconds=config.get('debug', {}).get('session_token_duration'),
+                    mfa_cil=mfa_cli,
                 )
             else:
                 logger.debug('MFA not required')
@@ -394,6 +403,7 @@ def get_assume_role_credentials_mfa_required(config: dict, arguments: argparse.N
     logger.info('Getting assume role credentials MFA required')
     region = profile_lib.get_region(profiles, arguments, config)
     mfa_serial = profile_lib.get_mfa_serial(profiles, target_profile_name)
+    mfa_cli = profile_lib.get_mfa_cli(config, arguments, profiles, target_profile_name)
     external_id = profile_lib.get_external_id(arguments, target_profile)
     source_profile = profile_lib.get_source_profile(profiles, target_profile_name)
     if source_profile:
@@ -408,6 +418,7 @@ def get_assume_role_credentials_mfa_required(config: dict, arguments: argparse.N
                 mfa_token=arguments.mfa_token,
                 ignore_cache=arguments.force_refresh,
                 duration_seconds=config.get('debug', {}).get('session_token_duration'),
+                mfa_cli=mfa_cli,
             )
         else:
             source_session = source_credentials
@@ -444,6 +455,7 @@ def get_assume_role_credentials_mfa_required_large_custom_duration(config: dict,
 
     region = profile_lib.get_region(profiles, arguments, config)
     mfa_serial = profile_lib.get_mfa_serial(profiles, target_profile_name)
+    mfa_cli = profile_lib.get_mfa_cli(config, arguments, profiles, target_profile_name)
     external_id = profile_lib.get_external_id(arguments, target_profile)
     source_profile = profile_lib.get_source_profile(profiles, target_profile_name)
     source_session = profile_lib.profile_to_credentials(source_profile)
@@ -457,6 +469,7 @@ def get_assume_role_credentials_mfa_required_large_custom_duration(config: dict,
         role_duration=role_duration,
         mfa_serial=mfa_serial,
         mfa_token=arguments.mfa_token,
+        mfa_cli=mfa_cli,
     )
     return role_session
 
@@ -515,6 +528,7 @@ def get_session_token_credentials(config: dict, arguments: argparse.Namespace, p
     region = profile_lib.get_region(profiles, arguments, config)
     mfa_serial = profile_lib.get_mfa_serial(profiles, target_profile_name)
     source_credentials = profile_lib.profile_to_credentials(target_profile)
+    mfa_cli = profile_lib.get_mfa_cli(config, arguments, profiles, target_profile_name)
     user_session = aws_lib.get_session_token(
         source_credentials,
         region=region,
@@ -522,6 +536,7 @@ def get_session_token_credentials(config: dict, arguments: argparse.Namespace, p
         mfa_token=arguments.mfa_token,
         ignore_cache=arguments.force_refresh,
         duration_seconds=config.get('debug', {}).get('session_token_duration'),
+        mfa_cli=mfa_cli,
     )
     return user_session
 

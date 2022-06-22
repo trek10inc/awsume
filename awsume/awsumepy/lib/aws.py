@@ -40,6 +40,7 @@ def assume_role(
     role_duration: int = None,
     mfa_serial: str = None,
     mfa_token: str = None,
+    mfa_cli: str = None,
 ) -> dict:
     if len(session_name) < 2:
         session_name = session_name.center(2, '_')
@@ -61,7 +62,7 @@ def assume_role(
             kwargs['DurationSeconds'] = int(role_duration)
         if mfa_serial:
             kwargs['SerialNumber'] = mfa_serial
-            kwargs['TokenCode'] = mfa_token or profile_lib.get_mfa_token()
+            kwargs['TokenCode'] = mfa_token or profile_lib.get_mfa_token(mfa_cli)
         logger.debug('Assuming role now')
         role_session = role_sts_client.assume_role(**kwargs).get('Credentials')
         logger.debug('Received role credentials')
@@ -80,6 +81,7 @@ def get_session_token(
     mfa_token: str = None,
     ignore_cache: bool = False,
     duration_seconds: int = None,
+    mfa_cli: str = None,
 ) -> dict:
     cache_file_name = 'aws-credentials-' + source_credentials.get('AccessKeyId')
     cache_session = cache_lib.read_aws_cache(cache_file_name)
@@ -101,7 +103,7 @@ def get_session_token(
         try:
             kwargs = {
                 'SerialNumber': mfa_serial if mfa_serial else None,
-                'TokenCode': None if not mfa_serial else (mfa_token or profile_lib.get_mfa_token()),
+                'TokenCode': None if not mfa_serial else (mfa_token or profile_lib.get_mfa_token(mfa_cli)),
             }
             if duration_seconds:
                 kwargs['DurationSeconds'] = duration_seconds

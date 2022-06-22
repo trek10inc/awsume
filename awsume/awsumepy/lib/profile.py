@@ -1,9 +1,11 @@
+import sys
 import argparse
 import json
 import re
 import operator
 from datetime import datetime
 import dateutil
+import subprocess
 import colorama
 import difflib
 from . import exceptions
@@ -191,7 +193,35 @@ def get_mfa_serial(profiles: dict, target_profile_name: str) -> dict:
     return mfa_serial
 
 
-def get_mfa_token() -> str:
+def get_mfa_cli(config: dict, arguments: argparse.Namespace, profiles: dict, target_profile_name: str) -> dict:
+    logger.debug('mfa_cli: {}'.format(json.dumps({
+        'config': config,
+        'arguments': arguments,
+        'profiles': profiles.get(target_profile_name),
+        'target_profile_name': target_profile_name,
+    }, default=str, indent=2)))
+    target_profile = profiles.get(target_profile_name)
+    if arguments.mfa_cli:
+        return arguments.mfa_cli
+    while target_profile:
+        if target_profile.get('mfa_cli'):
+            return target_profile['mfa_cli']
+        target_profile = profiles.get(target_profile.get('source_profile'))
+    if config.get('mfa-cli'):
+        return config['mfa-cli']
+
+
+def get_mfa_token(mfa_cli: str = None) -> str:
+    if mfa_cli:
+        logger.debug('Getting mfa from {}'.format(mfa_cli))
+        process = subprocess.run(mfa_cli.split(), stdout=subprocess.PIPE, stderr=sys.stderr)
+        result = re.search(r'\d{6}', process.stdout.decode('utf-8'))
+        if result:
+            code = result.group(0)
+            safe_print('Returned MFA code: {}'.format(code), color=colorama.Fore.YELLOW)
+            return code
+        else:
+            safe_print('MFA token not found from cli {}'.format(mfa_cli), colorama.Fore.RED)
     token_pattern = re.compile('^[0-9]{6}$')
     safe_print('Enter MFA token: ', colorama.Fore.CYAN, end='')
     while True:
