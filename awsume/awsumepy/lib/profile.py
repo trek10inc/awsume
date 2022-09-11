@@ -216,7 +216,7 @@ def aggregate_profiles(result: list) -> dict:
 def format_aws_profiles(profiles: dict, get_extra_data: bool) -> list: # pragma: no cover
     sorted_profiles = OrderedDict(sorted(profiles.items()))
     # List headers
-    list_headers = ['PROFILE', 'TYPE', 'SOURCE', 'MFA?', 'REGION', 'ACCOUNT']
+    list_headers = ['PROFILE', 'TYPE', 'SOURCE', 'MFA?', 'REGION', 'PARTITION', 'ACCOUNT']
     profile_list = []
     profile_list.append([])
     profile_list[0].extend(list_headers)
@@ -240,7 +240,11 @@ def format_aws_profiles(profiles: dict, get_extra_data: bool) -> list: # pragma:
             mfa_needed = 'Yes' if 'mfa_serial' in profile else 'No'
             profile_region = str(profile.get('region')) or str(profile.get('sso_region'))
             profile_account_id = get_account_id(profile, get_extra_data)
-            list_row = [name, profile_type, source_profile, mfa_needed, profile_region, profile_account_id]
+            if profile.get('role_arn'):
+                partition = parse_arn(profile['role_arn'])['partition']
+            if profile.get('mfa_serial'):
+                partition = parse_arn(profile['mfa_serial'])['partition']
+            list_row = [name, profile_type, source_profile, mfa_needed, profile_region, partition, profile_account_id]
             profile_list.append(list_row)
     return profile_list
 
@@ -254,11 +258,29 @@ def print_formatted_data(profile_data: list): # pragma: no cover
 
 
 def list_profile_data(profiles: dict, get_extra_data: bool, config: dict): # pragma: no cover
-    profiles = {k: v for k, v in profiles.items() if not v.get('autoawsume')}
+    profiles = {k: v for k, v in profiles.items() if not v.get('autoawsume')} ## This only removed the autoawsume ones
     if config.get('is_interactive'):
         formatted_profiles = format_aws_profiles(profiles, get_extra_data)
         print_formatted_data(formatted_profiles)
     return profiles
+
+def parse_arn(arn: str) -> dict:
+    # http://docs.aws.amazon.com/general/latest/gr/aws-arns-and-namespaces.html
+    elements = arn.split(':', 5)
+    result = {
+        'arn': elements[0],
+        'partition': elements[1],
+        'service': elements[2],
+        'region': elements[3],
+        'account': elements[4],
+        'resource': elements[5],
+        'resource_type': None
+    }
+    if '/' in result['resource']:
+        result['resource_type'], result['resource'] = result['resource'].split('/',1)
+    elif ':' in result['resource']:
+        result['resource_type'], result['resource'] = result['resource'].split(':',1)
+    return result
 
 
 def get_account_id(profile: dict, call_aws: bool = False) -> str:
@@ -266,9 +288,9 @@ def get_account_id(profile: dict, call_aws: bool = False) -> str:
     if profile.get('sso_account_id'):
         return profile['sso_account_id']
     if profile.get('role_arn'):
-        return profile['role_arn'].replace('arn:aws:iam::', '').split(':')[0]
+        return parse_arn(profile['role_arn'])['account']
     if profile.get('mfa_serial'):
-        return profile['mfa_serial'].replace('arn:aws:iam::', '').split(':')[0]
+        return parse_arn(profile['mfa_serial'])['account']
     if call_aws and profile.get('aws_access_key_id') and profile.get('aws_secret_access_key'):
         return aws_lib.get_account_id(profile_to_credentials(profile))
     return 'Unavailable'
