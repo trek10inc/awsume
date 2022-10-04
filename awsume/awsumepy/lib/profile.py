@@ -258,7 +258,7 @@ def print_formatted_data(profile_data: list): # pragma: no cover
 
 
 def list_profile_data(profiles: dict, get_extra_data: bool, config: dict): # pragma: no cover
-    profiles = {k: v for k, v in profiles.items() if not v.get('autoawsume')} ## This only removed the autoawsume ones
+    profiles = {k: v for k, v in profiles.items() if not v.get('autoawsume')}
     if config.get('is_interactive'):
         formatted_profiles = format_aws_profiles(profiles, get_extra_data)
         print_formatted_data(formatted_profiles)
