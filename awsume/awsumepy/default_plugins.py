@@ -563,6 +563,10 @@ def get_credentials_handler(config: dict, arguments: argparse.Namespace, profile
                 user_session = get_credentials_from_credential_source(config, arguments, profiles, target_profile, profile_name)
             else:
                 user_session = get_credentials_no_mfa(config, arguments, profiles, target_profile)
+                user_session["Expiration"] = user_session.get("Expiration", (
+                    lambda d: d.replace(d.year + 1, tzinfo=dateutil.tz.tzlocal())
+                )(datetime.now()))
+
 
     if config.get('is_interactive'):
         if user_session and user_session.get('Expiration'):
