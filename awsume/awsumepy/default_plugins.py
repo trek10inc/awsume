@@ -90,6 +90,13 @@ def add_arguments(config: dict, parser: argparse.ArgumentParser):
         dest='list_profiles',
         help='List profiles, "more" for detail (slow)',
     )
+    parser.add_argument('-t', '--tags',
+        action='store',
+        default=None,
+        metavar='Key=Value,...',
+        dest='session_tags',
+        help='A Key=Value list of session tags',
+    )
     parser.add_argument('--refresh-autocomplete',
         action='store_true',
         dest='refresh_autocomplete',
@@ -275,6 +282,20 @@ def post_add_arguments(config: dict, arguments: argparse.Namespace, parser: argp
     else:
         arguments.target_profile_name = arguments.profile_name
 
+    if arguments.session_tags:
+        tags = []
+        for tag in arguments.session_tags.split(","):
+            kv = tag.split('=')
+            try:
+                tags.append({
+                    'Key': kv[0],
+                    'Value': kv[1] or ''
+                })
+            except IndexError:
+                parser.error('--tags must be a valid string of Key=Value,... tags')
+        if len(tags) > 0:
+            arguments.session_tags = tags
+
 
 @hookimpl(tryfirst=True)
 def collect_aws_profiles(config: dict, arguments: argparse.Namespace, credentials_file: str, config_file: str):
@@ -308,7 +329,7 @@ def assume_role_from_cli(config: dict, arguments: dict, profiles: dict):
     logger.debug('Session name: {}'.format(session_name))
     if not arguments.source_profile:
         logger.debug('Using current credentials to assume role')
-        role_session = aws_lib.assume_role({}, arguments.role_arn, session_name, region=region, external_id=arguments.external_id, role_duration=role_duration)
+        role_session = aws_lib.assume_role({}, arguments.role_arn, session_name, region=region, external_id=arguments.external_id, role_duration=role_duration, tags=arguments.session_tags)
     else:
         logger.debug('Using the source_profile from the cli to call assume_role')
         source_profile = profiles.get(arguments.source_profile)
@@ -331,6 +352,7 @@ def assume_role_from_cli(config: dict, arguments: dict, profiles: dict):
                     role_duration=role_duration,
                     mfa_serial=mfa_serial,
                     mfa_token=arguments.mfa_token,
+                    tags=arguments.session_tags
                 )
             else:
                 logger.debug('MFA not needed, assuming role from with profile creds')
@@ -341,6 +363,7 @@ def assume_role_from_cli(config: dict, arguments: dict, profiles: dict):
                     region=region,
                     external_id=arguments.external_id,
                     role_duration=role_duration,
+                    tags=arguments.session_tags
                 )
         else:
             logger.debug('Using default role duration')
@@ -364,6 +387,7 @@ def assume_role_from_cli(config: dict, arguments: dict, profiles: dict):
                 region=region,
                 external_id=arguments.external_id,
                 role_duration=role_duration,
+                tags=arguments.session_tags
             )
     return role_session
 
@@ -382,6 +406,7 @@ def get_assume_role_credentials(config: dict, arguments: argparse.Namespace, pro
         region=region,
         external_id=external_id,
         role_duration=role_duration,
+        tags=arguments.session_tags
     )
     if 'SourceExpiration' in source_credentials:
         role_session['SourceExpiration'] = source_credentials['SourceExpiration']
@@ -426,6 +451,7 @@ def get_assume_role_credentials_mfa_required(config: dict, arguments: argparse.N
         region=region,
         external_id=external_id,
         role_duration=role_duration,
+        tags=arguments.session_tags
     )
 
     if 'SourceExpiration' in source_session:
@@ -457,6 +483,7 @@ def get_assume_role_credentials_mfa_required_large_custom_duration(config: dict,
         role_duration=role_duration,
         mfa_serial=mfa_serial,
         mfa_token=arguments.mfa_token,
+        tags=arguments.session_tags
     )
     return role_session
 
