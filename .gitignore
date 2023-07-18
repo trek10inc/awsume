@@ -57,5 +57,9 @@ Pipfile.lock
 # vscode
 .vscode
 
+#idea
+.idea
+/awsume.iml
+
 # sandbox files
 *sandbox*
