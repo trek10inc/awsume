@@ -1,4 +1,6 @@
-name: Run tests
+# ubuntu-latest does not have a release for python3.6 - until a decision is made to deprecate support we need to run tests against ubuntu-20.04
+
+name: Run 3.6 tests
 
 on:
   push:
@@ -14,8 +16,8 @@ jobs:
   test:
     strategy:
       matrix:
-        python-version: [ '3.7', '3.8', '3.9' ]
-    runs-on: ubuntu-latest
+        python-version: [ '3.6' ]
+    runs-on: ubuntu-20.04
 
     steps:
       - uses: actions/checkout@v2
