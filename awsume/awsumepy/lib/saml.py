@@ -15,8 +15,15 @@ def parse_assertion(assertion: str) -> list:
     if not xmltodict:
         raise ValidationException(message='SAML option not installed, try installing awsume[saml]')
 
+    namespaces = {
+        'urn:oasis:names:tc:SAML:2.0:protocol': 'saml2p',
+        'urn:oasis:names:tc:SAML:2.0:assertion': 'saml2',
+        'urn:oasis:names:tc:SAML:1.0:protocol': 'samlp',
+        'urn:oasis:names:tc:SAML:1.0:assertion': 'saml',
+    }
+
     roles = []
-    response = xmltodict.parse(base64.b64decode(assertion))
+    response = xmltodict.parse(base64.b64decode(assertion), process_namespaces=True, namespaces=namespaces, force_cdata=True)
 
     if response.get('saml2p:Response') is not None:
         attributes = response.get('saml2p:Response', {}).get('saml2:Assertion', {}).get('saml2:AttributeStatement', {}).get('saml2:Attribute', {})
