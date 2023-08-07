@@ -152,7 +152,6 @@ def test_get_saml_credentials(__init__: MagicMock, isatty: MagicMock, get_role_c
 
     result = obj.get_saml_credentials(args, profiles)
 
-    # obj.plugin_manager.hook.get_saml_credentials.assert_called_with(config=obj.config, arguments=args, profiles=profiles)
     assume_role_with_saml.assert_called_with(
         'arn:aws:iam::FAKE:role/FAKE',
         'arn:aws:iam::FAKE:saml-provider/MySamlProvider',
