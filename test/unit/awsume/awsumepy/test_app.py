@@ -11,7 +11,6 @@ from awsume.awsumepy.lib import exceptions
 from unittest.mock import patch, MagicMock, mock_open
 from awsume.awsumepy import hookspec
 from awsume.awsumepy.lib import aws
-from awsume.awsumepy import lib
 
 
 @patch.object(app, 'load_config')
@@ -125,7 +124,7 @@ def test_get_credentials(__init__: MagicMock, isatty: MagicMock, get_role_chain:
     obj.plugin_manager.hook.get_credentials.assert_called_with(config=obj.config, arguments=args, profiles=profiles)
     assert result == {'AccessKeyId': 'AKIA...', 'SecretAccessKey': 'SECRET', 'SessionToken': 'LONGSECRET', 'Region': 'us-east-1'}
 
-@patch.object(lib, 'safe_print')
+@patch.object(app, 'safe_print')
 @patch.object(aws, 'assume_role_with_saml')
 @patch.object(app, 'get_role_chain')
 @patch.object(sys.stdin, 'isatty')
