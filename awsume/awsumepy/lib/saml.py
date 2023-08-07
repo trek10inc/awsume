@@ -41,6 +41,7 @@ def parse_assertion(assertion: str) -> list:
                 roles.append(value['#text'])
         else:
             value = attribute[attribute_value_key]
+            roles.extend(value['#text'].split(','))
             roles.append(value['#text'])
 
     return roles
