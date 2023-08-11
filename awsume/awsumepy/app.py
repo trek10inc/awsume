@@ -129,7 +129,7 @@ class Awsume(object):
 
         if len(roles) > 1:
             if args.role_arn and args.principal_arn:
-                principal_plus_role_arn = ','.join(args.role_arn, args.principal_arn)
+                principal_plus_role_arn = ','.join([args.principal_arn, args.role_arn])
                 if self.config.get('fuzzy-match'):
                     choice = difflib.get_close_matches(principal_plus_role_arn, roles, cutoff=0)[0]
                     safe_print('Closest match: {}'.format(choice))
