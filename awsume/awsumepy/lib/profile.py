@@ -242,8 +242,10 @@ def format_aws_profiles(profiles: dict, get_extra_data: bool) -> list: # pragma:
             profile_account_id = get_account_id(profile, get_extra_data)
             if profile.get('role_arn'):
                 partition = parse_arn(profile['role_arn'])['partition']
-            if profile.get('mfa_serial'):
+            elif profile.get('mfa_serial'):
                 partition = parse_arn(profile['mfa_serial'])['partition']
+            else:
+                partition = '?'
             list_row = [name, profile_type, source_profile, mfa_needed, profile_region, partition, profile_account_id]
             profile_list.append(list_row)
     return profile_list
