@@ -11,7 +11,7 @@
 Homebrew is not an officially supported method of installing awsume
 :::
 
-The officially-recommended way to install awsume is via [pipx](https://pipxproject.github.io/pipx/)
+The officially-recommended way to install awsume is via [pipx](https://pypa.github.io/pipx/)
 
 Awsume can be installed via one of the following commands:
 
