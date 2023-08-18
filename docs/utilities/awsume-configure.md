@@ -37,7 +37,7 @@ If you are using awsume through a [pyenv](https://github.com/pyenv/pyenv) enviro
 alias awsume=". $(pyenv which awsume)"
 ```
 
-However, if you use pyenv and also have installed awsume with [pipx](https://github.com/pipxproject/pipx), you will need the original alias.
+However, if you use pyenv and also have installed awsume with [pipx](https://pypa.github.io/pipx/), you will need the original alias.
 
 Awsume will try to give you the correct alias depending on your installation method, but sometimes things can go awry and require manual intervention.
 

@@ -129,7 +129,7 @@ class Awsume(object):
 
         if len(roles) > 1:
             if args.role_arn and args.principal_arn:
-                principal_plus_role_arn = ','.join(args.role_arn, args.principal_arn)
+                principal_plus_role_arn = ','.join([args.principal_arn, args.role_arn])
                 if self.config.get('fuzzy-match'):
                     choice = difflib.get_close_matches(principal_plus_role_arn, roles, cutoff=0)[0]
                     safe_print('Closest match: {}'.format(choice))
@@ -143,7 +143,7 @@ class Awsume(object):
                 principal_arn = profiles.get(args.profile_name, {}).get('principal_arn')
                 if profile_role_arn is None or principal_arn is None:
                     raise exceptions.InvalidProfileError(args.profile_name, 'both role_arn and principal_arn are necessary for saml profiles')
-                principal_plus_profile_role_arn = ','.join([principal_arn, profile_role_arn])
+                principal_plus_profile_role_arn = ','.join([profile_role_arn, principal_arn])
                 if principal_plus_profile_role_arn in roles:
                     choice = principal_plus_profile_role_arn
                 else:
@@ -158,11 +158,13 @@ class Awsume(object):
                     choice = roles[int(response)]
                 else:
                     choice = difflib.get_close_matches(response, roles, cutoff=0)[0]
-            role_arn = choice.split(',')[1]
-            principal_arn = choice.split(',')[0]
         else:
-            role_arn = roles[0].split(',')[1]
-            principal_arn = roles[0].split(',')[0]
+            choice = roles[0]
+        for arn in choice.split(','):
+            if 'role' in arn:
+                role_arn = arn
+            if 'saml-provider' in arn:
+                principal_arn = arn
         safe_print('Assuming role: {},{}'.format(principal_arn, role_arn), color=colorama.Fore.GREEN)
         credentials = aws_lib.assume_role_with_saml(
             role_arn,
