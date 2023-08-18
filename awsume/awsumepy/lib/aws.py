@@ -1,19 +1,16 @@
 import os
-import argparse
-import dateutil
-import json
+from typing import Union
 
 import boto3
 import botocore
 import colorama
-from datetime import datetime
+import dateutil
 
-from . import profile as profile_lib
 from . import cache as cache_lib
-from . exceptions import RoleAuthenticationError, UserAuthenticationError
-from . logger import logger
-from . safe_print import safe_print
-
+from . import profile as profile_lib
+from .exceptions import RoleAuthenticationError, UserAuthenticationError
+from .logger import logger
+from .safe_print import safe_print
 
 DEFAULT_REGION = 'us-east-1'
 
@@ -40,6 +37,7 @@ def assume_role(
     role_duration: int = None,
     mfa_serial: str = None,
     mfa_token: str = None,
+    tags: Union[list, None] = None,
 ) -> dict:
     if len(session_name) < 2:
         session_name = session_name.center(2, '_')
@@ -62,6 +60,8 @@ def assume_role(
         if mfa_serial:
             kwargs['SerialNumber'] = mfa_serial
             kwargs['TokenCode'] = mfa_token or profile_lib.get_mfa_token()
+        if tags:
+            kwargs["Tags"] = tags
         logger.debug('Assuming role now')
         role_session = role_sts_client.assume_role(**kwargs).get('Credentials')
         logger.debug('Received role credentials')
