@@ -15,7 +15,7 @@ else:
 
 if os.getenv('XDG_CACHE_HOME'):
     XDG_CACHE_HOME = Path(os.getenv('XDG_CACHE_HOME')).expanduser()
-    AWSUME_CACHE_DIR = Path(str(XDG_CACHE_HOME) + '/awsume')
+    AWSUME_CACHE_DIR = XDG_CACHE_HOME / 'awsume'
 else:
     AWSUME_CACHE_DIR = Path('~/.awsume/cache').expanduser()
 
