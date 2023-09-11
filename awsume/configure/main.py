@@ -4,7 +4,7 @@ from distutils.spawn import find_executable
 
 from . import alias, autocomplete
 
-BASH_LOGIN_FILES = ['~/.bash_profile', '~/.bash_login', '~/.profile', '~/.bashrc']
+BASH_LOGIN_FILES = ['~/.bash_profile', '~/.bash_login', '~/.bashrc']
 
 
 def get_bash_file() -> str:

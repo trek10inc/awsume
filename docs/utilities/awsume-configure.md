@@ -66,9 +66,9 @@ It will attempt to load this into the first file it finds available of the follo
 
 - `~/.bash_profile`
 - `~/.bash_login`
-- `~/.profile`
 - `~/.bashrc`
 
+If you want this script in a different login file such as .profile, then you may manually add it into the necessary file.
 ### Zsh
 
 In Zsh environments, the autocomplete script should look something like this:
