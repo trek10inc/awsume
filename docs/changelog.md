@@ -1,5 +1,9 @@
 # Awsume Changelog
 
+## [4.5.4] - WIP - `credential_process` improvements
+
+- The AWS profile name for which the credential process is being invoked will now be passed to the process via the `AWS_PROFILE` environment variable
+
 ## [4.5.3] - 2021-05-28 - Adds `console` extras_require
 
 - Adds `console` extras_require to install the awsume-console-plugin automatically with awsume
