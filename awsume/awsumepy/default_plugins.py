@@ -1,25 +1,23 @@
 import argparse
-import configparser
 import json
 import os
-import colorama
 import subprocess
+
+import colorama
 import dateutil
 
-
-from . lib import exceptions
-from . hookimpl import hookimpl
+from .hookimpl import hookimpl
+from .lib import aws as aws_lib
+from .lib import aws_files as aws_files_lib
+from .lib import config_management as config_lib
+from .lib import exceptions
+from .lib import profile as profile_lib
+from .lib.logger import logger
+from .lib.profile import VALID_CREDENTIAL_SOURCES
+from .lib.profile import get_role_chain, get_profile_name
+from .lib.safe_print import safe_print
 from .. import __data__
 from ..autoawsume.process import kill
-from . lib import aws as aws_lib
-from . lib import aws_files as aws_files_lib
-from . lib.logger import logger
-from . lib.safe_print import safe_print
-from . lib import config_management as config_lib
-from . lib import profile as profile_lib
-from . lib import cache as cache_lib
-from . lib.profile import VALID_CREDENTIAL_SOURCES
-from . lib.profile import get_role_chain, get_profile_name
 
 
 def custom_duration_argument_type(string):
@@ -592,6 +590,7 @@ def get_credentials_handler(config: dict, arguments: argparse.Namespace, profile
                 user_session = get_credentials_from_credential_source(config, arguments, profiles, target_profile, profile_name)
             else:
                 user_session = get_credentials_no_mfa(config, arguments, profiles, target_profile)
+
 
     if config.get('is_interactive'):
         if user_session and user_session.get('Expiration'):

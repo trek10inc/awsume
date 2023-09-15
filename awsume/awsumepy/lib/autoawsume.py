@@ -15,7 +15,8 @@ def create_autoawsume_profile(config: dict, arguments: argparse.Namespace, profi
         raise exceptions.ImmutableProfileError(autoawsume_profile_name, 'not awsume-managed')
     profile = profile_lib.credentials_to_profile(role_session)
     profile['autoawsume'] = 'true'
-    profile['expiration'] = role_session.get('Expiration').strftime('%Y-%m-%d %H:%M:%S')
+    if 'Expiration' in role_session:
+        profile['expiration'] = role_session.get('Expiration').strftime('%Y-%m-%d %H:%M:%S')
     if 'SourceExpiration' in role_session:
         profile['source_expiration'] = role_session.get('SourceExpiration').strftime('%Y-%m-%d %H:%M:%S')
     profile['awsumepy_command'] = ' '.join(arguments.system_arguments)
