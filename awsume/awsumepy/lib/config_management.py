@@ -1,6 +1,7 @@
 import json
 import os
 import sys
+from shutil import move
 
 import colorama
 
@@ -32,8 +33,29 @@ operations:
 def load_config() -> dict:
     if not os.path.exists(str(constants.AWSUME_DIR)):
         os.makedirs(str(constants.AWSUME_DIR))
+    if not os.path.exists(str(constants.AWSUME_CONFIG.parent)):
+        os.makedirs(str(constants.AWSUME_CONFIG.parent))
     if not os.path.isfile(str(constants.AWSUME_CONFIG)):
         open(str(constants.AWSUME_CONFIG), 'a').close()
+    if constants.IS_USING_XDG_CONFIG_HOME and os.path.isfile(constants.AWSUME_CONFIG_LEGACY_PATH):
+        # handle migration to XDG base directory: config file
+        move(constants.AWSUME_CONFIG_LEGACY_PATH, constants.AWSUME_CONFIG)
+    if constants.IS_USING_XDG_CACHE_HOME and os.path.isdir(constants.AWSUME_CACHE_DIR_LEGACY_PATH):
+        # handle migration to XDG base directory: cache dir
+        move(constants.AWSUME_CACHE_DIR_LEGACY_PATH, constants.AWSUME_CACHE_DIR)
+    if constants.IS_USING_XDG_DATA_HOME and os.path.isdir(constants.AWSUME_CACHE_DIR_LEGACY_PATH):
+        # handle migration to XDG base directory: data dir
+        move(constants.AWSUME_DIR_LEGACY_PATH, constants.AWSUME_DIR)
+    if (
+            constants.IS_USING_XDG_CONFIG_HOME and
+            constants.IS_USING_XDG_DATA_HOME and
+            constants.IS_USING_XDG_CACHE_HOME and
+            os.path.isdir(constants.AWSUME_DIR_LEGACY_PATH)
+    ):
+        # cleanup legacy ~/.awsume dir
+        os.rmdir(constants.AWSUME_DIR_LEGACY_PATH)
+
+
 
     options = None
     try:
