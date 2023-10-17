@@ -1,7 +1,4 @@
-import os, subprocess, sys
-from pathlib import Path
 from setuptools.command.install import install
-from distutils.spawn import find_executable
 
 from .main import run
 

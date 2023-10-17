@@ -1,6 +1,6 @@
 import argparse, os, sys, subprocess
 from pathlib import Path
-from distutils.spawn import find_executable
+from shutil import which
 
 from . import alias, autocomplete
 
@@ -143,13 +143,13 @@ def run(shell: str = None, alias_file: str = None, autocomplete_file: str = None
         'fish': setup_fish,
     }
     if not shell:
-        if find_executable('bash'):
+        if which('bash'):
             setup_functions['bash'](None, None)
-        if find_executable('zsh'):
+        if which('zsh'):
             setup_functions['zsh'](None, None)
-        if find_executable('fish'):
+        if which('fish'):
             setup_functions['fish'](None, None)
-        if find_executable('powershell'):
+        if which('powershell'):
             setup_functions['powershell'](None, None)
     else:
         setup_functions[shell](alias_file, autocomplete_file)
