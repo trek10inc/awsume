@@ -1,5 +1,5 @@
 import os, pathlib
-from distutils.spawn import find_executable
+from shutil import which
 
 DEFAULT_ALIAS = 'alias awsume="source awsume"'
 PYENV_ALIAS = r'alias awsume="source \$(pyenv which awsume)"'
@@ -9,12 +9,12 @@ FISH_ALIAS = r'alias awsume="source (which awsume.fish)"'
 def main(shell: str, alias_file: str):
     alias_file = str(pathlib.Path(alias_file).expanduser())
     if shell == 'fish':
-        if find_executable('pyenv'):
+        if which('pyenv'):
             alias = PYENV_FISH_ALIAS
         else:
             alias = FISH_ALIAS
     else:
-        if find_executable('pyenv'):
+        if which('pyenv'):
             alias = PYENV_ALIAS
         else:
             alias = DEFAULT_ALIAS
