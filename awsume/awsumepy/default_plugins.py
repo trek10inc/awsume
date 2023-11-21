@@ -160,6 +160,11 @@ def add_arguments(config: dict, parser: argparse.ArgumentParser):
         dest='with_web_identity',
         help='Use web identity (requires plugin)',
     )
+    assume_role_method.add_argument('--who',
+        action='store_true',
+        dest='who',
+        help='Show current/active aws profile',
+    )
     parser.add_argument('--json',
         action='store',
         dest='json',
@@ -218,6 +223,10 @@ def post_add_arguments(config: dict, arguments: argparse.Namespace, parser: argp
     if arguments.version:
         logger.debug('Logging version')
         safe_print(__data__.version)
+        raise exceptions.EarlyExit()
+    if arguments.who:
+        logger.debug('Logging current profile')
+        safe_print(os.getenv('AWSUME_PROFILE'))
         raise exceptions.EarlyExit()
     if arguments.unset_variables:
         logger.debug('Unsetting environment variables')
