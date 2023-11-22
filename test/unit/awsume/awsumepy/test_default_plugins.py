@@ -19,6 +19,7 @@ def generate_namespace_with_defaults(
         with_saml=None,
         principal_arn=None,
         profile_name=None,
+        who=None,
         **kwargs
 ) -> argparse.Namespace:
     return argparse.Namespace(
@@ -34,6 +35,7 @@ def generate_namespace_with_defaults(
         with_saml=with_saml,
         principal_arn=principal_arn,
         profile_name=profile_name,
+        who=who,
         **kwargs
     )
 
@@ -56,7 +58,7 @@ def test_add_arguments():
 @patch.object(default_plugins, 'safe_print')
 def test_post_add_arguments_role_arn_no_auto_refresh(safe_print: MagicMock):
     config = {}
-    arguments = argparse.Namespace(
+    arguments = generate_namespace_with_defaults(
         role_arn=True,
         auto_refresh=True,
         version=False,
@@ -98,7 +100,7 @@ def test_post_add_arguments_version(safe_print: MagicMock, stdout: MagicMock, st
 @patch.object(default_plugins, 'safe_print')
 def test_post_add_arguments_unset_variables(safe_print: MagicMock, stdout: MagicMock, stderr: MagicMock):
     config = {}
-    arguments = argparse.Namespace(
+    arguments = generate_namespace_with_defaults(
         role_arn=False,
         auto_refresh=False,
         version=False,
@@ -120,7 +122,7 @@ def test_post_add_arguments_unset_variables(safe_print: MagicMock, stdout: Magic
 @patch.object(default_plugins, 'safe_print')
 def test_post_add_arguments_config(safe_print: MagicMock, config_lib: MagicMock, stdout: MagicMock, stderr: MagicMock):
     config = {}
-    arguments = argparse.Namespace(
+    arguments = generate_namespace_with_defaults(
         role_arn=False,
         auto_refresh=False,
         version=False,
@@ -143,7 +145,7 @@ def test_post_add_arguments_config(safe_print: MagicMock, config_lib: MagicMock,
 @patch.object(default_plugins, 'safe_print')
 def test_post_add_arguments_kill(safe_print: MagicMock, kill: MagicMock, stdout: MagicMock, stderr: MagicMock):
     config = {}
-    arguments = argparse.Namespace(
+    arguments = generate_namespace_with_defaults(
         role_arn=False,
         auto_refresh=False,
         version=False,
@@ -186,7 +188,7 @@ def test_post_add_arguments_role_arn_short(safe_print: MagicMock):
 @patch.object(default_plugins, 'safe_print')
 def test_post_add_arguments_role_arn_short_bad_id(safe_print: MagicMock, stdout: MagicMock, stderr: MagicMock):
     config = {}
-    arguments = argparse.Namespace(
+    arguments = generate_namespace_with_defaults(
         role_arn='notanid:myrole',
         auto_refresh=False,
         version=False,
@@ -209,7 +211,7 @@ def test_post_add_arguments_role_arn_short_bad_id(safe_print: MagicMock, stdout:
 @patch.object(default_plugins, 'safe_print')
 def test_post_add_arguments_role_arn_short_bad_number_parts(safe_print: MagicMock, stdout: MagicMock, stderr: MagicMock):
     config = {}
-    arguments = argparse.Namespace(
+    arguments = generate_namespace_with_defaults(
         role_arn='notanid:myrole:other',
         auto_refresh=False,
         version=False,
