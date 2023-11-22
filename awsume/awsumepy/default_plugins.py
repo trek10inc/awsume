@@ -226,7 +226,9 @@ def post_add_arguments(config: dict, arguments: argparse.Namespace, parser: argp
         raise exceptions.EarlyExit()
     if arguments.who:
         logger.debug('Logging current profile')
-        safe_print(os.getenv('AWSUME_PROFILE'))
+        awsume_profile = os.getenv('AWSUME_PROFILE')
+        message = awsume_profile if awsume_profile else 'No profile awsume\'d currently'
+        safe_print(message)
         raise exceptions.EarlyExit()
     if arguments.unset_variables:
         logger.debug('Unsetting environment variables')
