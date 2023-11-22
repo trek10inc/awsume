@@ -1,8 +1,29 @@
 # Awsume Changelog
 
-## [4.5.4] - WIP - `credential_process` improvements
+## [4.5.4] - 2023-11-22 - Numerous Bug fixes and improvements
 
-- The AWS profile name for which the credential process is being invoked will now be passed to the process via the `AWS_PROFILE` environment variable
+### Bug Fixes
+- [#148](https://github.com/trek10inc/awsume/pull/148/) Process SAML Namespaces when parsing assertion
+- [#164](https://github.com/trek10inc/awsume/pull/164/) SAML Argument Order bugfix
+- [#224](https://github.com/trek10inc/awsume/pull/224/) SAML Role Argument bugfix
+- [#226](https://github.com/trek10inc/awsume/pull/226/) Fix bug with listing profiles from all AWS partitions
+- [#233](https://github.com/trek10inc/awsume/pull/233/) Fixes issue with default user and the autoawsume plugin
+- [#239](https://github.com/trek10inc/awsume/pull/239) Replace distutil usage for 3.12 compatability
+
+### Improvements
+- [#169](https://github.com/trek10inc/awsume/pull/169/) The AWS profile name for which the credential process is being invoked will now be passed to the process via the `AWS_PROFILE` environment variable
+- [#174](https://github.com/trek10inc/awsume/pull/174/) Update fish autocomplete to ignore files in current directory
+- [#183](https://github.com/trek10inc/awsume/pull/183/) Remove non-posix commands from ~/.profile for autocomplete
+- [#225](https://github.com/trek10inc/awsume/pull/225/) Added feature to add tags to awsume'd session
+- [#227](https://github.com/trek10inc/awsume/pull/228/) Use XDG environment variables if set, migrate existing XDG users 
+- [#243](https://github.com/trek10inc/awsume/pull/243) Show currently awsumed profile with `who` flag
+
+### Docs
+- [#215](https://github.com/trek10inc/awsume/pull/215/) Add new plugins to the docs website
+- [#221](https://github.com/trek10inc/awsume/pull/211/) Dependabot updates for Vuepress docs site
+- [#227](https://github.com/trek10inc/awsume/pull/227/) Update pipx urls
+- [#241](https://github.com/trek10inc/awsume/pull/241) Dependabot Updates
+- [#242](https://github.com/trek10inc/awsume/pull/242) Dependabot Updates
 
 ## [4.5.3] - 2021-05-28 - Adds `console` extras_require
 
