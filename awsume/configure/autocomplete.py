@@ -1,5 +1,7 @@
 import os, pathlib
 
+from awsume.awsumepy.lib.constants import AWSUME_DIR
+
 BASH_AUTOCOMPLETE_SCRIPT = """
 _awsume() {
     local cur prev opts
@@ -64,16 +66,12 @@ def main(shell: str, autocomplete_file: str):
 
     # install autocomplete function if zsh
     if shell == 'zsh':
-        zsh_autocomplete_function_file = str(pathlib.Path('~/.awsume/zsh-autocomplete/_awsume').expanduser())
-        basedir = os.path.dirname(zsh_autocomplete_function_file)
-        if basedir and not os.path.exists(basedir):
-            os.makedirs(basedir)
-        if not os.path.isfile(zsh_autocomplete_function_file):
-            open(zsh_autocomplete_function_file, 'w').close()
-
-        if ZSH_AUTOCOMPLETE_FUNCTION in open(zsh_autocomplete_function_file, 'r').read():
+        zsh_autocomplete_function_file = AWSUME_DIR / 'zsh-autocomplete/_awsume'
+        if not zsh_autocomplete_function_file.is_file():
+            zsh_autocomplete_function_file.open('w').close()
+        if ZSH_AUTOCOMPLETE_FUNCTION in zsh_autocomplete_function_file.open('r').read():
             print('Zsh function already in ' + zsh_autocomplete_function_file)
         else:
-            with open(zsh_autocomplete_function_file, 'a') as f:
+            with zsh_autocomplete_function_file.open('a') as f:
                 f.write(ZSH_AUTOCOMPLETE_FUNCTION)
-            print('Wrote zsh function to ' + zsh_autocomplete_function_file)
+            print('Wrote zsh function to ' + str(zsh_autocomplete_function_file))

@@ -66,13 +66,13 @@ class Awsume(object):
         args = argument_parser.parse_args(system_arguments)
         logger.debug('Handling arguments')
         if args.refresh_autocomplete:
-            autocomplete_file = Path('~/.awsume/autocomplete.json').expanduser()
+            autocomplete_file = AWSUME_AUTOCOMPLETE_FILE
             result = self.plugin_manager.hook.get_profile_names(
                 config=self.config,
                 arguments=args,
             )
             profile_names = [y for x in result for y in x]
-            json.dump({'profile-names': profile_names}, open(autocomplete_file, 'w'))
+            json.dump({'profile-names': profile_names}, AWSUME_AUTOCOMPLETE_FILE.open('w'))
             raise exceptions.EarlyExit()
         if args.list_plugins:
             for plugin_name, _ in self.plugin_manager.list_name_plugin():

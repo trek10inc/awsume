@@ -11,6 +11,7 @@ from datetime import datetime, timedelta
 import dateutil
 
 from ..awsumepy.lib.aws_files import get_aws_files, delete_section
+from ..awsumepy.lib.constants import AWSUME_LOG_FILE
 from ..awsumepy.lib.logger import LogFormatter
 from ..awsumepy.lib.logger import logger as awsume_logger
 from ..awsumepy.lib import exceptions
@@ -80,14 +81,8 @@ def main():
 
 
 def configure_logger():
-    log_dir = str(Path('~/.awsume/logs/').expanduser())
-    log_file = str(Path('~/.awsume/logs/autoawsume.log').expanduser())
-
-    if not os.path.exists(log_dir):
-        os.makedirs(log_dir)
-
     log_handler = RotatingFileHandler(
-        filename=log_file,
+        filename=str(AWSUME_LOG_FILE),
         maxBytes=(
             5 * # five
             (2 ** 20) # megabytes

@@ -4,6 +4,8 @@ import json
 import configparser
 from pathlib import Path
 
+from awsume.awsumepy.lib.constants import AWSUME_AUTOCOMPLETE_FILE
+
 
 def get_aws_files() -> tuple:
     config_file = os.environ.get('AWS_CONFIG_FILE') if os.environ.get('AWS_CONFIG_FILE') else '~/.aws/config'
@@ -33,9 +35,8 @@ def uniquely_concat_lists(list1, list2):
 def main():
     config, credentials = get_aws_files()
     profile_names = get_profile_names(credentials, config)
-    autocomplete_file = str(Path('~/.awsume/autocomplete.json').expanduser())
-    if os.path.isfile(autocomplete_file):
-        autocomplete = json.load(open(autocomplete_file))
+    if AWSUME_AUTOCOMPLETE_FILE.is_file():
+        autocomplete = json.load(AWSUME_AUTOCOMPLETE_FILE.open())
         profile_names = uniquely_concat_lists(profile_names, autocomplete['profile-names'])
     print('\n'.join(profile_names))
 

@@ -29,3 +29,8 @@ else:
 
 DEFAULT_CREDENTIALS_FILE = Path('~/.aws/credentials').expanduser()
 DEFAULT_CONFIG_FILE = Path('~/.aws/config').expanduser()
+
+AWSUME_LOG_DIR = AWSUME_DIR / 'logs'
+AWSUME_LOG_DIR.mkdir(parents=True, exist_ok=True)
+AWSUME_LOG_FILE = AWSUME_LOG_DIR / 'awsume.log'
+AWSUME_AUTOCOMPLETE_FILE = AWSUME_DIR / 'autocomplete.json'

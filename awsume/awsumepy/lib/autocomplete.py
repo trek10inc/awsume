@@ -4,6 +4,8 @@ import json
 from pathlib import Path
 import boto3
 
+from awsume.awsumepy.lib.constants import AWSUME_AUTOCOMPLETE_FILE
+
 REGIONS = [
     'us-east-2',
     'us-east-1',
@@ -59,9 +61,8 @@ def uniquely_concat_lists(list1, list2):
 def profile_name_completer(prefix, parsed_args, **kwargs):
     config, credentials = get_aws_files()
     profile_names = get_profile_names(credentials, config)
-    autocomplete_file = str(Path('~/.awsume/autocomplete.json').expanduser())
-    if os.path.isfile(autocomplete_file):
-        autocomplete = json.load(open(autocomplete_file))
+    if AWSUME_AUTOCOMPLETE_FILE.is_file():
+        autocomplete = json.load(AWSUME_AUTOCOMPLETE_FILE.open())
         profile_names = uniquely_concat_lists(profile_names, autocomplete['profile-names'])
     return [profile_name for profile_name in profile_names if profile_name.startswith(prefix)]
 
