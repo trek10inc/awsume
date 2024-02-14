@@ -1,9 +1,12 @@
 import argparse
+from pathlib import Path
+
 import pytest
 from io import StringIO
 from unittest.mock import MagicMock, patch
 from awsume.awsumepy import default_plugins
 from awsume.awsumepy.lib import exceptions, autoawsume
+from awsume.awsumepy.lib.constants import AWSUME_DIR
 
 
 def generate_namespace_with_defaults(
@@ -1006,3 +1009,46 @@ def test_post_add_arguments_session_tags(aws_lib: MagicMock):
         ],
         region=arguments.region,
     )
+
+@patch.object(Path, 'is_file')
+def test_get_credentials_process_target_and_arguments_with_file(is_file: MagicMock):
+    is_file.return_value(True)
+    process_file = Path(f"{AWSUME_DIR}/test.sh").expanduser()
+    expected = [str(process_file), "arg1", "arg2"]
+    target_profile = {
+        "credential_process": f"{str(process_file)} arg1 arg2"
+    }
+    actual = default_plugins.get_credentials_process_target_and_arguments(target_profile)
+    assert actual == expected
+
+def test_get_credentials_process_target_and_arguments_without_file():
+    process_file = Path(f"{AWSUME_DIR}/nonexistent.sh").expanduser()
+    target_profile = {
+        "credential_process": f"{str(process_file)} arg1 arg2"
+    }
+    with pytest.raises(exceptions.ValidationException):
+        default_plugins.get_credentials_process_target_and_arguments(target_profile)
+
+def test_get_credentials_process_target_and_arguments_invalid_arguments():
+    target_profile = {
+        "credential_process": ""
+    }
+    with pytest.raises(exceptions.ValidationException):
+        default_plugins.get_credentials_process_target_and_arguments(target_profile)
+
+def test_get_credentials_process_target_and_arguments_invalid_input():
+    target_profile = {}
+    with pytest.raises(exceptions.ValidationException):
+        default_plugins.get_credentials_process_target_and_arguments(target_profile)
+
+def test_get_credentials_process_target_and_arguments_expands_user():
+    process_file = Path(f"~/test.sh")
+    expanded_process_file = process_file.expanduser()
+    expanded_process_file.open('w').close()
+    target_profile = {
+        "credential_process": f"{str(process_file)} arg1 arg2"
+    }
+    print(target_profile)
+    expected = [str(expanded_process_file), "arg1", "arg2"]
+    actual = default_plugins.get_credentials_process_target_and_arguments(target_profile)
+    assert actual == expected

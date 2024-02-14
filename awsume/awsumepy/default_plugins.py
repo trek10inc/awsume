@@ -2,6 +2,7 @@ import argparse
 import json
 import os
 import subprocess
+from pathlib import Path
 
 import colorama
 import dateutil
@@ -519,7 +520,8 @@ def get_credentials_from_credential_process(config: dict, arguments: argparse.Na
     return_session = {}
     credential_process_env = os.environ.copy()
     credential_process_env['AWS_PROFILE'] = target_profile_name
-    result = subprocess.run(target_profile.get('credential_process').split(), stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=credential_process_env)
+    credential_process_target_and_arguments = get_credentials_process_target_and_arguments(target_profile)
+    result = subprocess.run(credential_process_target_and_arguments, stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=credential_process_env)
     logger.info('credential_process returncode: {}'.format(result.returncode))
     logger.debug('credential_process stdout: {}'.format(result.stdout.decode('utf-8')))
     logger.debug('credential_process stderr: {}'.format(result.stderr.decode('utf-8')))
@@ -546,6 +548,20 @@ def get_credentials_from_credential_process(config: dict, arguments: argparse.Na
     return_session['Region'] = region
     logger.debug("credential_process session: {}".format(return_session))
     return return_session
+
+def get_credentials_process_target_and_arguments(target_profile: dict):
+    credential_process = target_profile.get("credential_process", None)
+    if credential_process is None:
+        raise exceptions.ValidationException(f"credential_process not found in profile: {json.dumps(target_profile)}")
+    parts = credential_process.split()
+    target = Path(parts[0]).expanduser() if len(parts) > 0 else None
+    if target is None:
+        logger.debug(f"Unable to find credentials target from provided process string: {credential_process}")
+        raise exceptions.ValidationException('credential_process target not found: {}'.format(target))
+    if not target.is_file():
+        logger.debug(f"{credential_process} is not a file. Derived target is {str(target)}")
+        raise exceptions.ValidationException('credential_process target is not a file: {}'.format(target))
+    return [str(target), *parts[1:]]
 
 
 def get_session_token_credentials(config: dict, arguments: argparse.Namespace, profiles: dict, target_profile: dict, target_profile_name: str):
