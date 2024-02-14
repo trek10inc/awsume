@@ -1010,16 +1010,16 @@ def test_post_add_arguments_session_tags(aws_lib: MagicMock):
         region=arguments.region,
     )
 
-def test_get_credentials_process_target_and_arguments_with_file():
+@patch.object(Path, 'is_file')
+def test_get_credentials_process_target_and_arguments_with_file(is_file: MagicMock):
+    is_file.return_value(True)
     process_file = Path(f"{AWSUME_DIR}/test.sh").expanduser()
-    process_file.open('w').close() # create test script file in AWSUME_DIR
     expected = [str(process_file), "arg1", "arg2"]
     target_profile = {
         "credential_process": f"{str(process_file)} arg1 arg2"
     }
     actual = default_plugins.get_credentials_process_target_and_arguments(target_profile)
     assert actual == expected
-    process_file.unlink() # remove test script file in AWSUME_DIR
 
 def test_get_credentials_process_target_and_arguments_without_file():
     process_file = Path(f"{AWSUME_DIR}/nonexistent.sh").expanduser()
@@ -1030,14 +1030,11 @@ def test_get_credentials_process_target_and_arguments_without_file():
         default_plugins.get_credentials_process_target_and_arguments(target_profile)
 
 def test_get_credentials_process_target_and_arguments_invalid_arguments():
-    process_file = Path(f"{AWSUME_DIR}/test.sh").expanduser()
-    process_file.open('w').close()
     target_profile = {
         "credential_process": ""
     }
     with pytest.raises(exceptions.ValidationException):
         default_plugins.get_credentials_process_target_and_arguments(target_profile)
-    process_file.unlink()
 
 def test_get_credentials_process_target_and_arguments_invalid_input():
     target_profile = {}
