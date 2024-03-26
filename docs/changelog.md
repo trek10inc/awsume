@@ -1,5 +1,16 @@
 # Awsume Changelog
 
+## [4.5.5] - 2024-03-26 - Bug Fixes and Dependabot Updates
+
+### Bug Fixes
+- [#251](https://github.com/trek10inc/awsume/pull/251) Update logger configuration to use constants
+- [#252](https://github.com/trek10inc/awsume/pull/252) Expand User Path For Subprocesses
+
+### Dependabot
+- [#253](https://github.com/trek10inc/awsume/pull/253) Bump ip from 1.1.8 to 1.1.9 in /docs
+- [#254](https://github.com/trek10inc/awsume/pull/254) Bump follow-redirects from 1.15.4 to 1.15.6 in /docs
+- [#256](https://github.com/trek10inc/awsume/pull/256) Bump express from 4.18.2 to 4.19.2 in /docs
+
 ## [4.5.4] - 2023-11-22 - Numerous Bug fixes and improvements
 
 ### Bug Fixes
