@@ -1,19 +1,17 @@
 import json
-import subprocess
 import configparser
 import time
-import sys
-import os
 import logging
 from logging.handlers import RotatingFileHandler
-from pathlib import Path
 from datetime import datetime, timedelta
 import dateutil
 
-from ..awsumepy.lib.aws_files import get_aws_files, delete_section
+from ..awsumepy.lib.aws_files import get_aws_files
 from ..awsumepy.lib.logger import LogFormatter
 from ..awsumepy.lib.logger import logger as awsume_logger
+from ..awsumepy.lib import constants
 from ..awsumepy.lib import exceptions
+from ..awsumepy.lib.config_management import migrate_to_xdg_base_directories
 from .. import awsumepy
 
 logger = logging.getLogger('autoawsume') # type: logging.Logger
@@ -80,11 +78,9 @@ def main():
 
 
 def configure_logger():
-    log_dir = str(Path('~/.awsume/logs/').expanduser())
-    log_file = str(Path('~/.awsume/logs/autoawsume.log').expanduser())
+    migrate_to_xdg_base_directories()
 
-    if not os.path.exists(log_dir):
-        os.makedirs(log_dir)
+    log_file = str(constants.AWSUME_LOG_DIR / 'autoawsume.log')
 
     log_handler = RotatingFileHandler(
         filename=log_file,

@@ -1,5 +1,3 @@
-import os
-import json
 import pytest
 from unittest.mock import patch, MagicMock
 
@@ -46,7 +44,7 @@ def test_load_config_no_path(exists: MagicMock, isfile: MagicMock, makedirs: Mag
     assert result == yaml_load.return_value
     makedirs.assert_called()
     open.assert_called_once()
-    assert makedirs.call_count == 2
+    assert makedirs.call_count == 3
 
 @patch('awsume.awsumepy.lib.constants.IS_USING_XDG_CONFIG_HOME', False)
 @patch('yaml.safe_load')
