@@ -13,11 +13,32 @@ on:
       - master
 
 jobs:
-  test:
+  test_3_6:
     strategy:
       matrix:
         python-version: [ '3.6' ]
     runs-on: ubuntu-20.04
+
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pipenv==2018.11.26
+      - name: Test
+        run: |
+          echo "Installing pipenv dependencies"
+          PIPENV_NOSPIN=true pipenv install --dev
+          pipenv run test
+  test_3_7:
+    strategy:
+      matrix:
+        python-version: [ '3.7' ]
+    runs-on: ubuntu-22.04
 
     steps:
       - uses: actions/checkout@v2
