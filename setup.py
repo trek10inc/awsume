@@ -21,6 +21,9 @@ setup(
         'psutil',
         'pluggy',
         'pyyaml',
+        'urllib3 >= 1.21.1, <= 1.24',
+        'chardet >= 3.0.2, < 3.1.0',
+        'setuptools; python_version >= "3.12"'
     ],
     extras_require={
         'saml': ['xmltodict'],
@@ -41,7 +44,7 @@ setup(
             'awsume-autocomplete=awsume_autocomplete:main',
         ],
     },
-    python_requires='>=3.5',
+    python_requires='>=3.6',
     cmdclass={
         'install': CustomInstall,
     },
