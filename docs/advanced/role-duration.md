@@ -9,5 +9,5 @@ Where this can be a danger is that the default role duration for all roles is 1 
 A role duration can be provided to awsume in the following ways, following priority:
 
 1. The `--role-duration` flag
-2. The target profile's `role_duration` property
+2. The target profile's `duration_seconds` property
 3. Awsume's global configuration `role-duration` property
