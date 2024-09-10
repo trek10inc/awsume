@@ -32,6 +32,7 @@ def assume_role(
     source_credentials: dict,
     role_arn: str,
     session_name: str,
+    session_policy: str = None,
     external_id: str = None,
     region: str = None,
     role_duration: int = None,
@@ -53,6 +54,8 @@ def assume_role(
         )
         role_sts_client = boto_session.client('sts') # type: botostubs.STS
         kwargs = { 'RoleSessionName': session_name, 'RoleArn': role_arn }
+        if session_policy:
+            kwargs['Policy'] = session_policy
         if external_id:
             kwargs['ExternalId'] = external_id
         if role_duration:

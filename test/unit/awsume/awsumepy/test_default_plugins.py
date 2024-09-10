@@ -10,6 +10,7 @@ from awsume.awsumepy.lib.constants import AWSUME_DIR
 
 
 def generate_namespace_with_defaults(
+        session_policy=None,
         session_tags=None,
         region=None,
         source_profile=None,
@@ -26,6 +27,7 @@ def generate_namespace_with_defaults(
         **kwargs
 ) -> argparse.Namespace:
     return argparse.Namespace(
+        session_policy=session_policy,
         session_tags=session_tags,
         region=region,
         source_profile=source_profile,
@@ -426,6 +428,7 @@ def test_assume_role_from_cli(aws_lib: MagicMock, profile_lib: MagicMock):
     default_plugins.assume_role_from_cli(config, arguments, profiles)
     aws_lib.assume_role.assert_called_with(
         {}, arguments.role_arn, 'awsume-cli-role',
+        session_policy=arguments.session_policy,
         region=profile_lib.get_region.return_value,
         external_id=arguments.external_id,
         role_duration=0,
@@ -463,6 +466,7 @@ def test_assume_role_from_cli_source_profile(aws_lib: MagicMock, profile_lib: Ma
         aws_lib.get_session_token.return_value,
         arguments.role_arn,
         'awsume-cli-role',
+        session_policy=arguments.session_policy,
         region=profile_lib.get_region.return_value,
         external_id=arguments.external_id,
         role_duration=0,
@@ -500,6 +504,7 @@ def test_assume_role_from_cli_source_profile_role_duration_mfa(aws_lib: MagicMoc
         profile_lib.profile_to_credentials.return_value,
         arguments.role_arn,
         'awsume-cli-role',
+        session_policy=arguments.session_policy,
         region=profile_lib.get_region.return_value,
         external_id=arguments.external_id,
         role_duration='43200',
@@ -538,6 +543,7 @@ def test_assume_role_from_cli_source_profile_role_duration_no_mfa(aws_lib: Magic
         profile_lib.profile_to_credentials.return_value,
         arguments.role_arn,
         'awsume-cli-role',
+        session_policy=arguments.session_policy,
         region=profile_lib.get_region.return_value,
         external_id=arguments.external_id,
         role_duration='43200',
@@ -582,6 +588,7 @@ def test_assume_role_from_cli_source_profile_no_role_duration_mfa(aws_lib: Magic
         aws_lib.get_session_token.return_value,
         arguments.role_arn,
         'awsume-cli-role',
+        session_policy=arguments.session_policy,
         region=profile_lib.get_region.return_value,
         external_id=arguments.external_id,
         role_duration=0,
@@ -618,6 +625,7 @@ def test_assume_role_from_cli_source_profile_no_role_duration_no_mfa(aws_lib: Ma
         profile_lib.profile_to_credentials.return_value,
         arguments.role_arn,
         'awsume-cli-role',
+        session_policy=arguments.session_policy,
         region=profile_lib.get_region.return_value,
         external_id=arguments.external_id,
         role_duration=0,
@@ -690,6 +698,7 @@ def test_get_credentials(aws_lib: MagicMock, create_autoawsume_profile: MagicMoc
         aws_lib.get_session_token.return_value,
         'myrolearn',
         'mysessionname',
+        session_policy=arguments.session_policy,
         region=None,
         external_id='myexternalid',
         role_duration=0,
@@ -742,6 +751,7 @@ def test_get_credentials_auto_refresh(aws_lib: MagicMock, create_autoawsume_prof
         aws_lib.get_session_token.return_value,
         'myrolearn',
         'mysessionname',
+        session_policy=arguments.session_policy,
         region=None,
         external_id='myexternalid',
         role_duration=0,
@@ -784,6 +794,7 @@ def test_get_credentials_role_duration(aws_lib: MagicMock, create_autoawsume_pro
         { 'AccessKeyId': 'AKIA...', 'SecretAccessKey': 'SECRET', 'SessionToken': None, 'Region': None },
         'myrolearn',
         'mysessionname',
+        session_policy=arguments.session_policy,
         region=None,
         external_id='myexternalid',
         role_duration=43200,
@@ -898,6 +909,7 @@ def test_get_credentials_no_mfa_role(aws_lib: MagicMock, create_autoawsume_profi
         { 'AccessKeyId': 'AKIA...', 'SecretAccessKey': 'SECRET', 'SessionToken': None, 'Region': None },
         'myrolearn',
         'mysessionname',
+        session_policy=arguments.session_policy,
         region=None,
         external_id='myexternalid',
         role_duration=0,
@@ -996,6 +1008,7 @@ def test_post_add_arguments_session_tags(aws_lib: MagicMock):
         config,
         arguments.role_arn,
         'awsume-cli-role',
+        session_policy=arguments.session_policy,
         external_id=arguments.external_id,
         role_duration='43200',
         tags=[

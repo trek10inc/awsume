@@ -143,6 +143,12 @@ def add_arguments(config: dict, parser: argparse.ArgumentParser):
         metavar='session_name',
         help='Set a custom role session name',
     )
+    parser.add_argument('--session-policy',
+        action='store',
+        dest='session_policy',
+        metavar='session_policy',
+        help='Custom session policy JSON',
+    )
     parser.add_argument('--role-duration',
         action='store',
         dest='role_duration',
@@ -339,7 +345,7 @@ def assume_role_from_cli(config: dict, arguments: dict, profiles: dict):
     logger.debug('Session name: {}'.format(session_name))
     if not arguments.source_profile:
         logger.debug('Using current credentials to assume role')
-        role_session = aws_lib.assume_role({}, arguments.role_arn, session_name, region=region, external_id=arguments.external_id, role_duration=role_duration, tags=arguments.session_tags)
+        role_session = aws_lib.assume_role({}, arguments.role_arn, session_name, session_policy=arguments.session_policy, region=region, external_id=arguments.external_id, role_duration=role_duration, tags=arguments.session_tags)
     else:
         logger.debug('Using the source_profile from the cli to call assume_role')
         source_profile = profiles.get(arguments.source_profile)
@@ -357,6 +363,7 @@ def assume_role_from_cli(config: dict, arguments: dict, profiles: dict):
                     source_session,
                     arguments.role_arn,
                     session_name,
+                    session_policy=arguments.session_policy,
                     region=region,
                     external_id=arguments.external_id,
                     role_duration=role_duration,
@@ -370,6 +377,7 @@ def assume_role_from_cli(config: dict, arguments: dict, profiles: dict):
                     source_credentials,
                     arguments.role_arn,
                     session_name,
+                    session_policy=arguments.session_policy,
                     region=region,
                     external_id=arguments.external_id,
                     role_duration=role_duration,
@@ -394,6 +402,7 @@ def assume_role_from_cli(config: dict, arguments: dict, profiles: dict):
                 source_session,
                 arguments.role_arn,
                 session_name,
+                session_policy=arguments.session_policy,
                 region=region,
                 external_id=arguments.external_id,
                 role_duration=role_duration,
@@ -413,6 +422,7 @@ def get_assume_role_credentials(config: dict, arguments: argparse.Namespace, pro
         source_credentials,
         target_profile.get('role_arn'),
         profile_lib.get_session_name(config, arguments, profiles, target_profile_name),
+        session_policy=arguments.session_policy,
         region=region,
         external_id=external_id,
         role_duration=role_duration,
@@ -458,6 +468,7 @@ def get_assume_role_credentials_mfa_required(config: dict, arguments: argparse.N
         source_session,
         target_profile.get('role_arn'),
         profile_lib.get_session_name(config, arguments, profiles, target_profile_name),
+        session_policy=arguments.session_policy,
         region=region,
         external_id=external_id,
         role_duration=role_duration,
@@ -488,6 +499,7 @@ def get_assume_role_credentials_mfa_required_large_custom_duration(config: dict,
         source_session,
         target_profile.get('role_arn'),
         profile_lib.get_session_name(config, arguments, profiles, target_profile_name),
+        session_policy=arguments.session_policy,
         region=region,
         external_id=external_id,
         role_duration=role_duration,
