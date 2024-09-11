@@ -23,7 +23,6 @@ setup(
         'pyyaml',
     ],
     extras_require={
-        'configure': ['setuptools'],
         'saml': ['xmltodict'],
         'fuzzy': ['python-levenshtein'],
         'console': ['awsume-console-plugin'],
