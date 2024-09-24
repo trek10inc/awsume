@@ -2,7 +2,7 @@
 
 Awsume's configuration file can be found at `~/.awsume/config.yaml` by
 default. If the `XDG_CONFIG_HOME` environment variable is set then it can be
-found at: `${XDG_CONFIG_HOME}/awsume/config.yaml`. 
+found at: `${XDG_CONFIG_HOME}/awsume/config.yaml`.
 
 Use `awsume --config help` to view available commands for config management.
 
@@ -20,7 +20,7 @@ role-session-name: awsume-cli-session
 
 - **colors** You can enable to disable adding colors to awsume's output. This is disabled on Windows machines.
 - **fuzzy-match** You can enable to disable fuzzy-matching the given profile if the given profile is not found. See more about it [here](../advanced/fuzzy-matching)
-- **role-duration** You can set a default role duration to awsume. _Note: If you specify a role duration that is greater than the maximum configured for that role, awsume will fail to assume the role. See how this impacts awsume [here](../advanced/role-duration)
+- **role-duration** You can set a default role duration (in seconds) to awsume. _Note: If you specify a role duration that is greater than the maximum configured for that role, awsume will fail to assume the role. See how this impacts awsume [here](../advanced/role-duration)
 - **region** You can specify a default region. See how this impacts awsume [here](../advanced/region)
 - **role-session-name** You can specify a default role session name that will be associated with your credential's session. See how this impacts awsume [here](../advanced/role-session-name)
 
