@@ -1,5 +1,5 @@
 import os
-from typing import Union
+from typing import List, Union
 
 import boto3
 import botocore
@@ -33,6 +33,7 @@ def assume_role(
     role_arn: str,
     session_name: str,
     session_policy: str = None,
+    session_policy_arns: List[str] = [],
     external_id: str = None,
     region: str = None,
     role_duration: int = None,
@@ -56,6 +57,8 @@ def assume_role(
         kwargs = { 'RoleSessionName': session_name, 'RoleArn': role_arn }
         if session_policy:
             kwargs['Policy'] = session_policy
+        if session_policy_arns:
+            kwargs['PolicyArns'] = [{'arn': arn} for arn in session_policy_arns]
         if external_id:
             kwargs['ExternalId'] = external_id
         if role_duration:
