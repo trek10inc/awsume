@@ -9,8 +9,9 @@ usage: awsume [-h] [-v] [-r] [-s] [-u] [-a] [-k] [-o] [-l [more]]
               [--refresh-autocomplete] [--role-arn role_arn]
               [--source-profile source_profile] [--external-id external_id]
               [--mfa-token mfa_token] [--region region]
-              [--session-name session_name] [--role-duration role_duration]
-              [--with-saml | --with-web-identity]
+              [--session-name session_name] [--session-policy session_policy]
+              [--session-policy-arns session_policy_arns [session_policy_arns...]]
+              [--role-duration role_duration] [--with-saml | --with-web-identity]
               [--credentials-file credentials_file] [--config-file config_file]
               [--config [option [option ...]]] [--info] [--debug]
               [profile_name]
@@ -36,6 +37,8 @@ optional arguments:
   --mfa-token mfa_token                Your mfa token
   --region region                      The region you want to awsume into
   --session-name session_name          Set a custom role session name
+  --session-policy session_policy      Custom session policy JSON
+  --session-policy-arns [arns ...]     List of policy ARNs
   --role-duration role_duration        Seconds to get role creds for
   --with-saml                          Use saml (requires plugin)
   --with-web-identity                  Use web identity (requires plugin)
@@ -138,6 +141,23 @@ You can target a specific region to awsume with the `--region` flag. This basica
 ## Session Name
 
 You can supply your own session name to the `assume_role` call with the `--session-name` flag.
+
+## Session Policy, Policy ARNs
+
+You can define your own session policy for a given `awsume` session.
+You can do this by specifying the policy JSON or a list of policy ARNs.
+
+Specifying policy JSON:
+
+```sh
+$ awsume myprofile --session-policy '{"Version":"2012-10-17","Statement":[{"Effect":"Allow","Action":"s3:*","Resource":"*"}]}'
+```
+
+Specifying policy ARNs:
+
+```sh
+$ awsume myprofile --session-policy-arns 'arn:aws:iam::aws:policy/job-function/Billing'
+```
 
 ## Role Duration
 
