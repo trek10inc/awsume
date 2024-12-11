@@ -3,8 +3,14 @@ from shutil import which
 
 DEFAULT_ALIAS = 'alias awsume="source awsume"'
 PYENV_ALIAS = r'alias awsume="source \$(pyenv which awsume)"'
-PYENV_FISH_ALIAS = r'alias awsume="source (pyenv which awsume.fish)"'
-FISH_ALIAS = r'alias awsume="source (which awsume.fish)"'
+PYENV_FISH_ALIAS = """function awsume
+    source (pyenv which awsume.fish) $argv;
+end
+"""
+FISH_ALIAS = """function awsume
+    source (which awsume.fish) $argv;
+end
+"""
 
 def main(shell: str, alias_file: str):
     alias_file = str(pathlib.Path(alias_file).expanduser())
