@@ -1,4 +1,4 @@
-version = '4.5.5.rc'
+version = '4.5.6'
 
 name = 'awsume'
 author = 'Trek10, Inc'
@@ -7,4 +7,4 @@ description = 'Awsume - A cli that makes using AWS IAM credentials easy'
 license = 'MIT'
 homepage = 'https://github.com/trek10inc/awsume'
 
-message = 'Thank you for using AWSume! Check us out at https://trek10.com'
+message = 'AWSume is no longer actively maintained. We recommend migrating to the AWS CLI. The project remains available to fork. Thank you for using AWSume!'
