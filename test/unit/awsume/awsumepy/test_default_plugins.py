@@ -1079,3 +1079,16 @@ def test_get_credentials_process_target_and_arguments_expands_user():
     expected = [str(expanded_process_file), "arg1", "arg2"]
     actual = default_plugins.get_credentials_process_target_and_arguments(target_profile)
     assert actual == expected
+
+
+def test_get_credentials_process_target_and_arguments_expands_user_args_containcontains_space():
+    process_file = Path(f"~/test.sh")
+    expanded_process_file = process_file.expanduser()
+    expanded_process_file.open('w').close()
+    target_profile = {
+        "credential_process": f"{str(process_file)} 'arg1 with space' 'arg2 with space'"
+    }
+    print(target_profile)
+    expected = [str(expanded_process_file), "arg1 with space", "arg2 with space"]
+    actual = default_plugins.get_credentials_process_target_and_arguments(target_profile)
+    assert actual == expected

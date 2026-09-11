@@ -1,6 +1,7 @@
 import argparse
 import json
 import os
+import shlex
 import subprocess
 from pathlib import Path
 
@@ -588,7 +589,7 @@ def get_credentials_process_target_and_arguments(target_profile: dict):
     credential_process = target_profile.get("credential_process", None)
     if credential_process is None:
         raise exceptions.ValidationException(f"credential_process not found in profile: {json.dumps(target_profile)}")
-    parts = credential_process.split()
+    parts = shlex.split(credential_process)
     target = Path(parts[0]).expanduser() if len(parts) > 0 else None
     if target is None:
         logger.debug(f"Unable to find credentials target from provided process string: {credential_process}")
