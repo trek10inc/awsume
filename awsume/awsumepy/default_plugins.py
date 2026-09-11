@@ -634,6 +634,16 @@ def get_credentials_handler(config: dict, arguments: argparse.Namespace, profile
             session = get_credentials_from_credential_process(config, arguments, profiles, target_profile, profile_name)
             if 'Expiration' in session:
                 role_session = session
+            elif mfa_serial and 'SessionToken' not in session:
+                region = profile_lib.get_region(profiles, arguments, config)
+                user_session = aws_lib.get_session_token(
+                    session,
+                    region=region,
+                    mfa_serial=mfa_serial,
+                    mfa_token=arguments.mfa_token,
+                    ignore_cache=arguments.force_refresh,
+                    duration_seconds=config.get('debug', {}).get('session_token_duration'),
+                )
             else:
                 user_session = session
         elif 'role_arn' in target_profile:

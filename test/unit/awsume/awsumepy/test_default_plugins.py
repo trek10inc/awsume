@@ -1079,3 +1079,139 @@ def test_get_credentials_process_target_and_arguments_expands_user():
     expected = [str(expanded_process_file), "arg1", "arg2"]
     actual = default_plugins.get_credentials_process_target_and_arguments(target_profile)
     assert actual == expected
+
+@patch.object(default_plugins, 'get_credentials_from_credential_process')
+@patch.object(default_plugins, 'aws_lib')
+def test_get_credentials_handler_credential_process_with_mfa_serial_calls_get_session_token(aws_lib: MagicMock, get_cred_process: MagicMock):
+    """credential_process returning long-term credentials + mfa_serial should call GetSessionToken."""
+    config = {}
+    arguments = generate_namespace_with_defaults(
+        target_profile_name='myprofile',
+        role_arn=None,
+        mfa_token='123456',
+        force_refresh=False,
+        auto_refresh=False,
+        region=None,
+        output_profile=None,
+        role_duration=None,
+        session_name=None,
+        external_id=None,
+    )
+    profiles = {
+        'myprofile': {
+            'credential_process': '/path/to/script',
+            'mfa_serial': 'arn:aws:iam::123456789012:mfa/user',
+        },
+    }
+    long_term_creds = {
+        'AccessKeyId': 'AKIA...',
+        'SecretAccessKey': 'SECRET',
+        'Region': None,
+    }
+    get_cred_process.return_value = long_term_creds
+
+    result = default_plugins.get_credentials(config, arguments, profiles)
+
+    aws_lib.get_session_token.assert_called_once_with(
+        long_term_creds,
+        region=None,
+        mfa_serial='arn:aws:iam::123456789012:mfa/user',
+        mfa_token='123456',
+        ignore_cache=False,
+        duration_seconds=None,
+    )
+    assert result == aws_lib.get_session_token.return_value
+
+
+@patch.object(default_plugins, 'get_credentials_from_credential_process')
+@patch.object(default_plugins, 'aws_lib')
+def test_get_credentials_handler_credential_process_with_session_token_skips_mfa(aws_lib: MagicMock, get_cred_process: MagicMock):
+    """credential_process that already returns SessionToken should skip GetSessionToken even if mfa_serial is set."""
+    config = {}
+    arguments = generate_namespace_with_defaults(
+        target_profile_name='myprofile',
+        role_arn=None,
+        mfa_token='123456',
+        force_refresh=False,
+        auto_refresh=False,
+        region=None,
+        output_profile=None,
+        role_duration=None,
+        session_name=None,
+        external_id=None,
+    )
+    profiles = {
+        'myprofile': {
+            'credential_process': '/path/to/script',
+            'mfa_serial': 'arn:aws:iam::123456789012:mfa/user',
+        },
+    }
+    already_temp_creds = {
+        'AccessKeyId': 'ASIA...',
+        'SecretAccessKey': 'SECRET',
+        'SessionToken': 'TOKEN',
+        'Region': None,
+    }
+    get_cred_process.return_value = already_temp_creds
+
+    result = default_plugins.get_credentials(config, arguments, profiles)
+
+    aws_lib.get_session_token.assert_not_called()
+    assert result == already_temp_creds
+
+
+@patch.object(default_plugins, 'get_credentials_from_credential_process')
+@patch.object(default_plugins, 'aws_lib')
+def test_get_credentials_handler_credential_process_with_mfa_serial_then_assume_role(aws_lib: MagicMock, get_cred_process: MagicMock):
+    config = {}
+    arguments = generate_namespace_with_defaults(
+        target_profile_name='my-role',
+        role_arn=None,
+        session_name='mysessionname',
+        external_id=None,
+        mfa_token='123456',
+        force_refresh=False,
+        auto_refresh=False,
+        region=None,
+        output_profile=None,
+        role_duration=None,
+    )
+    profiles = {
+        'default': {
+            'credential_process': '/path/to/script',
+        },
+        'my-role': {
+            'role_arn': 'arn:aws:iam::123456789012:role/my-role',
+            'source_profile': 'default',
+            'mfa_serial': 'arn:aws:iam::123456789012:mfa/user',
+        },
+    }
+    long_term_creds = {
+        'AccessKeyId': 'AKIA...',
+        'SecretAccessKey': 'SECRET',
+        'Region': None,
+    }
+    get_cred_process.return_value = long_term_creds
+
+    result = default_plugins.get_credentials(config, arguments, profiles)
+
+    aws_lib.get_session_token.assert_called_once_with(
+        long_term_creds,
+        region=None,
+        mfa_serial='arn:aws:iam::123456789012:mfa/user',
+        mfa_token='123456',
+        ignore_cache=False,
+        duration_seconds=None,
+    )
+    aws_lib.assume_role.assert_called_once_with(
+        aws_lib.get_session_token.return_value,
+        'arn:aws:iam::123456789012:role/my-role',
+        'mysessionname',
+        session_policy=arguments.session_policy,
+        session_policy_arns=arguments.session_policy_arns,
+        region=None,
+        external_id=None,
+        role_duration=0,
+        tags=None,
+    )
+    assert result == aws_lib.assume_role.return_value
